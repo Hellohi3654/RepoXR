@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using RepoXR.Assets;
 using RepoXR.Input;
 using RepoXR.Managers;
@@ -58,16 +59,17 @@ public class VRPlayer : MonoBehaviour
         localRig.head = mainCamera;
         localRig.leftArmTarget = leftHand;
         localRig.rightArmTarget = rightHand;
+    }
 
-        // TODO: Move this to Start() coroutine with a 1 frame delay
+    private IEnumerator Start()
+    {
+        yield return null;
+        
         ResetHeight();
     }
-    
-    // TODO: There's a chance that CameraAim overrides are gonna be put in their own class
 
     private void Update()
     {
-        UpdateCameraAim();
     }
 
     public void SetColor(int colorIndex, Color color = default)
@@ -84,23 +86,9 @@ public class VRPlayer : MonoBehaviour
         localRig.SetHurtAmount(amount);
     }
 
-    private void UpdateCameraAim()
-    {
-        cameraAim.aimVertical = mainCamera.localEulerAngles.x;
-        cameraAim.aimHorizontal = mainCamera.localEulerAngles.y;
-        cameraAim.playerAim = mainCamera.localRotation;
-    }
-
     private void ResetHeight()
     {
-        StartCoroutine(ResetHeightRoutine());
-    }
-
-    private IEnumerator ResetHeightRoutine()
-    {
         const float targetHeight = 1.5f;
-
-        yield return new WaitForSeconds(0.1f);
 
         var currentHeight = cameraPosition.playerTransform.InverseTransformPoint(mainCamera.transform.position).y -
                             cameraPosition.playerOffset.y;

@@ -9,8 +9,8 @@ public class VRCameraAim : MonoBehaviour
 {
     public static VRCameraAim Instance;
     
-    // TODO: Might not need this
     private CameraAim cameraAim;
+    private Transform mainCamera;
     
     public Vector3 eulerAngles;
 
@@ -19,12 +19,16 @@ public class VRCameraAim : MonoBehaviour
         Instance = this;
         
         cameraAim = GetComponent<CameraAim>();
+        mainCamera = GetComponentInChildren<Camera>().transform;
     }
 
     private void Update()
     {
+        cameraAim.aimVertical = mainCamera.localEulerAngles.x;
+        cameraAim.aimHorizontal = mainCamera.localEulerAngles.y;
+        cameraAim.playerAim = mainCamera.localRotation;
+        
         // TODO: Account for current head rotation
-    
         if (SemiFunc.MenuLevel() && CameraNoPlayerTarget.instance)
             transform.localRotation = CameraNoPlayerTarget.instance.transform.rotation;
         else

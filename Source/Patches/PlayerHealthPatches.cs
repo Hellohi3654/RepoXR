@@ -9,6 +9,7 @@ internal static class PlayerHealthPatches
     /// <summary>
     /// Make the VR rig inherit the hurt animation from the base game
     /// </summary>
+    // TODO: This doesn't seem to work yet
     [HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Update))]
     [HarmonyPostfix]
     private static void OnPlayerHealthUpdate(PlayerHealth __instance)
