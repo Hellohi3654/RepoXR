@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using RepoXR.Input;
 using RepoXR.Patches;
 using UnityEngine;
 
@@ -11,7 +12,8 @@ public class VRCameraAim : MonoBehaviour
     private CameraAim cameraAim;
     private Transform mainCamera;
     
-    public Vector3 eulerAngles;
+    private Vector3 eulerAngles;
+    private float rotationSpeed = 1f;
 
     private void Awake()
     {
@@ -21,17 +23,48 @@ public class VRCameraAim : MonoBehaviour
         mainCamera = GetComponentInChildren<Camera>().transform;
     }
 
+    private void Start()
+    {
+        if (SemiFunc.MenuLevel() && CameraNoPlayerTarget.instance)
+            ForceSetRotation(CameraNoPlayerTarget.instance.transform.eulerAngles -
+                             TrackingInput.Instance.HeadTransform.localEulerAngles.y * Vector3.up);
+    }
+
     private void Update()
     {
         cameraAim.aimVertical = mainCamera.localEulerAngles.x;
         cameraAim.aimHorizontal = mainCamera.localEulerAngles.y;
         cameraAim.playerAim = mainCamera.localRotation;
         
-        // TODO: Account for current head rotation
-        if (SemiFunc.MenuLevel() && CameraNoPlayerTarget.instance)
-            transform.localRotation = CameraNoPlayerTarget.instance.transform.rotation;
-        else
-            transform.localEulerAngles = eulerAngles;
+        transform.localEulerAngles = Vector3.Lerp(transform.localEulerAngles, eulerAngles, rotationSpeed * Time.deltaTime);
+    }
+
+    /// <summary>
+    /// Instantly change the aim rotation without any interpolation or smoothing
+    /// </summary>
+    public void ForceSetRotation(Vector3 newAngles)
+    {
+        transform.localEulerAngles = newAngles;
+        eulerAngles = newAngles;
+    }
+
+    /// <summary>
+    /// Set a new aim target which will be applied using a smooth linear interpolation
+    /// </summary>
+    public void SmoothSetRotation(Vector3 newAngles, float speed = 1)
+    {
+        eulerAngles = newAngles;
+        rotationSpeed = speed;
+    }
+
+    /// <summary>
+    /// Set spawn rotation, which takes into account the current Y rotation of the headset
+    /// </summary>
+    public void SetSpawnRotation(float yRot)
+    {
+        var angle = new Vector3(0, yRot - TrackingInput.Instance.HeadTransform.localEulerAngles.y, 0);
+        
+        ForceSetRotation(angle);
     }
 }
 
@@ -55,8 +88,7 @@ internal static class CameraAimPatches
     [HarmonyPostfix]
     private static void OnCameraAimSpawn(float _rotation)
     {
-        // TODO: Make helper function that accounts for current head rotation
-        VRCameraAim.Instance.eulerAngles = new Vector3(0, _rotation, 0);
+        VRCameraAim.Instance.SetSpawnRotation(_rotation);
     }
     
     /// <summary>
