@@ -78,18 +78,25 @@ internal static class Utils
         return $"""<sprite name="{id}">""";
     }
 
-    public static T ExecuteWithSteamAPI<T>(Func<T> func)
+    public static T? ExecuteWithSteamAPI<T>(Func<T> func)
     {
-        var isValid = SteamClient.IsValid;
-        
-        if (!isValid)
-            SteamClient.Init(3241660, false);
+        try
+        {
+            var isValid = SteamClient.IsValid;
 
-        var result = func();
-        
-        if (!isValid)
-            SteamClient.Shutdown();
+            if (!isValid)
+                SteamClient.Init(3241660, false);
 
-        return result;
+            var result = func();
+
+            if (!isValid)
+                SteamClient.Shutdown();
+
+            return result;
+        }
+        catch
+        {
+            return default;
+        }
     }
 }

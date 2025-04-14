@@ -107,7 +107,7 @@ internal static class OpenXR
             }
             catch (Exception ex)
             {
-                Logger.LogWarning($"Failed to parse ${file}: {ex.Message}. Runtime will be skipped.");
+                Logger.LogWarning($"Failed to parse {file}: {ex.Message}. Runtime will be skipped.");
             }
         }
 

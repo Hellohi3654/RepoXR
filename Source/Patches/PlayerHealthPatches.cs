@@ -14,7 +14,7 @@ internal static class PlayerHealthPatches
     [HarmonyPostfix]
     private static void OnPlayerHealthUpdate(PlayerHealth __instance)
     {
-        if (VRSession.Instance is not { } session)
+        if (!__instance.playerAvatar.isLocal || VRSession.Instance is not { } session)
             return;
 
         if (!__instance.materialEffect)

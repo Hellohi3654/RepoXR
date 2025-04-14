@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.XR.CoreUtils;
+using UnityEngine;
 
 namespace RepoXR.Player;
 
@@ -45,6 +46,7 @@ public class FirstPersonVRRig : MonoBehaviour
         
         playerAvatarRightArm.grabberClawParent.SetParent(rightHandTip);
         playerAvatarRightArm.grabberClawParent.localPosition = Vector3.zero;
+        playerAvatarRightArm.grabberClawParent.gameObject.SetLayerRecursively(6);
     }
 
     private void LateUpdate()

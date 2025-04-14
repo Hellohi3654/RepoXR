@@ -12,11 +12,6 @@ public class ReloadMenu : MonoBehaviour
     private IEnumerator Start()
     {
         yield return null;
-
-        // TODO: Remove
-        #if DEBUG
-        GameDirector.instance.currentState = GameDirector.gameState.EndWait;
-        #endif
         
         var camera = Camera.main!;
         var overlayCamera = CameraOverlay.instance.overlayCamera;
@@ -60,5 +55,6 @@ public class ReloadMenu : MonoBehaviour
         RenderTextureMain.instance.transform.GetComponentInParent<Canvas>().enabled = false;
 
         transform.localEulerAngles = new Vector3(0, -overlayCamera.transform.localEulerAngles.y, 0);
+        transform.localPosition += Actions.Instance.HeadPosition.ReadValue<Vector3>();
     }
 }

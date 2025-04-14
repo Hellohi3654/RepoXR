@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
+using RepoXR.Input;
 using RepoXR.Managers;
 using UnityEngine;
 
@@ -31,6 +32,9 @@ internal static class PhysGrabberPatches
         );
     }
 
+    /// <summary>
+    /// Make certain phys grabber operations operate from the hand transform instead of the camera transform
+    /// </summary>
     [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.Update))]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> UpdatePatches(IEnumerable<CodeInstruction> instructions)
@@ -139,6 +143,38 @@ internal static class PhysGrabberPatches
             .InstructionEnumeration();
     }
 
+    // TODO: This method takes into account everyone who is holding it
+    // TODO: So we need to add special detection for if these other players are VR players
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ObjectTurning))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> ObjectTurningPatches(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            // Use VR controls for rotation instead of mouse inputs
+            .MatchForward(false, new CodeMatch(OpCodes.Ldstr, "Mouse X"))
+            .RemoveInstructions(12)
+            .Insert(new CodeInstruction(OpCodes.Call, ((Func<Vector3>)GetRotationInput).Method))
+            // Replace camera transform with hand transform (local player)
+            .MatchForward(false, new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraTransform))))
+            .Advance(-2)
+            .RemoveInstructions(3)
+            .Insert(new CodeInstruction(OpCodes.Call, ((Func<Transform>)GetHandTransform).Method))
+            // Replace camera transform with hand transform (remote player)
+            // TODO: VERY TODO, DOES NOT WORK PROPERLY YET
+            .MatchForward(false, new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraTransform))))
+            .Advance(-2)
+            .RemoveInstructions(3)
+            .Insert(new CodeInstruction(OpCodes.Call, ((Func<Transform>)GetHandTransform).Method))
+            .InstructionEnumeration();
+
+        static Vector3 GetRotationInput()
+        {
+            var input = Actions.Instance["Rotation"].ReadValue<Vector2>();
+
+            return new Vector3(input.x, input.y, 0) * 20 * Time.deltaTime;
+        }
+    }
+    
     /// <summary>
     /// Move the grab beam origin to the hand
     /// </summary>

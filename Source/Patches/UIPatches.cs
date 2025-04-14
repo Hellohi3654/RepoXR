@@ -25,6 +25,16 @@ internal static class UIPatches
     }
 
     /// <summary>
+    /// Disable the menu page intro animation
+    /// </summary>
+    [HarmonyPatch(typeof(MenuPageMain), nameof(MenuPageMain.Start))]
+    [HarmonyPostfix]
+    private static void DisableMainMenuAnimation(MenuPageMain __instance)
+    {
+        __instance.menuPage.disableIntroAnimation = true;
+    }
+
+    /// <summary>
     /// Detect UI hits using VR pointers instead of mouse cursor
     /// </summary>
     [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseHover))]
@@ -56,20 +66,6 @@ internal static class UIPatches
         __result = new Vector2(pointer.x - rect.x, pointer.y - rect.y);
         
         return false;
-    }
-    
-    private static IEnumerable<CodeInstruction> UIMouseGetLocalPositionWithinRectTransformPatchT(
-        IEnumerable<CodeInstruction> instructions)
-    {
-        return new CodeMatcher(instructions)
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Call, Method(typeof(SemiFunc), nameof(SemiFunc.UIMousePosToUIPos))))
-            .SetOperandAndAdvance(PropertyGetter(typeof(XRRayInteractorManager), nameof(XRRayInteractorManager.Instance)))
-            .InsertAndAdvance(
-                new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Callvirt,
-                    Method(typeof(XRRayInteractorManager), nameof(XRRayInteractorManager.GetUIHitPosition))))
-            .InstructionEnumeration();
     }
 
     /// <summary>

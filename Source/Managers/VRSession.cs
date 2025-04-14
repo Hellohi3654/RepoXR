@@ -38,12 +38,19 @@ public class VRSession : MonoBehaviour
             input.enabled = false;
 
         MainCamera = CameraUtils.Instance.MainCamera;
+        MainCamera.targetTexture = null;
+        MainCamera.depth = 0;
 
         // Setup camera tracking
         var cameraPoseDriver = MainCamera.gameObject.AddComponent<TrackedPoseDriver>();
         cameraPoseDriver.positionAction = Actions.Instance.HeadPosition;
         cameraPoseDriver.rotationAction = Actions.Instance.HeadRotation;
         cameraPoseDriver.trackingStateInput = new InputActionProperty(Actions.Instance.HeadTrackingState);
+        
+        // Setup "on top" camera
+        var topCamera = MainCamera.transform.Find("Camera Top").GetComponent<Camera>();
+        topCamera.depth = 1;
+        topCamera.targetTexture = null;
         
         // Initialize VR Player
         Player = PlayerController.instance.gameObject.AddComponent<VRPlayer>();

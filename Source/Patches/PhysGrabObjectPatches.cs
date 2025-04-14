@@ -49,7 +49,6 @@ internal static class PhysGrabObjectPatches
 
     [HarmonyPatch(typeof(PhysGrabCart), nameof(PhysGrabCart.CartSteer))]
     [HarmonyTranspiler]
-    [HarmonyDebug]
     private static IEnumerable<CodeInstruction> HandRelativeCartPatch(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)

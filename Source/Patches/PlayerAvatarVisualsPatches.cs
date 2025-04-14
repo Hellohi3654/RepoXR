@@ -12,9 +12,9 @@ internal static class PlayerAvatarVisualsPatches
     /// </summary>
     [HarmonyPatch(typeof(PlayerAvatarVisuals), nameof(PlayerAvatarVisuals.SetColor))]
     [HarmonyPostfix]
-    private static void OnPlayerColorChanged(int _colorIndex, Color _setColor)
+    private static void OnPlayerColorChanged(PlayerAvatarVisuals __instance, int _colorIndex, Color _setColor)
     {
-        if (VRSession.Instance is not { } session)
+        if (!__instance.playerAvatar.isLocal || VRSession.Instance is not { } session)
             return;
         
         session.Player.SetColor(_colorIndex, _setColor);

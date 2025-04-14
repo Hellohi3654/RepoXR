@@ -18,23 +18,11 @@ internal static class Experiments
         __instance.enabled = false;
     }
 
-    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.OnScreen))]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> OnScreenVR(IEnumerable<CodeInstruction> instructions)
-    {
-        return new CodeMatcher(instructions)
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt,
-                    Method(typeof(Camera), nameof(Camera.WorldToScreenPoint), [typeof(Vector3)])))
-            .SetOperandAndAdvance(Method(typeof(Camera), nameof(Camera.WorldToViewportPoint), [typeof(Vector3)]))
-            .InstructionEnumeration();
-    }
-
-    [HarmonyPatch(typeof(ValuableDiscoverGraphic), nameof(ValuableDiscoverGraphic.Update))]
+    [HarmonyPatch(typeof(LoadingUI), nameof(LoadingUI.Awake))]
     [HarmonyPrefix]
-    private static void KeepDiscoveryUI(ValuableDiscoverGraphic __instance)
+    private static void LLLLLL(LoadingUI __instance)
     {
-        __instance.waitTimer = 1;
+        // __instance.enabled = false;
     }
 }
 #endif

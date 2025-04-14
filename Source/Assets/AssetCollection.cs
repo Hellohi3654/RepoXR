@@ -15,6 +15,7 @@ internal static class AssetCollection
     public static GameObject RebindButtonToggle;
     public static GameObject VRRig;
     public static GameObject Cube;
+    public static GameObject Imgage;
     
     public static InputActionAsset DefaultXRActions;
     public static InputActionAsset VRInputs;
@@ -40,6 +41,7 @@ internal static class AssetCollection
         RebindButtonToggle = assetBundle.LoadAsset<GameObject>("Rebind Button Toggle");
         VRRig = assetBundle.LoadAsset<GameObject>("VRRig");
         Cube = assetBundle.LoadAsset<GameObject>("Cube");
+        Imgage = assetBundle.LoadAsset<GameObject>("Imgage");
 
         DefaultXRActions = assetBundle.LoadAsset<InputActionAsset>("DefaultXRActions");
         VRInputs = assetBundle.LoadAsset<InputActionAsset>("VRInputs");

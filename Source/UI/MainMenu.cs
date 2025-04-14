@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.XR;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 
@@ -26,7 +27,10 @@ public class MainMenu : MonoBehaviour
         // Camera rendering setup
         mainCamera = CameraUtils.Instance.MainCamera;
         mainCamera.targetTexture = null;
-        // mainCamera.cullingMask |= 1 << 5; // TODO: Add stacked UI camera
+
+        var topCamera = mainCamera.transform.Find("Camera Top").GetComponent<Camera>();
+        topCamera.depth = 1;
+        topCamera.targetTexture = null;
 
         var uiCamera = CameraOverlay.instance.overlayCamera;
         uiCamera.CopyFrom(mainCamera);
@@ -36,7 +40,9 @@ public class MainMenu : MonoBehaviour
         uiCamera.transform.localEulerAngles = Vector3.zero;
         uiCamera.clearFlags = CameraClearFlags.Depth;
         uiCamera.farClipPlane = 150;
-        uiCamera.depth = 1;
+        uiCamera.depth = 2;
+        
+        Destroy(uiCamera.GetComponent<PostProcessLayer>());
         
         // Camera tracking
         var poseDriver = mainCamera.gameObject.AddComponent<TrackedPoseDriver>();

@@ -1,8 +1,12 @@
-﻿using HarmonyLib;
-using RepoXR.Assets;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Emit;
+using HarmonyLib;
 using RepoXR.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
+
+using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches;
 
@@ -79,6 +83,15 @@ internal static class InputPatches
             return true;
 
         __result = Actions.Instance["Movement"].ReadValue<Vector2>().y;
+
+        return false;
+    }
+
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.GetScrollY))]
+    [HarmonyPrefix]
+    private static bool GetScrollY(InputManager __instance, ref float __result)
+    {
+        __result = Actions.Instance["Scroll"].ReadValue<float>();
 
         return false;
     }
@@ -187,6 +200,22 @@ internal static class InputPatches
     private static bool InputToggleGet(ref InputKey key, ref bool __result)
     {
         __result = VRInputSystem.Instance.InputToggleGet(key.ToString());
+
+        return false;
+    }
+
+    /// <summary>
+    /// Prevent the addition of underlines in the input text
+    /// </summary>
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputDisplayReplaceTags))]
+    [HarmonyPrefix]
+    private static bool NoUnderlinePatch(InputManager __instance, ref string __result, ref string _text)
+    {
+        _text = __instance.tagDictionary.Aggregate(_text,
+            (current, keyValuePair) => current.Replace(keyValuePair.Key,
+                __instance.InputDisplayGet(keyValuePair.Value, MenuKeybind.KeyType.InputKey, MovementDirection.Up)));
+
+        __result = _text;
 
         return false;
     }

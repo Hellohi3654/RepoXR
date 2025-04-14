@@ -17,20 +17,7 @@ public class Config(string assemblyPath, ConfigFile file)
 
     // Performance configuration
 
-    public ConfigEntry<bool> EnableOcclusionMesh { get; } = file.Bind("Performance", nameof(EnableOcclusionMesh), true,
-        "The occlusion mesh will make the game stop rendering pixels otuside of the lens' views, which increases performance.");
-
     // Rendering configuration
-
-    public ConfigEntry<float> MirrorXOffset { get; } = file.Bind("Rendering", nameof(MirrorXOffset), 0f,
-        new ConfigDescription(
-            "The X offset that is added to the XR Mirror View shader. Do not touch if you don't know what this means.",
-            new AcceptableValueRange<float>(-1, 1)));
-
-    public ConfigEntry<float> MirrorYOffset { get; } = file.Bind("Rendering", nameof(MirrorYOffset), 0f,
-        new ConfigDescription(
-            "The Y offset that is added to the XR Mirror View shader. Do not touch if you don't know what this means.",
-            new AcceptableValueRange<float>(-1, 1)));
     
     // Internal configuration
 

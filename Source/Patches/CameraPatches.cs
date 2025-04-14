@@ -1,5 +1,9 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using System.Reflection.Emit;
+using HarmonyLib;
 using UnityEngine;
+
+using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches;
 
@@ -24,5 +28,20 @@ internal static class CameraPatches
     private static void DisableMainMenuAnimation(CameraMainMenu __instance)
     {
         __instance.introLerp = 1;
+    }
+    
+    /// <summary>
+    /// Patch to see if something is visible in the VR camera space
+    /// </summary>
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.OnScreen))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> OnScreenVR(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Callvirt,
+                    Method(typeof(Camera), nameof(Camera.WorldToScreenPoint), [typeof(Vector3)])))
+            .SetOperandAndAdvance(Method(typeof(Camera), nameof(Camera.WorldToViewportPoint), [typeof(Vector3)]))
+            .InstructionEnumeration();
     }
 }
