@@ -27,6 +27,8 @@ internal static class InputPatches
     private static void OnInitializeInputManager(InputManager __instance)
     {
         __instance.gameObject.AddComponent<VRInputSystem>();
+
+        new GameObject("VR Tracking Input").AddComponent<TrackingInput>();
     }
 
     [HarmonyPatch(typeof(InputManager), nameof(InputManager.GetAction))]
