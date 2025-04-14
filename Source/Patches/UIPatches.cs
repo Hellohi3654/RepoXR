@@ -31,6 +31,10 @@ internal static class UIPatches
     private static void DisableMainMenuAnimation(MenuPageMain __instance)
     {
         __instance.menuPage.disableIntroAnimation = true;
+        __instance.doIntroAnimation = false;
+        __instance.transform.localPosition = Vector3.zero;
+        __instance.waitTimer = 3;
+        __instance.introDone = true;
     }
 
     /// <summary>

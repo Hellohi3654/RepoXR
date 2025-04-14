@@ -10,6 +10,24 @@ namespace RepoXR;
 [RepoXRPatch]
 internal static class Entrypoint
 {
+    public static void OnSceneLoad(string sceneName)
+    {
+        Logger.LogDebug($"Scene name: {sceneName}");
+        
+        // Global add UI aaaaaah
+        GameObject.Find("UI").AddComponent<VRManager>();
+
+        switch (sceneName)
+        {
+            case "Main":
+                break;
+            
+            case "Reload":
+                new GameObject("Reload Scene VR").AddComponent<ReloadMenu>();
+                break;
+        }
+    }
+    
     /// <summary>
     /// <see cref="GameDirector"/> is always present in the `Main` scene, so we use it as entrypoint
     /// </summary>
@@ -34,7 +52,7 @@ internal static class Entrypoint
     private static void OnReloadScene()
     {
         // Do this in a new game object, as this fixes some timing issues
-        new GameObject("VR Reload Scene Menu").AddComponent<ReloadMenu>();
+        // new GameObject("VR Reload Scene Menu").AddComponent<ReloadMenu>();
     }
 
     private static void OnStartupMainMenu()

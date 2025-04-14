@@ -21,6 +21,7 @@ internal static class AssetCollection
     public static InputActionAsset VRInputs;
 
     public static Material DefaultLine;
+    public static Material VideoOverlay;
 
     public static TMP_SpriteAsset TMPInputsSpriteAsset;
 
@@ -47,7 +48,8 @@ internal static class AssetCollection
         VRInputs = assetBundle.LoadAsset<InputActionAsset>("VRInputs");
         
         DefaultLine = assetBundle.LoadAsset<Material>("Default-Line");
-
+        VideoOverlay = assetBundle.LoadAsset<Material>("Video Overlay");
+        
         TMPInputsSpriteAsset = assetBundle.LoadAsset<TMP_SpriteAsset>("TMPInputsSpriteAsset");
         
         return true;

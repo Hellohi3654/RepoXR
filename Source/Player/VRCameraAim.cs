@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using System.Collections;
+using System.Diagnostics;
+using HarmonyLib;
 using RepoXR.Input;
 using RepoXR.Patches;
 using UnityEngine;
@@ -12,7 +14,7 @@ public class VRCameraAim : MonoBehaviour
     private CameraAim cameraAim;
     private Transform mainCamera;
     
-    private Vector3 eulerAngles;
+    private Quaternion rotation;
     private float rotationSpeed = 1f;
 
     private void Awake()
@@ -23,20 +25,13 @@ public class VRCameraAim : MonoBehaviour
         mainCamera = GetComponentInChildren<Camera>().transform;
     }
 
-    private void Start()
-    {
-        if (SemiFunc.MenuLevel() && CameraNoPlayerTarget.instance)
-            ForceSetRotation(CameraNoPlayerTarget.instance.transform.eulerAngles -
-                             TrackingInput.Instance.HeadTransform.localEulerAngles.y * Vector3.up);
-    }
-
     private void Update()
     {
         cameraAim.aimVertical = mainCamera.localEulerAngles.x;
         cameraAim.aimHorizontal = mainCamera.localEulerAngles.y;
         cameraAim.playerAim = mainCamera.localRotation;
         
-        transform.localEulerAngles = Vector3.Lerp(transform.localEulerAngles, eulerAngles, rotationSpeed * Time.deltaTime);
+        transform.localRotation = Quaternion.Lerp(transform.localRotation, rotation, rotationSpeed * Time.deltaTime);
     }
 
     /// <summary>
@@ -44,8 +39,10 @@ public class VRCameraAim : MonoBehaviour
     /// </summary>
     public void ForceSetRotation(Vector3 newAngles)
     {
-        transform.localEulerAngles = newAngles;
-        eulerAngles = newAngles;
+        var rot = Quaternion.Euler(newAngles);
+        
+        transform.localRotation = rot;
+        rotation = rot;
     }
 
     /// <summary>
@@ -53,7 +50,7 @@ public class VRCameraAim : MonoBehaviour
     /// </summary>
     public void SmoothSetRotation(Vector3 newAngles, float speed = 1)
     {
-        eulerAngles = newAngles;
+        rotation = Quaternion.Euler(newAngles);
         rotationSpeed = speed;
     }
 
@@ -62,6 +59,9 @@ public class VRCameraAim : MonoBehaviour
     /// </summary>
     public void SetSpawnRotation(float yRot)
     {
+        if (CameraNoPlayerTarget.instance)
+            yRot = CameraNoPlayerTarget.instance.transform.eulerAngles.y;
+        
         var angle = new Vector3(0, yRot - TrackingInput.Instance.HeadTransform.localEulerAngles.y, 0);
         
         ForceSetRotation(angle);

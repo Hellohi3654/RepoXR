@@ -8,6 +8,7 @@ using BepInEx;
 using JetBrains.Annotations;
 using RepoXR.Patches;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace RepoXR;
 
@@ -95,6 +96,12 @@ public class Plugin : BaseUnityPlugin
         Logger.LogDebug("Inserted universal patches using Harmony");
         
         Native.BringGameWindowToFront();
+
+        SceneManager.sceneLoaded += (scene, _) =>
+        {
+            if (Flags.HasFlag(Flags.VR))
+                Entrypoint.OnSceneLoad(scene.name);
+        };
     }
 
     private static string GetCommitHash()

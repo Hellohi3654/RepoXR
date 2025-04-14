@@ -14,11 +14,25 @@ internal static class Experiments
         __instance.enabled = false;
     }
 
+    [HarmonyPatch(typeof(NetworkConnect), nameof(NetworkConnect.Start))]
+    [HarmonyPrefix]
+    private static bool Shitf(NetworkConnect __instance)
+    {
+        return false;
+    }
+
     [HarmonyPatch(typeof(LoadingUI), nameof(LoadingUI.Awake))]
     [HarmonyPrefix]
     private static void LLLLLL(LoadingUI __instance)
     {
         // __instance.enabled = false;
+    }
+
+    [HarmonyPatch(typeof(FadeOverlay), nameof(FadeOverlay.Awake))]
+    [HarmonyPostfix]
+    private static void Shit(FadeOverlay __instance)
+    {
+        __instance.enabled = true;
     }
 }
 #endif

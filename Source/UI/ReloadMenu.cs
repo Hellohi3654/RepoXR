@@ -10,7 +10,9 @@ public class ReloadMenu : MonoBehaviour
 {
     private IEnumerator Start()
     {
-        yield return null;
+        #if DEBUG
+        GameDirector.instance.currentState = GameDirector.gameState.Load;
+        #endif
         
         var camera = Camera.main!;
         var overlayCamera = CameraOverlay.instance.overlayCamera;

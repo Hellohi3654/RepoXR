@@ -1,9 +1,5 @@
-﻿using RepoXR.Input;
-using UnityEngine;
-using UnityEngine.InputSystem;
+﻿using UnityEngine;
 using UnityEngine.InputSystem.UI;
-using UnityEngine.InputSystem.XR;
-using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 
@@ -21,34 +17,22 @@ public class MainMenu : MonoBehaviour
         SetupMainCanvas();
         SetupControllers();
     }
-
+    
+    private static void DisableEventSystem()
+    {
+        var input = GameObject.Find("EventSystem")?.GetComponent<InputSystemUIInputModule>();
+        if (input != null)
+            input.enabled = false;
+    }
+    
     private void SetupMainCamera()
     {
         // Camera rendering setup
         mainCamera = CameraUtils.Instance.MainCamera;
-        mainCamera.targetTexture = null;
 
         var topCamera = mainCamera.transform.Find("Camera Top").GetComponent<Camera>();
         topCamera.depth = 1;
         topCamera.targetTexture = null;
-
-        var uiCamera = CameraOverlay.instance.overlayCamera;
-        uiCamera.CopyFrom(mainCamera);
-        uiCamera.cullingMask = 1 << 5; // UI Only
-        uiCamera.transform.parent = mainCamera.transform;
-        uiCamera.transform.localPosition = Vector3.zero;
-        uiCamera.transform.localEulerAngles = Vector3.zero;
-        uiCamera.clearFlags = CameraClearFlags.Depth;
-        uiCamera.farClipPlane = 150;
-        uiCamera.depth = 2;
-        
-        Destroy(uiCamera.GetComponent<PostProcessLayer>());
-        
-        // Camera tracking
-        var poseDriver = mainCamera.gameObject.AddComponent<TrackedPoseDriver>();
-        poseDriver.positionAction = Actions.Instance.HeadPosition;
-        poseDriver.rotationAction = Actions.Instance.HeadRotation;
-        poseDriver.trackingStateInput = new InputActionProperty(Actions.Instance.HeadTrackingState);
     }
 
     private void SetupMainCanvas()
@@ -58,16 +42,11 @@ public class MainMenu : MonoBehaviour
         mainCanvas.transform.position = new Vector3(-45, -0.75f, 6);
         mainCanvas.transform.eulerAngles = new Vector3(0, 45, 0);
         mainCanvas.transform.localScale = Vector3.one * 0.03f;
+        mainCanvas.gameObject.AddComponent<Mask>();
+        mainCanvas.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0);
         
         Destroy(mainCanvas.GetComponent<GraphicRaycaster>());
         mainCanvas.gameObject.AddComponent<TrackedDeviceGraphicRaycaster>();
-        
-        // Remove blocking UI elements
-        mainCanvas.transform.Find("Fade").gameObject.SetActive(false);
-        mainCanvas.transform.Find("Render Texture Video").gameObject.SetActive(false);
-        
-        // Remove PC UI Canvas
-        RenderTextureMain.instance.transform.GetComponentInParent<Canvas>().enabled = false;
         
         // Remove game HUD elements
         mainCanvas.transform.Find("HUD/Game Hud").gameObject.SetActive(false);
@@ -78,12 +57,5 @@ public class MainMenu : MonoBehaviour
     private void SetupControllers()
     {
         mainCamera.transform.parent.gameObject.AddComponent<XRRayInteractorManager>();
-    }
-    
-    private static void DisableEventSystem()
-    {
-        var input = GameObject.Find("EventSystem")?.GetComponent<InputSystemUIInputModule>();
-        if (input != null)
-            input.enabled = false;
     }
 }
