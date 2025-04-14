@@ -3,7 +3,6 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using RepoXR.Input;
 using RepoXR.UI;
-using TMPro;
 using UnityEngine;
 using static HarmonyLib.AccessTools;
 

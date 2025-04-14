@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using RepoXR.Patches;
-using TMPro;
 using UnityEngine;
 
 namespace RepoXR.Player;

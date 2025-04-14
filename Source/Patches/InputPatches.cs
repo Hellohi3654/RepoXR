@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
+﻿using System.Linq;
 using HarmonyLib;
 using RepoXR.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
-using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches;
 
