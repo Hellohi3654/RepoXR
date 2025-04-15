@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using HarmonyLib;
-using RepoXR.Input;
 using RepoXR.Patches;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -28,12 +26,8 @@ public class LoadingUI : MonoBehaviour
     {
         RestorePosition();
         
-        Logger.LogDebug($"Frame: {Time.frameCount}, Pos: {Camera.main!.transform.localPosition}");
-        
         yield return null;
 
-        Logger.LogDebug($"Frame: {Time.frameCount}, Pos: {Camera.main!.transform.localPosition}");
-        
         RestorePosition();
     }
 
@@ -48,12 +42,12 @@ public class LoadingUI : MonoBehaviour
         var fwd = (camera.localRotation * Vector3.forward).normalized;
         fwd.y = 0;
         fwd.Normalize();
-        
-        transform.localPosition = camera.transform.localPosition + fwd * 5 + Vector3.up * 0.15f;
-        
-        var targetPos = new Vector3(camera.localPosition.x, transform.localPosition.y, camera.localPosition.z);
-        var dirToCam = -(targetPos - transform.localPosition).normalized;
-        
+
+        var pos = camera.transform.localPosition + fwd * 5 + Vector3.up * 0.15f;
+        var targetPos = new Vector3(camera.localPosition.x, pos.y, camera.localPosition.z);
+        var dirToCam = -(targetPos - pos).normalized;
+
+        transform.localPosition = pos;
         transform.localRotation = Quaternion.LookRotation(dirToCam);
     }
 

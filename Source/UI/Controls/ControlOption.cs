@@ -8,8 +8,8 @@ namespace RepoXR.UI.Controls;
 
 public class ControlOption : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI controlName;
-    [SerializeField] private TextMeshProUGUI controlText;
+    [SerializeField] protected TextMeshProUGUI controlName;
+    [SerializeField] protected TextMeshProUGUI controlText;
 
     public InputAction? action => control?.currentInput.action;
 

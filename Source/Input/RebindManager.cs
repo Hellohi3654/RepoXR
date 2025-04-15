@@ -45,7 +45,7 @@ public class RebindManager : MonoBehaviour
     private PlayerInput playerInput;
     private InputActionRebindingExtensions.RebindingOperation? currentOperation;
     private ControlOption currentOption;
-    private List<ControlOption> options = [];
+    private readonly List<ControlOption> options = [];
 
     private float lastRebindTime;
     

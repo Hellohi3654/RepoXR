@@ -63,7 +63,10 @@ internal static class UIPatches
     [HarmonyPrefix]
     private static bool UIMouseGetLocalPositionWithinRectTransformPatch(RectTransform rectTransform, ref Vector2 __result)
     {
-        var pointer = XRRayInteractorManager.Instance.GetUIHitPosition(rectTransform);
+        if (XRRayInteractorManager.Instance is not { } manager)
+            return true;
+        
+        var pointer = manager.GetUIHitPosition(rectTransform);
         var rect = SemiFunc.UIGetRectTransformPositionOnScreen(rectTransform, false);
 
         __result = new Vector2(pointer.x - rect.x, pointer.y - rect.y);
@@ -110,6 +113,7 @@ internal static class UIPatches
     /// <summary>
     /// Handle VR inputs for UI buttons
     /// </summary>
+    // TODO: Maybe look at also patching out the original code? Since the mouse can sometimes click on UI elements.
     [HarmonyPatch(typeof(MenuButton), nameof(MenuButton.HoverLogic))]
     [HarmonyPostfix]
     private static void HandleVRButtonLogic(MenuButton __instance)

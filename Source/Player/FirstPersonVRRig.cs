@@ -22,8 +22,8 @@ public class FirstPersonVRRig : MonoBehaviour
 
     public Vector3 headOffset;
     
-    [SerializeField] private LineRenderer leftHandLine;
-    [SerializeField] private LineRenderer rightHandLine;
+    [SerializeField] protected LineRenderer leftHandLine;
+    [SerializeField] protected LineRenderer rightHandLine;
     
     private Transform leftArmMesh;
     private Transform rightArmMesh;
@@ -54,15 +54,13 @@ public class FirstPersonVRRig : MonoBehaviour
         transform.position = head.position + headOffset;
         
         // TODO: Maybe use Player rotation? This might be just fine though.
+        // TODO: Will need to disable (or at least hide) the rig when player dies and in spectator
         transform.rotation = Quaternion.Lerp(transform.rotation,
             Quaternion.Euler(transform.eulerAngles.x, head.eulerAngles.y, transform.eulerAngles.z),
             10 * Time.deltaTime);
         
         UpdateArms();
-        
-        // Update claw
-        playerAvatarRightArm.deltaTime = playerAvatarVisuals.deltaTime;
-        playerAvatarRightArm.GrabberLogic();
+        UpdateClaw();
     }
 
     private void UpdateArms()
@@ -104,6 +102,12 @@ public class FirstPersonVRRig : MonoBehaviour
         rightHandLine.SetPositions([rightHandTip.position, rightHandTip.position + rightHandTip.forward * 5]);
     }
 
+    private void UpdateClaw()
+    {
+        playerAvatarRightArm.deltaTime = playerAvatarVisuals.deltaTime;
+        playerAvatarRightArm.GrabberLogic();
+    }
+    
     public void SetColor(Color color)
     {
         foreach (var mesh in meshes)

@@ -87,7 +87,7 @@ public class VRPlayer : MonoBehaviour
 
     private void ResetHeight()
     {
-        const float targetHeight = 1.5f;
+        const float targetHeight = 1.5f; // TODO: This is too high
 
         var currentHeight = cameraPosition.playerTransform.InverseTransformPoint(mainCamera.transform.position).y -
                             cameraPosition.playerOffset.y;

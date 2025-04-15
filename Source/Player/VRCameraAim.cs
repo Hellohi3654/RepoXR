@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Diagnostics;
-using HarmonyLib;
+﻿using HarmonyLib;
 using RepoXR.Input;
 using RepoXR.Patches;
 using UnityEngine;
@@ -31,6 +29,11 @@ public class VRCameraAim : MonoBehaviour
         cameraAim.aimHorizontal = mainCamera.localEulerAngles.y;
         cameraAim.playerAim = mainCamera.localRotation;
         
+        // TODO: Add support for consistently looking at a Transform (e.g. for the ceiling eye)
+    }
+
+    private void LateUpdate()
+    {
         transform.localRotation = Quaternion.Lerp(transform.localRotation, rotation, rotationSpeed * Time.deltaTime);
     }
 
