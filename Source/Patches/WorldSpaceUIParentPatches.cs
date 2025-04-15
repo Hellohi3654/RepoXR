@@ -6,6 +6,9 @@ namespace RepoXR.Patches;
 [RepoXRPatch]
 internal static class WorldSpaceUIParentPatches
 {
+    /// <summary>
+    /// Position elements actually in world space instead of screen space coordinates
+    /// </summary>
     [HarmonyPatch(typeof(WorldSpaceUIChild), nameof(WorldSpaceUIChild.SetPosition))]
     [HarmonyPrefix]
     private static bool SetPositionPatch(WorldSpaceUIChild __instance)

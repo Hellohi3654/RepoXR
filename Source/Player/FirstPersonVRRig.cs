@@ -6,6 +6,7 @@ namespace RepoXR.Player;
 public class FirstPersonVRRig : MonoBehaviour
 {
     private static readonly int AlbedoColor = Shader.PropertyToID("_AlbedoColor");
+    private static readonly int HurtColor = Shader.PropertyToID("_ColorOverlayAmount");
     private static readonly int HurtAmount = Shader.PropertyToID("_ColorOverlayAmount");
     
     public MeshRenderer[] meshes;
@@ -107,11 +108,26 @@ public class FirstPersonVRRig : MonoBehaviour
         playerAvatarRightArm.deltaTime = playerAvatarVisuals.deltaTime;
         playerAvatarRightArm.GrabberLogic();
     }
+
+    public void SetVisible(bool visible)
+    {
+        foreach (var mesh in meshes)
+            mesh.enabled = visible;
+
+        leftHandLine.enabled = visible;
+        rightHandLine.enabled = visible;
+    }
     
     public void SetColor(Color color)
     {
         foreach (var mesh in meshes)
             mesh.sharedMaterial.SetColor(AlbedoColor, color);
+    }
+
+    public void SetHurtColor(Color color)
+    {
+        foreach (var mesh in meshes)
+            mesh.sharedMaterial.SetColor(HurtColor, color);
     }
 
     public void SetHurtAmount(float amount)

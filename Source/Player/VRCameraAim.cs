@@ -38,6 +38,17 @@ public class VRCameraAim : MonoBehaviour
     }
 
     /// <summary>
+    /// Instantly append a set amount of degrees to the current aim on the Y axis
+    /// </summary>
+    public void TurnAimNow(float degrees)
+    {
+        var rot = Quaternion.Euler(transform.eulerAngles + Vector3.up * degrees);
+
+        transform.localRotation = rot;
+        rotation = rot;
+    }
+
+    /// <summary>
     /// Instantly change the aim rotation without any interpolation or smoothing
     /// </summary>
     public void ForceSetRotation(Vector3 newAngles)

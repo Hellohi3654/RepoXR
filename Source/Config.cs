@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using System;
+using BepInEx.Configuration;
 
 namespace RepoXR;
 
@@ -16,6 +17,23 @@ public class Config(string assemblyPath, ConfigFile file)
         "Enables verbose debug logging during OpenXR initialization");
 
     // Performance configuration
+    
+    // Input configuration
+
+    public ConfigEntry<TurnProviderOption> TurnProvider = file.Bind("Input", nameof(TurnProvider),
+        TurnProviderOption.Smooth,
+        new ConfigDescription("Specify which turning provider your player uses, if any.",
+            new AcceptableValueEnum<TurnProviderOption>()));
+
+    public ConfigEntry<float> SmoothTurnSpeedModifier { get; } = file.Bind("Input", nameof(SmoothTurnSpeedModifier), 1f,
+        new ConfigDescription(
+            "A multiplier that is added to the smooth turning speed. Requires turn provider to be set to smooth.",
+            new AcceptableValueRange<float>(0.25f, 5)));
+    
+    public ConfigEntry<float> SnapTurnSize { get; } = file.Bind("Input", nameof(SnapTurnSize), 45f,
+        new ConfigDescription(
+            "The amount of rotation that is applied when performing a snap turn. Requires turn provider to be set to snap.",
+            new AcceptableValueRange<float>(10, 180)));
 
     // Rendering configuration
     
@@ -29,4 +47,21 @@ public class Config(string assemblyPath, ConfigFile file)
 
     public ConfigEntry<string> OpenXRRuntimeFile { get; } = file.Bind("Internal", nameof(OpenXRRuntimeFile), "",
         "FOR INTERNAL USE ONLY, DO NOT EDIT");
+
+    public enum TurnProviderOption
+    {
+        Snap,
+        Smooth,
+        Disabled
+    }
+}
+
+internal class AcceptableValueEnum<T>() : AcceptableValueBase(typeof(T))
+    where T: Enum
+{
+    private readonly string[] names = Enum.GetNames(typeof(T));
+
+    public override object Clamp(object value) => value;
+    public override bool IsValid(object value) => true;
+    public override string ToDescriptionString() => $"# Acceptable values: {string.Join(", ", names)}";
 }

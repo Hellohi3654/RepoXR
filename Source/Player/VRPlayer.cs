@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using RepoXR.Assets;
 using RepoXR.Input;
 using RepoXR.Managers;
@@ -12,7 +13,7 @@ public class VRPlayer : MonoBehaviour
 {
     // Camera stuff
     private CameraPosition cameraPosition;
-    private CameraAim cameraAim;
+    private VRCameraAim cameraAim;
     
     private Transform mainCamera;
     private Transform leftHand;
@@ -20,13 +21,15 @@ public class VRPlayer : MonoBehaviour
 
     private PlayerController localController;
     private FirstPersonVRRig localRig;
-
+    
     public Transform MainHand => localRig.rightHandTip;
+
+    private bool turnedLastInput;
     
     private void Awake()
     {
         cameraPosition = CameraPosition.instance;
-        cameraAim = CameraAim.Instance;
+        cameraAim = VRCameraAim.Instance;
 
         mainCamera = VRSession.Instance.MainCamera.transform;
         
@@ -58,6 +61,13 @@ public class VRPlayer : MonoBehaviour
         localRig.head = mainCamera;
         localRig.leftArmTarget = leftHand;
         localRig.rightArmTarget = rightHand;
+
+        Actions.Instance["ResetHeight"].performed += OnResetHeight;
+    }
+
+    private void OnDestroy()
+    {
+        Actions.Instance["ResetHeight"].performed -= OnResetHeight;
     }
 
     private IEnumerator Start()
@@ -69,8 +79,14 @@ public class VRPlayer : MonoBehaviour
 
     private void Update()
     {
+        HandleTurning();
     }
 
+    public void SetRigVisible(bool visible)
+    {
+        localRig.SetVisible(visible);
+    }
+    
     public void SetColor(int colorIndex, Color color = default)
     {
         var customColor = colorIndex == -1;
@@ -80,6 +96,11 @@ public class VRPlayer : MonoBehaviour
         localRig.SetColor(color);
     }
 
+    public void SetHurtColor(Color color)
+    {
+        localRig.SetHurtColor(color);
+    }
+    
     public void SetHurtAmount(float amount)
     {
         localRig.SetHurtAmount(amount);
@@ -87,10 +108,47 @@ public class VRPlayer : MonoBehaviour
 
     private void ResetHeight()
     {
-        const float targetHeight = 1.5f; // TODO: This is too high
+        const float targetHeight = 1.4f; // TODO: This is too high
 
         var currentHeight = cameraPosition.playerTransform.InverseTransformPoint(mainCamera.transform.position).y -
                             cameraPosition.playerOffset.y;
         cameraPosition.playerOffset = new Vector3(0, targetHeight - currentHeight, 0);
+    }
+
+    private void HandleTurning()
+    {
+        var value = Actions.Instance["Turn"].ReadValue<float>();
+
+        switch (Plugin.Config.TurnProvider.Value)
+        {
+            case Config.TurnProviderOption.Snap:
+                var should = MathF.Abs(value) > 0.75f;
+                
+                if (!turnedLastInput && should)
+                    if (value > 0)
+                        cameraAim.TurnAimNow(Plugin.Config.SnapTurnSize.Value);
+                    else
+                        cameraAim.TurnAimNow(-Plugin.Config.SnapTurnSize.Value);
+
+                turnedLastInput = should;
+                
+                break;
+            
+            case Config.TurnProviderOption.Smooth:
+                cameraAim.TurnAimNow(180 * Time.deltaTime * Plugin.Config.SmoothTurnSpeedModifier.Value * value);
+                break;
+            
+            case Config.TurnProviderOption.Disabled:
+            default:
+                break;
+        }
+    }
+
+    private void OnResetHeight(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.performed)
+            return;
+        
+        ResetHeight();
     }
 }

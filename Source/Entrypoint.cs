@@ -27,7 +27,7 @@ internal static class Entrypoint
                 break;
             
             case "Reload":
-                new GameObject("Reload Scene VR").AddComponent<ReloadMenu>();
+                // new GameObject("Reload Scene VR").AddComponent<ReloadMenu>();
                 break;
         }
     }

@@ -123,7 +123,7 @@ internal static class PhysGrabberPatches
                 return (grabber.overrideGrabTarget.transform.position - VRSession.Instance.Player.MainHand.position)
                     .normalized;
 
-            return VRSession.Instance.Player.MainHand.forward;
+            return VRSession.Instance is not { } session ? Vector3.zero : session.Player.MainHand.forward;
         }
     }
 

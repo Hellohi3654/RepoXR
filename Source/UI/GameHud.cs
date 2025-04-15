@@ -1,7 +1,5 @@
 ﻿using System.Collections;
-using RepoXR.Managers;
 using UnityEngine;
-using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 
 namespace RepoXR.UI;
@@ -13,12 +11,6 @@ public class GameHud : MonoBehaviour
 
     private Transform smoothCanvasContainer;
     private Transform camera;
-    
-    private void Awake()
-    {
-        // Disable main render texture which obscures the flatscreen mirror view
-        RenderTextureMain.instance.transform.GetComponentInParent<Canvas>().enabled = false;
-    }
 
     private IEnumerator Start()
     {
@@ -26,11 +18,10 @@ public class GameHud : MonoBehaviour
         yield return null;
 
         camera = CameraOverlay.instance.overlayCamera.transform;
-        
-        SetupOverlayCamera();
-        CreateOverlayCanvas();
+
+        SetupOverlayCanvas();
         CreateSmoothedCanvas();
-        
+
         // TODO: Temporary
         HUDCanvas.instance.transform.position = Vector3.down * 10000; // Move the world space hud far away
     }
@@ -40,60 +31,40 @@ public class GameHud : MonoBehaviour
         if (!camera) // Start has not yet finished
             return;
 
-        smoothCanvasContainer.transform.position = camera.position;
+        // Keep the UI upright even during the short post-death "view from above" state
+        var up = SpectateCamera.instance && SpectateCamera.instance.CheckState(SpectateCamera.State.Death)
+            ? SpectateCamera.instance.transform.up
+            : Vector3.up;
 
-        var fwd = new Vector3(camera.forward.x, camera.forward.y, camera.forward.z).normalized * 1.5f;
-        var rot = Quaternion.Euler(camera.eulerAngles.x, camera.eulerAngles.y, 0);
+        var fwd = camera.position + camera.forward * 1.5f;
+        var rot = Quaternion.LookRotation(camera.forward, up);
 
-        SmoothedCanvas.transform.localPosition = Vector3.Slerp(SmoothedCanvas.transform.localPosition, fwd, 0.1f);
+        SmoothedCanvas.transform.position = Vector3.Slerp(SmoothedCanvas.transform.position, fwd, 0.1f);
         SmoothedCanvas.transform.rotation = Quaternion.Slerp(SmoothedCanvas.transform.rotation, rot, 0.1f);
-    }
-
-    /// <summary>
-    /// Set up a stacked camera that will handle rendering all UI (on top of the game)
-    /// </summary>
-    private void SetupOverlayCamera()
-    {
-        var uiCamera = CameraOverlay.instance.overlayCamera;
-        
-        uiCamera.CopyFrom(VRSession.Instance.MainCamera);
-        uiCamera.targetTexture = null;
-        uiCamera.depth = 2;
-        uiCamera.transform.parent = VRSession.Instance.MainCamera.transform;
-        uiCamera.clearFlags = CameraClearFlags.Depth;
-        uiCamera.cullingMask = 1 << 5;
-        uiCamera.farClipPlane = 1500;
-        
-        // Disable post-processing on UI layer
-        Destroy(uiCamera.GetComponent<PostProcessLayer>());
     }
 
     /// <summary>
     /// Creates the main overlay canvas, which is rendered in camera space
     /// </summary>
-    private void CreateOverlayCanvas()
+    private void SetupOverlayCanvas()
     {
-        OverlayCanvas = new GameObject("VR Overlay Canvas") { layer = 5 }.AddComponent<Canvas>();
+        OverlayCanvas = GameObject.Find("VR Overlay Canvas").GetComponent<Canvas>();
         OverlayCanvas.worldCamera = CameraOverlay.instance.overlayCamera;
         OverlayCanvas.renderMode = RenderMode.ScreenSpaceCamera;
-        
+
         // World space scale
         WorldSpaceUIParent.instance.transform.localScale = Vector3.one * 0.005f;
-        
-        // Video overlay
-        VideoOverlay.Instance.transform.parent = OverlayCanvas.transform;
-        VideoOverlay.Instance.transform.localPosition = Vector3.zero;
-        VideoOverlay.Instance.transform.localEulerAngles = Vector3.zero;
-        VideoOverlay.Instance.transform.localScale = Vector3.one * 2.5f;
 
         // Put tumble UI on the overlay canvas, and move the top and bottom elements closer to the edge of the screen
         var tumbleUi = TumbleUI.instance;
         tumbleUi.transform.parent.SetParent(OverlayCanvas.transform, false);
+        tumbleUi.transform.parent.localScale = Vector3.one * 300;
+        tumbleUi.transform.parent.localPosition = Vector3.down * 20;
         tumbleUi.transform.localPosition = Vector3.back * 1.7f;
-        tumbleUi.parts1[0].GetComponent<RectTransform>().anchoredPosition += Vector2.up * 0.1f;
-        tumbleUi.parts1[1].GetComponent<RectTransform>().anchoredPosition += Vector2.down * 0.1f;
-        tumbleUi.parts2[0].GetComponent<RectTransform>().anchoredPosition += Vector2.up * 0.1f;
-        tumbleUi.parts2[1].GetComponent<RectTransform>().anchoredPosition += Vector2.down * 0.1f;
+        tumbleUi.parts1[0].GetComponent<RectTransform>().anchoredPosition += Vector2.up * 0.3f;
+        tumbleUi.parts1[1].GetComponent<RectTransform>().anchoredPosition += Vector2.down * 0.3f;
+        tumbleUi.parts2[0].GetComponent<RectTransform>().anchoredPosition += Vector2.up * 0.3f;
+        tumbleUi.parts2[1].GetComponent<RectTransform>().anchoredPosition += Vector2.down * 0.3f;
     }
 
     /// <summary>
@@ -101,7 +72,8 @@ public class GameHud : MonoBehaviour
     /// </summary>
     private void CreateSmoothedCanvas()
     {
-        smoothCanvasContainer = new GameObject("VR Smoothed Canvas - Container") { layer = 5 }.transform;
+        smoothCanvasContainer = new GameObject("VR Smoothed Canvas - Container")
+            { layer = 5, transform = { parent = camera.parent.parent.parent } }.transform;
         SmoothedCanvas = new GameObject("VR Smoothed Canvas")
             {
                 layer = 5,

@@ -30,6 +30,11 @@ public class VRSession : MonoBehaviour
             InitializeVRSession();
     }
 
+    private void OnDestroy()
+    {
+        Instance = null!;
+    }
+
     private void InitializeVRSession()
     {
         // Disable base UI input system
