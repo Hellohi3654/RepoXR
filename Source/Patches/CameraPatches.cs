@@ -23,12 +23,23 @@ internal static class CameraPatches
     /// <summary>
     /// Disable the main menu camera pan when booting the game
     /// </summary>
-    /// TODO: Disable main menu sliding animation
     [HarmonyPatch(typeof(CameraMainMenu), nameof(CameraMainMenu.Awake))]
     [HarmonyPostfix]
     private static void DisableMainMenuAnimation(CameraMainMenu __instance)
     {
         __instance.introLerp = 1;
+    }
+
+    /// <summary>
+    /// Disable aim offset (the small rotation animation when loading into a level)
+    /// </summary>
+    [HarmonyPatch(typeof(CameraAimOffset), nameof(CameraAimOffset.Awake))]
+    [HarmonyPrefix]
+    private static bool DisableCameraAimOffset(CameraAimOffset __instance)
+    {
+        __instance.enabled = false;
+        
+        return false;
     }
     
     /// <summary>

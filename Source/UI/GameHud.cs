@@ -115,8 +115,7 @@ public class GameHud : MonoBehaviour
             }
             .AddComponent<Canvas>();
         SmoothedCanvas.renderMode = RenderMode.WorldSpace;
-        SmoothedCanvas.gameObject.AddComponent<Mask>();
-        SmoothedCanvas.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0);
+        SmoothedCanvas.gameObject.AddComponent<RectMask2D>();
 
         var rect = SmoothedCanvas.GetComponent<RectTransform>();
         rect.sizeDelta = new Vector2(712, 400);

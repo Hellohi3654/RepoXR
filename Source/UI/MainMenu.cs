@@ -42,8 +42,7 @@ public class MainMenu : MonoBehaviour
         mainCanvas.transform.position = new Vector3(-45, -0.75f, 6);
         mainCanvas.transform.eulerAngles = new Vector3(0, 45, 0);
         mainCanvas.transform.localScale = Vector3.one * 0.03f;
-        mainCanvas.gameObject.AddComponent<Mask>();
-        mainCanvas.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0);
+        mainCanvas.gameObject.AddComponent<RectMask2D>();
         
         Destroy(mainCanvas.GetComponent<GraphicRaycaster>());
         mainCanvas.gameObject.AddComponent<TrackedDeviceGraphicRaycaster>();
