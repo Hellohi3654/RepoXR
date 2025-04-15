@@ -6,14 +6,11 @@ using UnityEngine.InputSystem.XR;
 
 namespace RepoXR.UI;
 
+// TODO: Is this even needed anymore?
 public class ReloadMenu : MonoBehaviour
 {
     private IEnumerator Start()
     {
-        #if DEBUG
-        GameDirector.instance.currentState = GameDirector.gameState.Load;
-        #endif
-        
         var camera = Camera.main!;
         var overlayCamera = CameraOverlay.instance.overlayCamera;
         var hud = HUDCanvas.instance.GetComponent<Canvas>();
