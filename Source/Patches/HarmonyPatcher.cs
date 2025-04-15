@@ -37,9 +37,8 @@ internal static class HarmonyPatcher
                 if (attribute == null)
                     return;
 
-                // TODO: Mod compat support
-                /* if (attribute.Dependency != null && something)
-                    return; */
+                if (attribute.Dependency != null && !Compat.IsLoaded(attribute.Dependency))
+                    return;
 
                 if (attribute.Target != target)
                     return;
