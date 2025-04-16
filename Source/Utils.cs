@@ -29,11 +29,6 @@ internal static class Utils
             where !string.IsNullOrEmpty(parsedLine)
             select parsedLine).ToArray();
     }
-    
-    public static void EnableSprites(this TextMeshProUGUI text)
-    {
-        text.spriteAsset = AssetCollection.TMPInputsSpriteAsset;
-    }
 
     public static string GetControlSpriteString(string controlPath)
     {

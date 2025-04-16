@@ -147,6 +147,10 @@ public class VRPlayer : MonoBehaviour
 
     private void HandleTurning()
     {
+        // Block turning if we are rotating an object
+        if (PlayerAvatar.instance.physGrabber.isRotating)
+            return;
+        
         var value = Actions.Instance["Turn"].ReadValue<float>();
 
         switch (Plugin.Config.TurnProvider.Value)

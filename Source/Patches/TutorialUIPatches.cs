@@ -50,7 +50,6 @@ internal static class TutorialUIPatches
             .InsertAndAdvance(
                 new CodeInstruction(OpCodes.Ldloc_1),
                 new CodeInstruction(OpCodes.Call, ((Action<TutorialUI>)SetSpriteAtlas).Method)
-
             )
             .InstructionEnumeration();
 
