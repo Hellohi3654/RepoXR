@@ -55,7 +55,6 @@ public class FirstPersonVRRig : MonoBehaviour
         transform.position = head.position + headOffset;
         
         // TODO: Maybe use Player rotation? This might be just fine though.
-        // TODO: Will need to disable (or at least hide) the rig when player dies and in spectator
         transform.rotation = Quaternion.Lerp(transform.rotation,
             Quaternion.Euler(transform.eulerAngles.x, head.eulerAngles.y, transform.eulerAngles.z),
             10 * Time.deltaTime);

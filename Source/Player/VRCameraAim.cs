@@ -13,7 +13,7 @@ public class VRCameraAim : MonoBehaviour
     private Transform mainCamera;
     
     private Quaternion rotation;
-    private float rotationSpeed = 1f;
+    private float lerpSpeed = 10;
 
     private void Awake()
     {
@@ -34,7 +34,7 @@ public class VRCameraAim : MonoBehaviour
 
     private void LateUpdate()
     {
-        transform.localRotation = Quaternion.Lerp(transform.localRotation, rotation, rotationSpeed * Time.deltaTime);
+        transform.localRotation = Quaternion.Lerp(transform.localRotation, rotation, lerpSpeed * Time.deltaTime);
     }
 
     /// <summary>
@@ -62,10 +62,10 @@ public class VRCameraAim : MonoBehaviour
     /// <summary>
     /// Set a new aim target which will be applied using a smooth linear interpolation
     /// </summary>
-    public void SmoothSetRotation(Vector3 newAngles, float speed = 1)
+    public void SmoothSetRotation(Vector3 newAngles, float speed = 10)
     {
         rotation = Quaternion.Euler(newAngles);
-        rotationSpeed = speed;
+        lerpSpeed = speed;
     }
 
     /// <summary>

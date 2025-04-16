@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections;
+using System.Numerics;
 using RepoXR.Assets;
 using RepoXR.Input;
 using RepoXR.Managers;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
+using Vector3 = UnityEngine.Vector3;
 
 namespace RepoXR.Player;
 
 public class VRPlayer : MonoBehaviour
 {
     // Camera stuff
-    private CameraPosition cameraPosition;
-    private VRCameraAim cameraAim;
+    private VRCameraPosition cameraPosition;
+    private VRCameraAim cameraAim;  
     
     private Transform mainCamera;
     private Transform leftHand;
@@ -28,7 +30,7 @@ public class VRPlayer : MonoBehaviour
     
     private void Awake()
     {
-        cameraPosition = CameraPosition.instance;
+        cameraPosition = VRCameraPosition.Instance;
         cameraAim = VRCameraAim.Instance;
 
         mainCamera = VRSession.Instance.MainCamera.transform;
@@ -79,6 +81,7 @@ public class VRPlayer : MonoBehaviour
 
     private void Update()
     {
+        HandleMovement();
         HandleTurning();
     }
 
@@ -108,11 +111,45 @@ public class VRPlayer : MonoBehaviour
 
     private void ResetHeight()
     {
+        // TODO: This function does not yet account for crouch/tumble, meaning reset height only works properly while standing
+
         const float targetHeight = 1.4f; // TODO: This is too high
 
-        var currentHeight = cameraPosition.playerTransform.InverseTransformPoint(mainCamera.transform.position).y -
-                            cameraPosition.playerOffset.y;
-        cameraPosition.playerOffset = new Vector3(0, targetHeight - currentHeight, 0);
+        // The playerOffset field is actually smoothed, making the reset height sequence look a little bit nicer
+
+        var currentHeight =
+            cameraPosition.original.playerTransform.InverseTransformPoint(mainCamera.transform.position).y -
+            cameraPosition.original.playerOffset.y;
+        cameraPosition.original.playerOffset = new Vector3(0, targetHeight - currentHeight, 0);
+    }
+
+    private Vector3 lastPosition;
+
+    // TODO: Maybe move to FixedUpdate if this looks stuttery in VR
+    private void HandleMovement()
+    {
+        // TODO: Make use of VRCameraPosition.additionalOffset to add player-relative offset
+        // (everything uses localPosition but are root elements so they're world positions anyways)
+
+        // No tracking data yet
+        // TODO: Can probably be removed
+        if (mainCamera.transform.localPosition == Vector3.zero)
+            return;
+        
+        // If this is our first frame with position data, just reset the position immediately
+        if (lastPosition == Vector3.zero)
+            lastPosition = mainCamera.transform.localPosition;
+
+        var headPosition = mainCamera.transform.localPosition;
+        var movement = new Vector3(headPosition.x - lastPosition.x, 0, headPosition.z - lastPosition.z);
+
+        cameraPosition.additionalOffset = -mainCamera.transform.localPosition; // Will make the game run like 3-DoF
+        PlayerController.instance.rb.MovePosition(PlayerController.instance.rb.transform.position + movement);
+        // Interpolation settings **SHOULD** prevent walking through walls using the above method
+        // TODO: Apply movement to player (preferably instantly to minimize or eliminate the 3-DoF look) (^)
+        // TODO: Test this (probably works like shit)
+
+        lastPosition = headPosition;
     }
 
     private void HandleTurning()
