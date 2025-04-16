@@ -34,12 +34,10 @@ internal static class CameraPatches
     /// Disable aim offset (the small rotation animation when loading into a level)
     /// </summary>
     [HarmonyPatch(typeof(CameraAimOffset), nameof(CameraAimOffset.Awake))]
-    [HarmonyPrefix]
-    private static bool DisableCameraAimOffset(CameraAimOffset __instance)
+    [HarmonyPostfix]
+    private static void DisableCameraAimOffset(CameraAimOffset __instance)
     {
         __instance.enabled = false;
-        
-        return false;
     }
     
     /// <summary>

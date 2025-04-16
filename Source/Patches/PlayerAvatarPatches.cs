@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RepoXR.Managers;
+using UnityEngine;
 
 namespace RepoXR.Patches;
 
@@ -30,5 +31,10 @@ internal static class PlayerAvatarPatches
             return;
         
         session.Player.SetRigVisible(true);
+
+        // Reset CameraAimOffset (for when revived during the top-down death sequence)
+        var offsetTransform = CameraAimOffset.Instance.transform;
+        offsetTransform.localRotation = Quaternion.identity;
+        offsetTransform.localPosition = Vector3.zero;
     }
 }
