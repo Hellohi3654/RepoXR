@@ -57,7 +57,7 @@ public class ControlOption : MonoBehaviour
         if (rebindTimerCoroutine != null)
             StopCoroutine(rebindTimerCoroutine);
 
-        bindingIndex = Mathf.Max(bindingIndex, 0) +
+        bindingIndex = Mathf.Max(control.bindingIndex, 0) +
                        Mathf.Max(
                            control.currentInput.action.GetBindingIndex(playerInput.currentControlScheme), 0);
         
