@@ -2,11 +2,14 @@ using HarmonyLib;
 using RepoXR.Patches;
 using UnityEngine;
 
-namespace RepoXR.Player;
+namespace RepoXR.Player.Camera;
+
+// TODO: This will also implement the VR-equivalent of CameraZoom
+// Or, at least the game object this is attached to will be used as a transform (and we can use the additionalOffset tbh)
 
 public class VRCameraPosition : MonoBehaviour
 {
-    public static VRCameraPosition Instance;
+    public static VRCameraPosition instance;
 
     public CameraPosition original;
     public Vector3 additionalOffset;
@@ -15,7 +18,7 @@ public class VRCameraPosition : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        instance = this;
         original = GetComponent<CameraPosition>();
     }
 

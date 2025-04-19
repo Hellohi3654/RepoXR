@@ -2,9 +2,8 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using RepoXR.Assets;
 using Steamworks;
-using TMPro;
+using UnityEngine;
 
 namespace RepoXR;
 
@@ -93,5 +92,11 @@ internal static class Utils
         {
             return default;
         }
+    }
+
+    public static bool Collide(Collider lhs, Collider rhs)
+    {
+        return Physics.ComputePenetration(lhs, lhs.transform.position, lhs.transform.rotation, rhs,
+            rhs.transform.position, rhs.transform.rotation, out _, out _);
     }
 }

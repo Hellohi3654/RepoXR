@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using HarmonyLib;
 using RepoXR.Input;
 using RepoXR.Managers;
+using RepoXR.Player;
 using UnityEngine;
 
 using static HarmonyLib.AccessTools;
@@ -187,5 +188,31 @@ internal static class PhysGrabberPatches
         
         __instance.PhysGrabPointOrigin.SetParent(VRSession.Instance.Player.MainHand);
         __instance.PhysGrabPointOrigin.localPosition = Vector3.zero;
+    }
+
+    /// <summary>
+    /// Allow a custom override to disable object turning
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ObjectTurning))]
+    [HarmonyTranspiler]
+    [HarmonyDebug]
+    private static IEnumerable<CodeInstruction> DisableTurningPatch(IEnumerable<CodeInstruction> instructions)
+    {
+        var matcher = new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Call, Method(typeof(SemiFunc), nameof(SemiFunc.InputHold))))
+            .Advance(1);
+
+        var jmp = matcher.Instruction;
+
+        matcher.Advance(1).InsertAndAdvance(
+            new CodeInstruction(OpCodes.Call, PropertyGetter(typeof(VRSession), nameof(VRSession.Instance))),
+            new CodeInstruction(OpCodes.Callvirt, PropertyGetter(typeof(VRSession), nameof(VRSession.Player))),
+            new CodeInstruction(OpCodes.Ldfld, Field(typeof(VRPlayer), nameof(VRPlayer.disableRotateTimer))),
+            new CodeInstruction(OpCodes.Ldc_R4, 0f),
+            new CodeInstruction(OpCodes.Bge_Un_S, jmp.operand)
+        );
+
+        return matcher
+            .InstructionEnumeration();
     }
 }

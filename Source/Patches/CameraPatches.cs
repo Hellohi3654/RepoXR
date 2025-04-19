@@ -1,9 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Reflection.Emit;
-using HarmonyLib;
+﻿using HarmonyLib;
 using UnityEngine;
-
-using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches;
 
@@ -39,19 +35,59 @@ internal static class CameraPatches
     {
         __instance.enabled = false;
     }
+
+    /// <summary>
+    /// Disable the camera top fade, which is only used for the map tool
+    /// </summary>
+    [HarmonyPatch(typeof(CameraTopFade), nameof(CameraTopFade.Set))]
+    [HarmonyPrefix]
+    private static bool DisableCameraTopFade()
+    {
+        return false;
+    }
     
     /// <summary>
     /// Patch to see if something is visible in the VR camera space
     /// </summary>
+    // TODO: This patch is most likely insufficient
+    // [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.OnScreen))]
+    // [HarmonyTranspiler]
+    // private static IEnumerable<CodeInstruction> OnScreenVR(IEnumerable<CodeInstruction> instructions)
+    // {
+    //     return new CodeMatcher(instructions)
+    //         .MatchForward(false,
+    //             new CodeMatch(OpCodes.Callvirt,
+    //                 Method(typeof(Camera), nameof(Camera.WorldToScreenPoint), [typeof(Vector3)])))
+    //         .SetOperandAndAdvance(Method(typeof(Camera), nameof(Camera.WorldToViewportPoint), [typeof(Vector3)]))
+    //         .InstructionEnumeration();
+    // }
+
+    // TODO: Will likely have to change padding since they use pixels instead of viewport coordinates
     [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.OnScreen))]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> OnScreenVR(IEnumerable<CodeInstruction> instructions)
+    [HarmonyPrefix]
+    private static bool OnScreenVRPatch(Vector3 position, ref float paddWidth, ref float paddHeight, ref bool __result)
     {
-        return new CodeMatcher(instructions)
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt,
-                    Method(typeof(Camera), nameof(Camera.WorldToScreenPoint), [typeof(Vector3)])))
-            .SetOperandAndAdvance(Method(typeof(Camera), nameof(Camera.WorldToViewportPoint), [typeof(Vector3)]))
-            .InstructionEnumeration();
+        // Add some extra padding if it's too small since in VR the edges are almost never visible to the eye
+        if (paddWidth is < 0 and >= -0.2f)
+            paddWidth -= 0.2f;
+
+        if (paddHeight is < 0 and >= -0.2f)
+            paddHeight -= 0.1f;
+        
+        __result = OnScreenVR(position, paddWidth, paddHeight);
+
+        return false;
+    }
+
+    private static bool OnScreenVR(Vector3 position, float padWidth, float padHeight)
+    {
+        var cam = CameraUtils.Instance.MainCamera;
+        var screenPoint = cam.WorldToViewportPoint(position);
+
+        if (screenPoint.z < 0)
+            return false;
+
+        return screenPoint.x > -padWidth && screenPoint.x < 1 + padWidth && 
+               screenPoint.y > -padHeight && screenPoint.y < 1 + padHeight;
     }
 }

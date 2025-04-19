@@ -3,6 +3,7 @@ using System.Collections;
 using RepoXR.Assets;
 using RepoXR.Input;
 using RepoXR.Managers;
+using RepoXR.Player.Camera;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
@@ -16,22 +17,30 @@ public class VRPlayer : MonoBehaviour
     private VRCameraPosition cameraPosition;
     private VRCameraAim cameraAim;  
     
+    // Tracking stuff
     private Transform mainCamera;
     private Transform leftHand;
     private Transform rightHand;
 
+    // Reference stuff
     private PlayerController localController;
     private FirstPersonVRRig localRig;
     
+    // Public accessors
     public Transform MainHand => localRig.rightHandTip;
-
+    public Transform MapParent => localRig.map;
+    
+    // Public state
+    public float disableRotateTimer;
+    
+    // Private state
     private bool turnedLastInput;
     private Vector3 lastPosition;
     
     private void Awake()
     {
-        cameraPosition = VRCameraPosition.Instance;
-        cameraAim = VRCameraAim.Instance;
+        cameraPosition = VRCameraPosition.instance;
+        cameraAim = VRCameraAim.instance;
 
         mainCamera = VRSession.Instance.MainCamera.transform;
         
@@ -86,8 +95,16 @@ public class VRPlayer : MonoBehaviour
 
     private void Update()
     {
-        // HandleMovement();
         HandleTurning();
+        
+        // Timers
+        if (disableRotateTimer > 0)
+            disableRotateTimer -= Time.deltaTime;
+    }
+
+    public void DisableGrabRotate(float time)
+    {
+        disableRotateTimer = time;
     }
 
     public void SetRigVisible(bool visible)

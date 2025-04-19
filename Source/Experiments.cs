@@ -7,32 +7,37 @@ namespace RepoXR;
 [RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class Experiments
 {
-    [HarmonyPatch(typeof(ReloadScene), nameof(ReloadScene.Awake))]
+    [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.Awake))]
     [HarmonyPostfix]
-    private static void DisableReload(ReloadScene __instance)
+    private static void FuckLolEnemy(EnemyDirector __instance)
     {
-        // __instance.enabled = false;
+        // Only allow thin-man spawning
+        // var enemy = __instance.enemiesDifficulty1[1];
+
+        // Only allow eyeyeyeyeyeye spawning
+        var enemy = __instance.enemiesDifficulty1[0];
+        
+        __instance.enemiesDifficulty1.Clear();
+        __instance.enemiesDifficulty2.Clear();
+        __instance.enemiesDifficulty3.Clear();
+        
+        __instance.enemiesDifficulty1.Add(enemy);
+        __instance.enemiesDifficulty2.Add(enemy);
+        __instance.enemiesDifficulty3.Add(enemy);
     }
 
-    // [HarmonyPatch(typeof(NetworkConnect), nameof(NetworkConnect.Start))]
-    // [HarmonyPrefix]
-    // private static bool Shitf(NetworkConnect __instance)
-    // {
-    //     return false;
-    // }
+    [HarmonyPatch(typeof(PlayerController), nameof(PlayerController.FixedUpdate))]
+    [HarmonyPostfix]
+    private static void InfiniteSprintPatch(PlayerController __instance)
+    {
+        __instance.EnergyCurrent = __instance.EnergyStart;
+    }
 
-    [HarmonyPatch(typeof(LoadingUI), nameof(LoadingUI.Awake))]
+    [HarmonyPatch(typeof(EnemyCeilingEye), nameof(EnemyCeilingEye.StateTargetLost))]
     [HarmonyPrefix]
-    private static void LLLLLL(LoadingUI __instance)
+    private static bool NoStay()
     {
-        // __instance.enabled = false;
-    }
-
-    [HarmonyPatch(typeof(FadeOverlay), nameof(FadeOverlay.Awake))]
-    [HarmonyPostfix]
-    private static void Shit(FadeOverlay __instance)
-    {
-        __instance.enabled = true;
+        return false;
     }
 }
 #endif

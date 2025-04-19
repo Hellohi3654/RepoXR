@@ -1,4 +1,9 @@
-﻿using Unity.XR.CoreUtils;
+﻿using System;
+using System.Collections;
+using System.Linq;
+using RepoXR.Input;
+using RepoXR.Player.Camera;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 
 namespace RepoXR.Player;
@@ -20,10 +25,16 @@ public class FirstPersonVRRig : MonoBehaviour
     public Transform rightHandAnchor;
     public Transform leftHandTip;
     public Transform rightHandTip;
+    
+    public Transform inventory;
+    public Transform map;
+
+    public Collider leftHandCollider;
+    public Collider rightHandCollider;
+    public Collider mapPickupCollider;
 
     public Vector3 headOffset;
     
-    [SerializeField] protected LineRenderer leftHandLine;
     [SerializeField] protected LineRenderer rightHandLine;
     
     private Transform leftArmMesh;
@@ -33,21 +44,41 @@ public class FirstPersonVRRig : MonoBehaviour
     private PlayerAvatarVisuals playerAvatarVisuals;
     private PlayerAvatarRightArm playerAvatarRightArm;
     
+    // Map tool stuff
+
+    private MapToolController mapTool;
+    private bool mapHeldLeftHand;
+    private bool mapHeld;
+    
     private void Awake()
     {
         leftArmMesh = leftArm.GetComponentInChildren<MeshRenderer>().transform;
         rightArmMesh = rightArm.GetComponentInChildren<MeshRenderer>().transform;
     }
 
-    private void Start()
+    private IEnumerator Start()
     {
         playerAvatar = PlayerController.instance.playerAvatarScript;
         playerAvatarVisuals = playerAvatar.playerAvatarVisuals;
         playerAvatarRightArm = playerAvatarVisuals.GetComponentInChildren<PlayerAvatarRightArm>(true);
         
+        // Parent claw to right hand
         playerAvatarRightArm.grabberClawParent.SetParent(rightHandTip);
         playerAvatarRightArm.grabberClawParent.localPosition = Vector3.zero;
         playerAvatarRightArm.grabberClawParent.gameObject.SetLayerRecursively(6);
+
+        // Everything else is only available after the first frame
+        yield return null;
+        
+        // Parent flashlight to left hand
+        var flashlight = FlashlightController.Instance;
+        
+        flashlight.transform.parent = leftHandTip;
+        flashlight.transform.localPosition = Vector3.zero;
+        flashlight.transform.localRotation = Quaternion.identity;
+        
+        // Map tool
+        mapTool = FindObjectsOfType<MapToolController>().First(tool => tool.PlayerAvatar.isLocal);
     }
 
     private void LateUpdate()
@@ -61,6 +92,7 @@ public class FirstPersonVRRig : MonoBehaviour
         
         UpdateArms();
         UpdateClaw();
+        MapToolLogic();
     }
 
     private void UpdateArms()
@@ -98,7 +130,6 @@ public class FirstPersonVRRig : MonoBehaviour
         leftHandTip.rotation = leftArmTarget.rotation;
         rightHandTip.rotation = rightArmTarget.rotation;
         
-        leftHandLine.SetPositions([leftHandTip.position, leftHandTip.position + leftHandTip.forward * 5]);
         rightHandLine.SetPositions([rightHandTip.position, rightHandTip.position + rightHandTip.forward * 5]);
     }
 
@@ -108,13 +139,86 @@ public class FirstPersonVRRig : MonoBehaviour
         playerAvatarRightArm.GrabberLogic();
     }
 
+    private void MapToolLogic()
+    {
+        if (!mapTool)
+            return;
+
+        mapTool.transform.parent.localPosition =
+            Vector3.Lerp(mapTool.transform.parent.localPosition, Vector3.zero, 5 * Time.deltaTime);
+        mapTool.transform.parent.localRotation = Quaternion.Slerp(mapTool.transform.parent.localRotation,
+            Quaternion.identity, 5 * Time.deltaTime);
+
+        // If the map tool was disabled for any reason, reparent back to hotbar
+        if (!mapTool.Active && mapHeld)
+        {
+            mapHeld = false;
+            mapHeldLeftHand = false;
+            mapTool.transform.parent.parent = map;
+            playerAvatar.physGrabber.enabled = true;
+        }
+
+        mapHeld = mapTool.Active;
+
+        // Check for states that don't allow the map to be used
+        if (playerAvatar.isDisabled || playerAvatar.isTumbling || VRCameraAim.instance.IsActive || SemiFunc.MenuLevel())
+        {
+            mapTool.Active = false;
+            return;
+        }
+
+        // Right hand pickup logic
+        if (!mapTool.Active && Actions.Instance["MapGrabRight"].WasPressedThisFrame() &&
+            Utils.Collide(rightHandCollider, mapPickupCollider) && !PlayerController.instance.sprinting)
+            if (mapTool.HideLerp >= 1)
+            {
+                mapTool.transform.parent.parent = rightHandTip;
+                mapTool.Active = true;
+                
+                // Prevent picking up items while the map is opened
+                playerAvatar.physGrabber.ReleaseObject();
+                playerAvatar.physGrabber.enabled = false;
+            }
+
+        // Left hand touch logic (before picking up)
+        if (!mapTool.Active && Utils.Collide(leftHandCollider, mapPickupCollider) &&
+            !PlayerController.instance.sprinting)
+            FlashlightController.Instance.hideFlashlight = true;
+        else if (!mapTool.Active)
+            FlashlightController.Instance.hideFlashlight = false;
+
+        // Left hand pickup logic
+        if (!mapTool.Active && Actions.Instance["MapGrabLeft"].WasPressedThisFrame() &&
+            Utils.Collide(leftHandCollider, mapPickupCollider) && !PlayerController.instance.sprinting)
+            if (mapTool.HideLerp >= 1)
+            {
+                mapTool.transform.parent.parent = leftHandTip;
+                mapHeldLeftHand = true;
+                FlashlightController.Instance.hideFlashlight = true;
+                mapTool.Active = true;
+            }
+        
+        // Disable map when sprinting
+        if (PlayerController.instance.sprinting)
+            mapTool.Active = false;
+
+        // Right hand "let-go" logic
+        if (mapTool.Active && !Actions.Instance["MapGrabRight"].IsPressed() && !mapHeldLeftHand && mapTool.HideLerp <= 0)
+            mapTool.Active = false;
+
+        // Left hand "let-go" logic
+        if (mapTool.Active && !Actions.Instance["MapGrabLeft"].IsPressed() && mapHeldLeftHand && mapTool.HideLerp <= 0)
+            mapTool.Active = false;
+    }
+
     public void SetVisible(bool visible)
     {
         foreach (var mesh in meshes)
             mesh.enabled = visible;
 
-        leftHandLine.enabled = visible;
         rightHandLine.enabled = visible;
+        map.gameObject.SetActive(visible);
+        inventory.gameObject.SetActive(visible);
     }
     
     public void SetColor(Color color)

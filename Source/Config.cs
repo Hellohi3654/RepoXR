@@ -20,7 +20,7 @@ public class Config(string assemblyPath, ConfigFile file)
     
     // Input configuration
 
-    public ConfigEntry<TurnProviderOption> TurnProvider = file.Bind("Input", nameof(TurnProvider),
+    public ConfigEntry<TurnProviderOption> TurnProvider { get; } = file.Bind("Input", nameof(TurnProvider),
         TurnProviderOption.Smooth,
         new ConfigDescription("Specify which turning provider your player uses, if any.",
             new AcceptableValueEnum<TurnProviderOption>()));

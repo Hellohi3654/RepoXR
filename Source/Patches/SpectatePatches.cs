@@ -22,7 +22,7 @@ internal static class SpectatePatches
         if (_state == SpectateCamera.State.Death)
         {
             offsetTransform.localEulerAngles = Camera.main!.transform.localEulerAngles.y * Vector3.down;
-            offsetTransform.localPosition = Vector3.back * 50;
+            offsetTransform.localPosition = Vector3.back * 10;
         }
         else
         {
@@ -32,16 +32,13 @@ internal static class SpectatePatches
     }
 
     /// <summary>
-    /// Add an offset to the near clip plane to fix some visual issues with VR
+    /// Keep the original small near clip plane value since we can move our head around (which breaks the original logic)
     /// </summary>
     [HarmonyPatch(typeof(SpectateCamera), nameof(SpectateCamera.DeathNearClipLogic))]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> NearClipPatches(IEnumerable<CodeInstruction> instructions)
+    [HarmonyPostfix]
+    private static void NearClipPatches(SpectateCamera __instance)
     {
-        return new CodeMatcher(instructions)
-            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 0.5f))
-            .SetOperandAndAdvance(-20f)
-            .InstructionEnumeration();
+        __instance.MainCamera.nearClipPlane = 0.01f;
     }
 
     /// <summary>
