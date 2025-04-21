@@ -15,7 +15,7 @@ internal static class Experiments
         // var enemy = __instance.enemiesDifficulty1[1];
 
         // Only allow eyeyeyeyeyeye spawning
-        var enemy = __instance.enemiesDifficulty1[0];
+        var enemy = __instance.enemiesDifficulty1[1];
         
         __instance.enemiesDifficulty1.Clear();
         __instance.enemiesDifficulty2.Clear();

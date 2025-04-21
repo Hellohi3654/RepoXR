@@ -47,6 +47,9 @@ internal static class PhysGrabObjectPatches
             .InstructionEnumeration();
     }
 
+    /// <summary>
+    /// Apply cart steering rotation based on hand rotation instead of camera rotation
+    /// </summary>
     [HarmonyPatch(typeof(PhysGrabCart), nameof(PhysGrabCart.CartSteer))]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> HandRelativeCartPatch(IEnumerable<CodeInstruction> instructions)

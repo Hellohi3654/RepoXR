@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using RepoXR.Input;
 using RepoXR.Player.Camera;
@@ -33,9 +32,9 @@ public class FirstPersonVRRig : MonoBehaviour
     public Collider rightHandCollider;
     public Collider mapPickupCollider;
 
+    public VRInventory inventoryController;
+
     public Vector3 headOffset;
-    
-    [SerializeField] protected LineRenderer rightHandLine;
     
     private Transform leftArmMesh;
     private Transform rightArmMesh;
@@ -129,8 +128,6 @@ public class FirstPersonVRRig : MonoBehaviour
 
         leftHandTip.rotation = leftArmTarget.rotation;
         rightHandTip.rotation = rightArmTarget.rotation;
-        
-        rightHandLine.SetPositions([rightHandTip.position, rightHandTip.position + rightHandTip.forward * 5]);
     }
 
     private void UpdateClaw()
@@ -139,6 +136,8 @@ public class FirstPersonVRRig : MonoBehaviour
         playerAvatarRightArm.GrabberLogic();
     }
 
+    // TODO: Move to VRMapTool.cs
+    // TODO: Wait actually maybe not
     private void MapToolLogic()
     {
         if (!mapTool)
@@ -210,13 +209,12 @@ public class FirstPersonVRRig : MonoBehaviour
         if (mapTool.Active && !Actions.Instance["MapGrabLeft"].IsPressed() && mapHeldLeftHand && mapTool.HideLerp <= 0)
             mapTool.Active = false;
     }
-
+    
     public void SetVisible(bool visible)
     {
         foreach (var mesh in meshes)
             mesh.enabled = visible;
 
-        rightHandLine.enabled = visible;
         map.gameObject.SetActive(visible);
         inventory.gameObject.SetActive(visible);
     }

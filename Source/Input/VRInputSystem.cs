@@ -62,7 +62,7 @@ public class VRInputSystem : MonoBehaviour
             return value;
         
         // Check for default
-        foreach (var control in AssetCollection.RemappableControls.GetComponent<RemappableControls>().controls)
+        foreach (var control in AssetCollection.RemappableControls.controls)
             if (control.currentInput.action.name == action)
             {
                 inputToggle[action] = control.defaultToggle;

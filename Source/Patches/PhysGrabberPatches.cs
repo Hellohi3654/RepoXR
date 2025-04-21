@@ -56,6 +56,37 @@ internal static class PhysGrabberPatches
     }
 
     /// <summary>
+    /// Slow down the push/pull logic since it's way to fast in VR
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.Update))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> PushPullSlowdownPatch(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 0.2f))
+            .SetOperandAndAdvance(0.1f)
+            .Advance(1)
+            .Insert(
+                new CodeInstruction(OpCodes.Ldsfld, Field(typeof(InputManager), nameof(InputManager.instance))),
+                new CodeInstruction(OpCodes.Callvirt,
+                    Method(typeof(InputManager), nameof(InputManager.KeyPullAndPush))),
+                new CodeInstruction(OpCodes.Call,
+                    Method(typeof(Vector3), "op_Multiply", [typeof(Vector3), typeof(float)]))
+            )
+            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 0.2f))
+            .SetOperandAndAdvance(-0.1f)
+            .Advance(1)
+            .Insert(
+                new CodeInstruction(OpCodes.Ldsfld, Field(typeof(InputManager), nameof(InputManager.instance))),
+                new CodeInstruction(OpCodes.Callvirt,
+                    Method(typeof(InputManager), nameof(InputManager.KeyPullAndPush))),
+                new CodeInstruction(OpCodes.Call,
+                    Method(typeof(Vector3), "op_Multiply", [typeof(Vector3), typeof(float)]))
+            )
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
     /// Make sure the <see cref="PhysGrabber.physGrabPointPlane"/> and <see cref="PhysGrabber.physGrabPointPuller"/> are
     /// manually updated if we are holding something.
     ///
@@ -195,7 +226,6 @@ internal static class PhysGrabberPatches
     /// </summary>
     [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ObjectTurning))]
     [HarmonyTranspiler]
-    [HarmonyDebug]
     private static IEnumerable<CodeInstruction> DisableTurningPatch(IEnumerable<CodeInstruction> instructions)
     {
         var matcher = new CodeMatcher(instructions)
@@ -209,10 +239,62 @@ internal static class PhysGrabberPatches
             new CodeInstruction(OpCodes.Callvirt, PropertyGetter(typeof(VRSession), nameof(VRSession.Player))),
             new CodeInstruction(OpCodes.Ldfld, Field(typeof(VRPlayer), nameof(VRPlayer.disableRotateTimer))),
             new CodeInstruction(OpCodes.Ldc_R4, 0f),
-            new CodeInstruction(OpCodes.Bge_Un_S, jmp.operand)
+            new CodeInstruction(OpCodes.Bgt_Un_S, jmp.operand)
         );
 
         return matcher
             .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Detect item release and try to equip item if possible
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ReleaseObject))]
+    [HarmonyPrefix]
+    private static void OnReleaseObject(PhysGrabber __instance)
+    {
+        if (!__instance.grabbed || !__instance.isLocal || !__instance.grabbedObject ||
+            !__instance.grabbedObject.TryGetComponent<ItemEquippable>(out var item))
+            return;
+
+        if (VRSession.Instance is not { } session)
+            return;
+
+        session.Player.Rig.inventoryController.TryEquipItem(item);
+    }
+
+    private static float forceGrabTimer;
+
+    /// <summary>
+    /// Every time a grab override is triggered, reset the timer
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.OverrideGrab))]
+    [HarmonyPostfix]
+    private static void OnOverrideGrab(PhysGrabber __instance)
+    {
+        forceGrabTimer = 0.1f;
+    }
+
+    /// <summary>
+    /// If the <see cref="forceGrabTimer"/> is above zero, do not allow the grabber to let go
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.Update))]
+    [HarmonyTranspiler]
+    [HarmonyDebug]
+    private static IEnumerable<CodeInstruction> ForceOverrideGrabPatch(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Stfld, Field(typeof(PhysGrabber), nameof(PhysGrabber.overrideGrabTarget))))
+            .Advance(-13)
+            .SetInstruction(new CodeInstruction(OpCodes.Call, ((Func<PhysGrabber, bool>)CheckAndUpdate).Method))
+            .InstructionEnumeration();
+
+        static bool CheckAndUpdate(PhysGrabber grabber)
+        {
+            forceGrabTimer -= Time.deltaTime;
+
+            return grabber.overrideGrab && forceGrabTimer <= 0;
+        }
     }
 }

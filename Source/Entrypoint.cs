@@ -15,21 +15,9 @@ namespace RepoXR;
 [RepoXRPatch]
 internal static class Entrypoint
 {
-    public static void OnSceneLoad(string sceneName)
+    public static void OnSceneLoad(string _)
     {
-        Logger.LogDebug($"Scene name: {sceneName}");
-        
         SetupDefaultSceneVR();
-
-        switch (sceneName)
-        {
-            case "Main":
-                break;
-            
-            case "Reload":
-                // new GameObject("Reload Scene VR").AddComponent<ReloadMenu>();
-                break;
-        }
     }
 
     /// <summary>
@@ -121,17 +109,6 @@ internal static class Entrypoint
             OnStartupMainMenu();
         else
             OnStartupInGame();
-    }
-
-    /// <summary>
-    /// The reload scene is a scene used for a short amount of time while waiting for players to load
-    /// </summary>
-    [HarmonyPatch(typeof(ReloadScene), nameof(ReloadScene.Awake))]
-    [HarmonyPostfix]
-    private static void OnReloadScene()
-    {
-        // Do this in a new game object, as this fixes some timing issues
-        // new GameObject("VR Reload Scene Menu").AddComponent<ReloadMenu>();
     }
 
     private static void OnStartupMainMenu()

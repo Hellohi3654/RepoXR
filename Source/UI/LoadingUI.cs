@@ -17,8 +17,6 @@ public class LoadingUI : MonoBehaviour
     {
         camera = Camera.main!.transform;
 
-        Logger.LogDebug($"Frame: {Time.frameCount}, Pos: {Camera.main!.transform.localPosition}");
-
         RestorePosition();
     }
 
@@ -58,16 +56,13 @@ public class LoadingUI : MonoBehaviour
     }
 }
 
-// TODO: Idk something I guess
 [RepoXRPatch]
 internal static class LoadingUIPatches
 {
     [HarmonyPatch(typeof(global::LoadingUI), nameof(global::LoadingUI.StartLoading))]
     [HarmonyPostfix]
-    private static void idkasndasjkdas()
+    private static void OnStartLoading()
     {
-        Logger.LogDebug("StartLoading");
-        
         Object.FindObjectOfType<LoadingUI>().ResetPosition();
     }
 }

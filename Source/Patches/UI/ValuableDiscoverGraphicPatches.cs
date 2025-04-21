@@ -2,7 +2,7 @@
 using RepoXR.Managers;
 using UnityEngine;
 
-namespace RepoXR.Patches;
+namespace RepoXR.Patches.UI;
 
 [RepoXRPatch]
 internal static class ValuableDiscoverGraphicPatches

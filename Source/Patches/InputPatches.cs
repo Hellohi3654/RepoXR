@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using HarmonyLib;
+using RepoXR.Assets;
 using RepoXR.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -18,6 +19,18 @@ internal static class InputPatches
     {
         value = InputSettings.BackgroundBehavior.IgnoreFocus;
     }
+
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.Start))]
+    [HarmonyPostfix]
+    private static void OnInputManagerStart(InputManager __instance)
+    {
+        for (var i = 0; i < AssetCollection.RemappableControls.additionalBindings.Length; i++)
+        {
+            var binding = AssetCollection.RemappableControls.additionalBindings[i];
+            
+            __instance.tagDictionary.Add($"[{binding.action.name}]", (InputKey)(i + 32));
+        }
+    }
     
     /// <summary>
     /// Create a custom <see cref="VRInputSystem"/> component on the <see cref="InputManager"/>, allowing the use of <see cref="InputActionAsset"/>s
@@ -35,8 +48,10 @@ internal static class InputPatches
     [HarmonyPrefix]
     private static bool GetAction(ref InputKey key, ref InputAction __result)
     {
-        __result = Actions.Instance[key.ToString()];
-        
+        __result = (int)key >= 32
+            ? AssetCollection.RemappableControls.additionalBindings[(int)key - 32]
+            : Actions.Instance[key.ToString()];
+
         return false;
     }
 
@@ -102,7 +117,7 @@ internal static class InputPatches
                 or InputKey.Inventory3 or InputKey.Interact && __instance.disableMovementTimer > 0)
             return true;
 
-        __result = Actions.Instance[key.ToString()].WasPressedThisFrame();
+        __result = __instance.GetAction(key).WasPressedThisFrame();
 
         return false;
     }
@@ -116,8 +131,8 @@ internal static class InputPatches
 
         if (key is InputKey.Push or InputKey.Pull)
             return true;
-        
-        __result = Actions.Instance[key.ToString()].WasReleasedThisFrame();
+
+        __result = __instance.GetAction(key).WasReleasedThisFrame();
         
         return false;
     }
@@ -129,7 +144,7 @@ internal static class InputPatches
         if (key is InputKey.Jump or InputKey.Crouch or InputKey.Tumble && __instance.disableMovementTimer > 0)
             return true;
 
-        __result = Actions.Instance[key.ToString()].IsPressed();
+        __result = __instance.GetAction(key).IsPressed();
 
         return false;
     }

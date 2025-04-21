@@ -1,0 +1,123 @@
+﻿using HarmonyLib;
+using RepoXR.Input;
+using Unity.XR.CoreUtils;
+using UnityEngine;
+
+namespace RepoXR.Player;
+
+public class VRInventory : MonoBehaviour
+{
+    [SerializeField] private Transform visualsTransform;
+    
+    [SerializeField] private VRInventorySlot[] slots;
+    
+    [SerializeField] private Color holdColor;
+    [SerializeField] private Color hoverColor;
+
+    public FirstPersonVRRig rig;
+
+    private bool holdingItem;
+    private int hoveredSlot = -1;
+    
+    private void Update()
+    {
+        holdingItem = IsHoldingItem();
+     
+        HandleHoldItem();
+        HandleSlotHover();
+        HandleSlotInteract();
+    }
+
+    private void HandleHoldItem()
+    {
+        visualsTransform.localScale = Vector3.Lerp(visualsTransform.localScale, Vector3.one * (holdingItem ? 3 : 1),
+            8 * Time.deltaTime);
+        visualsTransform.localPosition = Vector3.Lerp(visualsTransform.localPosition,
+            holdingItem ? new Vector3(0, -0.5f, 1.2f) : Vector3.zero, 8 * Time.deltaTime);
+        slots.Do(slot => slot.collider.transform.localScale = Vector3.Lerp(slot.collider.transform.localScale,
+            Vector3.one * (holdingItem ? 2 : 1),
+            8 * Time.deltaTime));
+
+        hoveredSlot = -1;
+
+        if (!holdingItem || !Physics.Raycast(new Ray(rig.rightHandTip.position, rig.rightHandTip.forward), out var hit,
+                3, 1 << 27))
+            return;
+
+        for (var i = 0; i < slots.Length; i++)
+            if (hit.collider == slots[i].collider)
+                hoveredSlot = i;
+    }
+
+    private void HandleSlotHover()
+    {
+        slots.Do(slot =>
+        {
+            slot.isHovered = slot.slotIndex == hoveredSlot;
+            slot.targetColor = slot.slotIndex == hoveredSlot ? hoverColor : holdingItem ? holdColor : Color.clear;
+        });
+    }
+
+    private void HandleSlotInteract()
+    {
+        if (SemiFunc.RunIsArena() || PlayerController.instance.InputDisableTimer > 0)
+            return;
+        
+        slots.Do(slot =>
+        {
+            slot.isCollided = false;
+            
+            if (!slot.heldItem)
+                return;
+
+            slot.isCollided = Utils.Collide(slot.collider, rig.rightHandCollider);
+            
+            if (Actions.Instance["Grab"].WasPressedThisFrame() && slot.isCollided)
+                slot.spot.HandleInput();
+        });
+    }
+    
+    public void TryEquipItem(ItemEquippable item)
+    {
+        if (!holdingItem || hoveredSlot == -1)
+            return;
+        
+        slots[hoveredSlot].spot.HandleInput();
+    }
+
+    public void EquipItem(ItemEquippable item)
+    {
+        var slot = slots[item.equippedSpot.inventorySpotIndex];
+
+        slot.heldItem = item;
+        item.transform.parent = slot.transform;
+        item.rb.interpolation = RigidbodyInterpolation.None;
+        item.gameObject.SetLayerRecursively(6);
+
+        // Prevent getting hurt by item in inventory
+        if (item.TryGetComponent<ItemMelee>(out var melee))
+            melee.hurtCollider.gameObject.SetActive(false);
+    }
+
+    public void UnequipItem(ItemEquippable item)
+    {
+        var slot = slots[item.equippedSpot.inventorySpotIndex];
+
+        slot.heldItem = null;
+        item.transform.parent = GameObject.Find("Level Generator/Items")?.transform;
+        item.rb.interpolation = RigidbodyInterpolation.Interpolate;
+        item.gameObject.SetLayerRecursively(16);
+        item.enabled = true;
+    }
+
+    private static bool IsHoldingItem()
+    {
+        if (SemiFunc.RunIsArena() || PlayerController.instance.InputDisableTimer > 0)
+            return false;
+
+        if (!PhysGrabber.instance.grabbed || PhysGrabber.instance.grabbedPhysGrabObject is not { } heldObject)
+            return false;
+
+        return heldObject.GetComponent<ItemEquippable>();
+    }
+}

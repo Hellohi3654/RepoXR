@@ -29,6 +29,7 @@ public class VRPlayer : MonoBehaviour
     // Public accessors
     public Transform MainHand => localRig.rightHandTip;
     public Transform MapParent => localRig.map;
+    public FirstPersonVRRig Rig => localRig;
     
     // Public state
     public float disableRotateTimer;

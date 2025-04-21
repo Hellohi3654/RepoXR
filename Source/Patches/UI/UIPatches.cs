@@ -6,7 +6,7 @@ using RepoXR.UI;
 using UnityEngine;
 using static HarmonyLib.AccessTools;
 
-namespace RepoXR.Patches;
+namespace RepoXR.Patches.UI;
 
 [RepoXRPatch]
 internal static class UIPatches

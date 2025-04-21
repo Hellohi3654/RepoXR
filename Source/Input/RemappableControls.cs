@@ -7,6 +7,7 @@ namespace RepoXR.Input;
 public class RemappableControls : MonoBehaviour
 {
     public RemappableControl[] controls;
+    public InputActionReference[] additionalBindings;
 }
 
 [Serializable]

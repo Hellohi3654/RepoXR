@@ -4,7 +4,7 @@ using HarmonyLib;
 using UnityEngine;
 using static HarmonyLib.AccessTools;
 
-namespace RepoXR.Patches;
+namespace RepoXR.Patches.Player;
 
 [RepoXRPatch]
 internal static class PlayerControllerPatches

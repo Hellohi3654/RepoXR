@@ -95,10 +95,9 @@ public class RebindManager : MonoBehaviour
     private void CreateUI()
     {        
         var container = transform.Find("Scroll Box/Mask/Scroller");
-        var controls = AssetCollection.RemappableControls.GetComponent<RemappableControls>();
         var yPos = -40;
         
-        foreach (var control in controls.controls)
+        foreach (var control in AssetCollection.RemappableControls.controls)
         {
             if (!string.IsNullOrEmpty(control.headerName))
             {

@@ -1,0 +1,147 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection.Emit;
+using HarmonyLib;
+using RepoXR.Managers;
+using UnityEngine;
+using static HarmonyLib.AccessTools;
+
+namespace RepoXR.Patches.Player;
+
+[RepoXRPatch]
+internal static class InventoryPatches
+{
+    private static bool ItemIsMine(ItemEquippable item)
+    {
+        return !SemiFunc.IsMultiplayer() || item.ownerPlayerId == PlayerAvatar.instance.photonView.ViewID;
+    }
+    
+    /// <summary>
+    /// Do not allow the item to shrink below 50% if we are the ones holding it
+    /// </summary>
+    [HarmonyPatch(typeof(ItemEquippable), nameof(ItemEquippable.AnimateEquip), MethodType.Enumerator)]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> MinimumScaleEquip(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 0.01f))
+            .SetInstructionAndAdvance(new CodeInstruction(OpCodes.Ldarg_0))
+            .Insert(new CodeInstruction(OpCodes.Call, ((Func<ItemEquippable, float>)MinimumScale).Method))
+            .InstructionEnumeration();
+
+        static float MinimumScale(ItemEquippable item)
+        {
+            return ItemIsMine(item) ? 0.5f : 0.01f;
+        }
+    }
+
+    /// <summary>
+    /// Immediately force grab item when unequipping
+    /// </summary>
+    [HarmonyPatch(typeof(ItemEquippable), nameof(ItemEquippable.AnimateUnequip), MethodType.Enumerator)]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> UnequipGrabImmediately(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Callvirt, PropertySetter(typeof(Transform), nameof(Transform.localScale))))
+            .Advance(1)
+            .Insert(
+                new CodeInstruction(OpCodes.Ldloc_1), // `this` is `ldloc.1` because we're in an enumerator, I don't make the rules
+                new CodeInstruction(OpCodes.Callvirt, Method(typeof(ItemEquippable), nameof(ItemEquippable.ForceGrab)))
+            )
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Fix item magnitude if the scale is much larger than normal
+    /// </summary>
+    [HarmonyPatch(typeof(ItemEquippable), nameof(ItemEquippable.StateEquipped))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> StateEquippedPatch(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 0.1f))
+            .SetInstructionAndAdvance(new CodeInstruction(OpCodes.Ldarg_0))
+            .Insert(new CodeInstruction(OpCodes.Call, ((Func<ItemEquippable, float>)MinimumMagnitude).Method))
+            .InstructionEnumeration();
+
+        static float MinimumMagnitude(ItemEquippable item)
+        {
+            return ItemIsMine(item) ? 0.9f : 0.1f;
+        }
+    }
+
+    /// <summary>
+    /// When unequipping an item, disable teleportation since we grab items straight from out inventory
+    /// </summary>
+    [HarmonyPatch(typeof(ItemEquippable), nameof(ItemEquippable.RayHitTestNew))]
+    [HarmonyPrefix]
+    private static bool ItemUnequipNoTeleport(ItemEquippable __instance)
+    {
+        __instance.teleportPosition = __instance.transform.position;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Prevent melee weapons from hurting the player when in their inventory
+    /// </summary>
+    [HarmonyPatch(typeof(ItemMelee), nameof(ItemMelee.FixedUpdate))]
+    [HarmonyPrefix]
+    private static bool DontMeleeWhenEquipped(ItemMelee __instance)
+    {
+        return __instance.itemEquippable.currentState != ItemEquippable.ItemState.Equipped;
+    }
+    
+    /// <summary>
+    /// Prevent items from being "hidden" when equipped in an inventory
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabObject), nameof(PhysGrabObject.OverrideTimersTick))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> DisableItemHiding(IEnumerable<CodeInstruction> instructions)
+    {
+        var matcher = new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 3000f))
+            .Advance(-4);
+
+        var jmp = matcher.Instruction;
+
+        matcher.Advance(1).Insert(
+            new CodeInstruction(OpCodes.Ldarg_0),
+            new CodeInstruction(OpCodes.Call, ((Func<PhysGrabObject, bool>)ShouldTeleport).Method),
+            jmp
+        );
+
+        return matcher.InstructionEnumeration();
+
+        // TODO: Test if work in multiplayer
+        static bool ShouldTeleport(PhysGrabObject @object)
+        {
+            if (!@object.TryGetComponent<ItemEquippable>(out var item))
+                return true;
+
+            return !ItemIsMine(item);
+        }
+    }
+
+    [HarmonyPatch(typeof(InventorySpot), nameof(InventorySpot.EquipItem))]
+    [HarmonyPrefix]
+    private static void OnItemEquip(InventorySpot __instance, ItemEquippable item)
+    {
+        if (__instance.currentState != InventorySpot.SpotState.Empty)
+            return;
+    
+        VRSession.Instance.Player.Rig.inventoryController.EquipItem(item);
+    }
+
+    [HarmonyPatch(typeof(InventorySpot), nameof(InventorySpot.UnequipItem))]
+    [HarmonyPrefix]
+    private static void OnItemUnequip(InventorySpot __instance)
+    {
+        if (__instance.currentState != InventorySpot.SpotState.Occupied)
+            return;
+    
+        VRSession.Instance.Player.Rig.inventoryController.UnequipItem(__instance.CurrentItem);
+    }
+}

@@ -21,6 +21,7 @@ public class VRCameraAim : MonoBehaviour
     private float aimTargetTimer;
     private float aimTargetSpeed;
     private int aimTargetPriority = 999;
+    private bool aimTargetLowImpact;
 
     private float aimTargetLerp;
     
@@ -77,8 +78,13 @@ public class VRCameraAim : MonoBehaviour
             aimTargetPriority = 999;
             aimTargetActive = false;
         }
+
+        var targetRotation = GetLookRotation(aimTargetPosition);
+
+        if (aimTargetLowImpact)
+            targetRotation = Quaternion.Euler(0, targetRotation.eulerAngles.y, 0);
         
-        rotation = Quaternion.LerpUnclamped(rotation, GetLookRotation(aimTargetPosition), cameraAim.AimTargetCurve.Evaluate(aimTargetLerp));
+        rotation = Quaternion.LerpUnclamped(rotation, targetRotation, cameraAim.AimTargetCurve.Evaluate(aimTargetLerp));
         
         if (aimTargetSoftTimer > 0 && aimTargetTimer <= 0)
         {
@@ -158,7 +164,7 @@ public class VRCameraAim : MonoBehaviour
         ForceSetRotation(angle);
     }
 
-    public void SetAimTarget(Vector3 position, float time, float speed, GameObject obj, int priority)
+    public void SetAimTarget(Vector3 position, float time, float speed, GameObject obj, int priority, bool lowImpact = false)
     {
         if (priority > aimTargetPriority)
             return;
@@ -172,6 +178,7 @@ public class VRCameraAim : MonoBehaviour
         aimTargetTimer = time;
         aimTargetSpeed = speed;
         aimTargetPriority = priority;
+        aimTargetLowImpact = lowImpact;
     }
 
     public void SetAimTargetSoft(Vector3 position, float time, float strength, float strengthNoAim, GameObject obj,

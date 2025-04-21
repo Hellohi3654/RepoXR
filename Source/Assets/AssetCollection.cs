@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using RepoXR.Input;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,7 +10,8 @@ internal static class AssetCollection
 {
     private static AssetBundle assetBundle;
 
-    public static GameObject RemappableControls;
+    public static RemappableControls RemappableControls;
+    
     public static GameObject RebindHeader;
     public static GameObject RebindButton;
     public static GameObject RebindButtonToggle;
@@ -36,7 +38,8 @@ internal static class AssetCollection
             return false;
         }
 
-        RemappableControls = assetBundle.LoadAsset<GameObject>("RemappableControls");
+        RemappableControls = assetBundle.LoadAsset<GameObject>("RemappableControls").GetComponent<RemappableControls>();
+        
         RebindHeader = assetBundle.LoadAsset<GameObject>("Rebind Header");
         RebindButton = assetBundle.LoadAsset<GameObject>("Rebind Button");
         RebindButtonToggle = assetBundle.LoadAsset<GameObject>("Rebind Button Toggle");

@@ -2,7 +2,7 @@
 using RepoXR.Managers;
 using UnityEngine;
 
-namespace RepoXR.Patches;
+namespace RepoXR.Patches.Player;
 
 [RepoXRPatch]
 internal static class PlayerAvatarVisualsPatches
