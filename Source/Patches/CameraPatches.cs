@@ -54,10 +54,10 @@ internal static class CameraPatches
     private static bool OnScreenVRPatch(Vector3 position, ref float paddWidth, ref float paddHeight, ref bool __result)
     {
         // Add some extra padding if it's too small since in VR the edges are almost never visible to the eye
-        if (paddWidth is < 0 and >= -0.2f)
+        if (paddWidth is < 0 and >= -0.1f)
             paddWidth -= 0.1f;
 
-        if (paddHeight is < 0 and >= -0.2f)
+        if (paddHeight is < 0 and >= -0.1f)
             paddHeight -= 0.05f;
         
         __result = OnScreenVR(position, paddWidth, paddHeight);
