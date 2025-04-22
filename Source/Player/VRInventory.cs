@@ -53,6 +53,14 @@ public class VRInventory : MonoBehaviour
     {
         slots.Do(slot =>
         {
+            if (!slot.spot.isActiveAndEnabled)
+            {
+                slot.isHovered = false;
+                slot.targetColor = Color.clear;
+                
+                return;
+            }
+            
             slot.isHovered = slot.slotIndex == hoveredSlot;
             slot.targetColor = slot.slotIndex == hoveredSlot ? hoverColor : holdingItem ? holdColor : Color.clear;
         });
@@ -67,7 +75,7 @@ public class VRInventory : MonoBehaviour
         {
             slot.isCollided = false;
             
-            if (!slot.heldItem)
+            if (!slot.heldItem || !slot.spot.isActiveAndEnabled)
                 return;
 
             slot.isCollided = Utils.Collide(slot.collider, rig.rightHandCollider);
