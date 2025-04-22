@@ -49,30 +49,16 @@ internal static class CameraPatches
     /// <summary>
     /// Patch to see if something is visible in the VR camera space
     /// </summary>
-    // TODO: This patch is most likely insufficient
-    // [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.OnScreen))]
-    // [HarmonyTranspiler]
-    // private static IEnumerable<CodeInstruction> OnScreenVR(IEnumerable<CodeInstruction> instructions)
-    // {
-    //     return new CodeMatcher(instructions)
-    //         .MatchForward(false,
-    //             new CodeMatch(OpCodes.Callvirt,
-    //                 Method(typeof(Camera), nameof(Camera.WorldToScreenPoint), [typeof(Vector3)])))
-    //         .SetOperandAndAdvance(Method(typeof(Camera), nameof(Camera.WorldToViewportPoint), [typeof(Vector3)]))
-    //         .InstructionEnumeration();
-    // }
-
-    // TODO: Will likely have to change padding since they use pixels instead of viewport coordinates
     [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.OnScreen))]
     [HarmonyPrefix]
     private static bool OnScreenVRPatch(Vector3 position, ref float paddWidth, ref float paddHeight, ref bool __result)
     {
         // Add some extra padding if it's too small since in VR the edges are almost never visible to the eye
         if (paddWidth is < 0 and >= -0.2f)
-            paddWidth -= 0.2f;
+            paddWidth -= 0.1f;
 
         if (paddHeight is < 0 and >= -0.2f)
-            paddHeight -= 0.1f;
+            paddHeight -= 0.05f;
         
         __result = OnScreenVR(position, paddWidth, paddHeight);
 
