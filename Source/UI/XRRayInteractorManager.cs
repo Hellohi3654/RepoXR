@@ -31,10 +31,18 @@ public class XRRayInteractorManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        Instance = null;
+        
         leftController.GetComponent<ActionBasedController>().uiPressAction.action.performed -= LeftControllerPressed;
         rightController.GetComponent<ActionBasedController>().uiPressAction.action.performed -= RightControllerPressed;
     }
 
+    public void SetVisible(bool visible)
+    {
+        leftController.GetComponent<XRInteractorLineVisual>().enabled = visible;
+        rightController.GetComponent<XRInteractorLineVisual>().enabled = visible;
+    }
+    
     private void LeftControllerPressed(InputAction.CallbackContext obj)
     {
         UpdateActiveController(ActiveController.Left);
@@ -48,10 +56,10 @@ public class XRRayInteractorManager : MonoBehaviour
     public Vector2 GetUIHitPosition(RectTransform rect)
     {
         var canvas = rect.GetComponentInParent<Canvas>().transform;
-
+        
         if (!GetActiveInteractor().TryGetCurrentUIRaycastResult(out var result))
             return Vector2.zero;
-
+        
         var local = canvas.InverseTransformPoint(result.worldPosition);
         return new Vector2(local.x, local.y);
     }
@@ -179,6 +187,7 @@ public class XRRayInteractorManager : MonoBehaviour
         };
         visual.enabled = true;
         visual.lineLength = 20;
+        renderer.sortingOrder = 4;
 
         renderer.material = AssetCollection.DefaultLine;
         

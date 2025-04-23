@@ -39,6 +39,8 @@ internal static class EnemyCeilingEyePatches
             .Advance(-10)
             .SetOperandAndAdvance(Field(typeof(VRCameraAim), nameof(VRCameraAim.instance)))
             .Advance(9)
+            // TODO: Make configurable I guess
+            .InsertAndAdvance(new CodeInstruction(OpCodes.Ldc_I4_0))
             .SetOperandAndAdvance(Method(typeof(VRCameraAim), nameof(VRCameraAim.SetAimTarget)))
             .InstructionEnumeration();
     }

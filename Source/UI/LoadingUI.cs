@@ -8,6 +8,8 @@ namespace RepoXR.UI;
 
 public class LoadingUI : MonoBehaviour
 {
+    public static LoadingUI instance;
+    
     private static Vector3 lastLocalPosition;
     private static float lastLocalRotation;
     
@@ -15,9 +17,15 @@ public class LoadingUI : MonoBehaviour
 
     private void Awake()
     {
+        instance = this;
         camera = Camera.main!.transform;
 
         RestorePosition();
+    }
+
+    private void OnDestroy()
+    {
+        instance = null!;
     }
 
     private IEnumerator Start()

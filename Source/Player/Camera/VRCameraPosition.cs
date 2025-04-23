@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace RepoXR.Player.Camera;
 
-// TODO: This will also implement the VR-equivalent of CameraZoom
-// Or, at least the game object this is attached to will be used as a transform (and we can use the additionalOffset tbh)
-
 public class VRCameraPosition : MonoBehaviour
 {
     public static VRCameraPosition instance;

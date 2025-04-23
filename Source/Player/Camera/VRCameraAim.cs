@@ -15,7 +15,7 @@ public class VRCameraAim : MonoBehaviour
     private Quaternion rotation;
     
     // Aim fields
-    private bool aimTargetActive; // TODO: Patch Map tool to read this one instead of the original CameraAim one
+    private bool aimTargetActive;
     private GameObject? aimTargetObject;
     private Vector3 aimTargetPosition;
     private float aimTargetTimer;

@@ -15,6 +15,7 @@ internal static class FlashlightPatches
         if (!__instance.PlayerAvatar.isLocal)
             return;
 
+        __instance.toolBackAway.enabled = false;
         __instance.GetComponentInChildren<FlashlightBob>().enabled = false;
         __instance.GetComponentInChildren<FlashlightSprint>().enabled = false;
         __instance.GetComponentInChildren<FlashlightTilt>().enabled = false;
