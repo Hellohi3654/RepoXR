@@ -33,7 +33,7 @@ public class Crosshair : MonoBehaviour
             return;
         }
 
-        var upness = Mathf.Abs(Vector3.Dot(hit.normal, Vector3.up) - 0.5f) / 0.5f;
+        var upness = Mathf.Abs(Mathf.Max(0, Vector3.Dot(hit.normal, Vector3.up) - 0.5f)) / 0.5f;
         var toCamera = camera.position - hit.point;
         var projectedToCamera = Vector3.ProjectOnPlane(toCamera, hit.normal).normalized;
         var forward = Quaternion.AngleAxis(90, hit.normal) * projectedToCamera;

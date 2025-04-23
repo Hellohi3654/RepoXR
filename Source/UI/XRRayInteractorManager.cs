@@ -13,6 +13,8 @@ public class XRRayInteractorManager : MonoBehaviour
 
     private XRRayInteractor leftController;
     private XRRayInteractor rightController;
+    private LineRenderer leftRenderer;
+    private LineRenderer rightRenderer;
 
     private ActiveController activeController;
     
@@ -22,6 +24,9 @@ public class XRRayInteractorManager : MonoBehaviour
         
         leftController = CreateInteractorController("Left");
         rightController = CreateInteractorController("Right");
+        
+        leftRenderer = leftController.GetComponent<LineRenderer>();
+        rightRenderer = rightController.GetComponent<LineRenderer>();
         
         leftController.GetComponent<ActionBasedController>().uiPressAction.action.performed += LeftControllerPressed;
         rightController.GetComponent<ActionBasedController>().uiPressAction.action.performed += RightControllerPressed;
@@ -41,6 +46,12 @@ public class XRRayInteractorManager : MonoBehaviour
     {
         leftController.GetComponent<XRInteractorLineVisual>().enabled = visible;
         rightController.GetComponent<XRInteractorLineVisual>().enabled = visible;
+    }
+
+    public void SetLineSortingOrder(int sortingOrder)
+    {
+        leftRenderer.sortingOrder = sortingOrder;
+        rightRenderer.sortingOrder = sortingOrder;
     }
     
     private void LeftControllerPressed(InputAction.CallbackContext obj)

@@ -13,6 +13,7 @@ public class VRInventory : MonoBehaviour
     
     [SerializeField] protected Color holdColor;
     [SerializeField] protected Color hoverColor;
+    [SerializeField] protected Color equippedColor;
 
     public FirstPersonVRRig rig;
 
@@ -60,9 +61,18 @@ public class VRInventory : MonoBehaviour
                 
                 return;
             }
-            
+
+            slot.isHolding = holdingItem;
             slot.isHovered = slot.slotIndex == hoveredSlot;
-            slot.targetColor = slot.slotIndex == hoveredSlot ? hoverColor : holdingItem ? holdColor : Color.clear;
+            
+            if (slot.slotIndex == hoveredSlot)
+                slot.targetColor = hoverColor;
+            else if (holdingItem)
+                slot.targetColor = holdColor;
+            else if (slot.heldItem != null)
+                slot.targetColor = equippedColor;
+            else
+                slot.targetColor = Color.clear;
         });
     }
 
@@ -98,6 +108,9 @@ public class VRInventory : MonoBehaviour
     public void EquipItem(ItemEquippable item)
     {
         var slot = slots[item.equippedSpot.inventorySpotIndex];
+
+        if (GameDirector.instance.currentState != GameDirector.gameState.Main)
+            item.transform.localScale = Vector3.one * 0.1667f * 2;
 
         slot.heldItem = item;
         item.transform.parent = slot.transform;

@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using RepoXR.Managers;
-using RepoXR.UI;
 
 namespace RepoXR.Patches.UI;
 
@@ -33,6 +32,19 @@ internal static class PauseMenuPatches
         if (!__instance.currentMenuPage || __instance.currentMenuPage.menuPageIndex != MenuPageIndex.Escape)
             return;
 
+        if (VRSession.Instance is not { } session)
+            return;
+        
+        session.HUD.ResumeGame();
+    }
+
+    /// <summary>
+    /// Detect if the pause menu is closed
+    /// </summary>
+    [HarmonyPatch(typeof(MenuPageEsc), nameof(MenuPageEsc.ButtonEventContinue))]
+    [HarmonyPrefix]
+    private static void OnEscapeMenuClose()
+    {
         if (VRSession.Instance is not { } session)
             return;
         

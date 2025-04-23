@@ -280,7 +280,6 @@ internal static class PhysGrabberPatches
     /// </summary>
     [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.Update))]
     [HarmonyTranspiler]
-    [HarmonyDebug]
     private static IEnumerable<CodeInstruction> ForceOverrideGrabPatch(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)

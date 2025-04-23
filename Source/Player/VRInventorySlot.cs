@@ -13,6 +13,7 @@ public class VRInventorySlot : MonoBehaviour
     public Collider collider;
     public InventorySpot spot;
 
+    public bool isHolding;
     public bool isHovered;
     public bool isCollided;
     
@@ -34,15 +35,10 @@ public class VRInventorySlot : MonoBehaviour
         currentColor = Color.Lerp(currentColor, targetColor, 5 * Time.deltaTime);
         heightOffset = Mathf.Lerp(heightOffset, isHovered ? 0.02f : 0, 5 * Time.deltaTime);
 
-        lineRenderer.positionCount = 4;
-        lineRenderer.SetPositions([
-            transform.TransformPoint(new Vector3(-0.045f, heightOffset, -0.07f)),
-            transform.TransformPoint(new Vector3(0.045f, heightOffset, -0.07f)),
-            transform.TransformPoint(new Vector3(0.045f, heightOffset, 0.07f)),
-            transform.TransformPoint(new Vector3(-0.045f, heightOffset, 0.07f))
-        ]);
+        lineRenderer.widthMultiplier =
+            Mathf.Lerp(lineRenderer.widthMultiplier, isHolding ? 0.2f : 0.1f, 5 * Time.deltaTime);
 
-        lineRenderer.material.mainTextureOffset += Vector2.right * (Time.deltaTime * 2f);
+        lineRenderer.material.mainTextureOffset += Vector2.right * (Time.deltaTime * (isHolding ? 2f : 0.4f));
         lineRenderer.material.SetColor(ColorId,
             new Color(currentColor.r, currentColor.g, currentColor.b, currentColor.a * 0.6f));
         lineRenderer.material.SetColor(EmissionColorId, currentColor);
@@ -61,6 +57,14 @@ public class VRInventorySlot : MonoBehaviour
 
     private void LateUpdate()
     {
+        lineRenderer.positionCount = 4;
+        lineRenderer.SetPositions([
+            transform.TransformPoint(new Vector3(-0.045f, heightOffset, -0.07f)),
+            transform.TransformPoint(new Vector3(0.045f, heightOffset, -0.07f)),
+            transform.TransformPoint(new Vector3(0.045f, heightOffset, 0.07f)),
+            transform.TransformPoint(new Vector3(-0.045f, heightOffset, 0.07f))
+        ]);
+        
         if (spot != null)
         {
             spot.battery.transform.position = transform.TransformPoint(Vector3.back * 0.05f);

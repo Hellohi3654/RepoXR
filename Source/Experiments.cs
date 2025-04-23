@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using RepoXR.Patches;
-using UnityEngine;
 
 namespace RepoXR;
 
@@ -32,13 +31,6 @@ internal static class Experiments
     private static void InfiniteSprintPatch(PlayerController __instance)
     {
         __instance.EnergyCurrent = __instance.EnergyStart;
-    }
-
-    [HarmonyPatch(typeof(EnemyCeilingEye), nameof(EnemyCeilingEye.StateTargetLost))]
-    [HarmonyPrefix]
-    private static bool NoStay()
-    {
-        return false;
     }
 }
 #endif

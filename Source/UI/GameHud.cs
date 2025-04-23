@@ -139,7 +139,7 @@ public class GameHud : MonoBehaviour
 
         canvas.gameObject.AddComponent<TrackedDeviceGraphicRaycaster>();
         canvas.renderMode = RenderMode.WorldSpace;
-        canvas.sortingOrder = 4;
+        canvas.sortingOrder = 5;
 
         menu.SetParent(canvas.transform, false);
         menu.localPosition = Vector3.zero;
@@ -147,8 +147,9 @@ public class GameHud : MonoBehaviour
         menu.localScale = Vector3.one;
         menu.gameObject.AddComponent<RectMask2D>();
 
-        rect.anchoredPosition = -(rect.sizeDelta * 0.5f) + new Vector2(50, 75);
-
+        var pixelOffset = -(rect.sizeDelta * 0.5f) + new Vector2(50, 0);
+        
         pause = canvas.gameObject.AddComponent<PauseUI>();
+        pause.positionOffset = new Vector3(pixelOffset.x * 0.01f, pixelOffset.y * 0.01f, 0);
     }
 }

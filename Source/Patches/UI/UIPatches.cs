@@ -73,7 +73,7 @@ internal static class UIPatches
         
         return false;
     }
-
+    
     /// <summary>
     /// Calculate component position on canvasses in local space since screen space canvasses are disabled
     /// </summary>
@@ -107,7 +107,17 @@ internal static class UIPatches
         if (!MenuManager.instance.activeSelectionBox)
             return;
 
+        var currentScale = __instance.GetComponentInParent<Canvas>().transform.localScale;
+        var targetScale = MenuManager.instance.activeSelectionBox.GetComponentInParent<Canvas>().transform.localScale;
+        var scaleFactor = new Vector3(
+            currentScale.x != 0f ? targetScale.x / currentScale.x : 0f,
+            currentScale.y != 0f ? targetScale.y / currentScale.y : 0f,
+            currentScale.z != 0f ? targetScale.z / currentScale.z : 0f
+        );
+        
         __instance.rectTransform.position = MenuManager.instance.activeSelectionBox.rectTransform.position;
+        // __instance.rectTransform.rotation = MenuManager.instance.activeSelectionBox.rectTransform.rotation;
+        // __instance.rectTransform.parent.localScale = scaleFactor;
     }
     
     /// <summary>

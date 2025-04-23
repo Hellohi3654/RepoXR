@@ -45,7 +45,7 @@ public class Config(string assemblyPath, ConfigFile file)
         file.Bind("Rendering", nameof(EnableCustomCamera), false,
             "Adds a second camera mounted on top of the VR camera that will render separately from the VR camera to the display. This requires extra GPU power!");
 
-    public ConfigEntry<float> CustomCameraFOV { get; } = file.Bind("Rendering", nameof(CustomCameraFOV), 90f,
+    public ConfigEntry<float> CustomCameraFOV { get; } = file.Bind("Rendering", nameof(CustomCameraFOV), 75f,
         new ConfigDescription("The field of view that the custom camera should have.",
             new AcceptableValueRange<float>(45, 120)));
 

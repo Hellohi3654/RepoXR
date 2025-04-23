@@ -27,7 +27,7 @@ public class VRCustomCamera : MonoBehaviour
         uiCamera.fieldOfView = fov;
         
         gameplayCamera = UnityEngine.Camera.main!.transform;
-
+        
         Plugin.Config.CustomCameraFOV.SettingChanged += OnFOVChanged;
     }
 
@@ -49,10 +49,17 @@ public class VRCustomCamera : MonoBehaviour
 
     private void Update()
     {
-        var strength = Mathf.Lerp(50, 8, Plugin.Config.CustomCameraSmoothing.Value);
+        var smoothing = Plugin.Config.CustomCameraSmoothing.Value;
+        var strength = smoothing == 0 ? 1 / Time.deltaTime : Mathf.Lerp(15, 3, smoothing);
 
         transform.localPosition = gameplayCamera.localPosition;
         transform.localRotation =
             Quaternion.Slerp(transform.localRotation, gameplayCamera.localRotation, strength * Time.deltaTime);
+
+        mainCamera.backgroundColor = RenderSettings.fogColor;
+
+        // Some weird fog thing, I don't know why but this is needed
+        RenderSettings.fogDensity =
+            SemiFunc.MenuLevel() || SemiFunc.RunIsShop() || SemiFunc.RunIsLobby() ? 0.015f : 0.15f;
     }
 }
