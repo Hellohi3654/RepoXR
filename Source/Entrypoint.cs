@@ -93,6 +93,10 @@ internal static class Entrypoint
         loadingCanvas.gameObject.AddComponent<UI.LoadingUI>();
         
         loading.SetParent(loadingCanvas.transform, false);
+        
+        // Create custom camera (if enabled)
+        if (Plugin.Config.EnableCustomCamera.Value)
+            Object.Instantiate(AssetCollection.CustomCamera, Camera.main.transform.parent);
     }
     
     /// <summary>

@@ -1,5 +1,9 @@
 ﻿using System;
 using BepInEx.Configuration;
+using RepoXR.Assets;
+using RepoXR.Player.Camera;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace RepoXR;
 
@@ -36,6 +40,19 @@ public class Config(string assemblyPath, ConfigFile file)
             new AcceptableValueRange<float>(10, 180)));
 
     // Rendering configuration
+
+    public ConfigEntry<bool> EnableCustomCamera { get; } =
+        file.Bind("Rendering", nameof(EnableCustomCamera), false,
+            "Adds a second camera mounted on top of the VR camera that will render separately from the VR camera to the display. This requires extra GPU power!");
+
+    public ConfigEntry<float> CustomCameraFOV { get; } = file.Bind("Rendering", nameof(CustomCameraFOV), 90f,
+        new ConfigDescription("The field of view that the custom camera should have.",
+            new AcceptableValueRange<float>(45, 120)));
+
+    public ConfigEntry<float> CustomCameraSmoothing { get; } = file.Bind("Rendering", nameof(CustomCameraSmoothing),
+        0.5f,
+        new ConfigDescription("The amount of smoothing that is applied to the custom camera.",
+            new AcceptableValueRange<float>(0, 1)));
     
     // Internal configuration
 
@@ -47,6 +64,20 @@ public class Config(string assemblyPath, ConfigFile file)
 
     public ConfigEntry<string> OpenXRRuntimeFile { get; } = file.Bind("Internal", nameof(OpenXRRuntimeFile), "",
         "FOR INTERNAL USE ONLY, DO NOT EDIT");
+
+    /// <summary>
+    /// Create persistent callbacks that persist for the entire duration of the application
+    /// </summary>
+    public void SetupGlobalCallbacks()
+    {
+        EnableCustomCamera.SettingChanged += (_, _) =>
+        {
+            if (EnableCustomCamera.Value)
+                Object.Instantiate(AssetCollection.CustomCamera, Camera.main!.transform.parent);
+            else
+                Object.Destroy(VRCustomCamera.instance.gameObject);
+        };
+    }
 
     public enum TurnProviderOption
     {

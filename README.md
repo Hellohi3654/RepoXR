@@ -4,5 +4,7 @@
 
 TODO: Music box toy force disable turn provider maybe?
 TODO: Pause menu
+TODO: Fix remaining enemies that need force-looking and zooming
 TODO: Find good spot for UI elements
+TODO: Custom camera (smooth camera, whatever)
 TODO: Multiplayer support

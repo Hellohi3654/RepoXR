@@ -16,6 +16,7 @@ internal static class AssetCollection
     public static GameObject RebindButton;
     public static GameObject RebindButtonToggle;
     public static GameObject VRRig;
+    public static GameObject CustomCamera;
     public static GameObject Cube;
     public static GameObject Imgage;
     
@@ -44,6 +45,7 @@ internal static class AssetCollection
         RebindButton = assetBundle.LoadAsset<GameObject>("Rebind Button");
         RebindButtonToggle = assetBundle.LoadAsset<GameObject>("Rebind Button Toggle");
         VRRig = assetBundle.LoadAsset<GameObject>("VRRig");
+        CustomCamera = assetBundle.LoadAsset<GameObject>("CustomCamera");
         Cube = assetBundle.LoadAsset<GameObject>("Cube");
         Imgage = assetBundle.LoadAsset<GameObject>("Imgage");
 

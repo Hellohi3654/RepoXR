@@ -83,8 +83,6 @@ public class FirstPersonVRRig : MonoBehaviour
     private void LateUpdate()
     {
         transform.position = head.position + headOffset;
-        
-        // TODO: Maybe use Player rotation? This might be just fine though.
         transform.rotation = Quaternion.Lerp(transform.rotation,
             Quaternion.Euler(transform.eulerAngles.x, head.eulerAngles.y, transform.eulerAngles.z),
             10 * Time.deltaTime);
@@ -136,8 +134,6 @@ public class FirstPersonVRRig : MonoBehaviour
         playerAvatarRightArm.GrabberLogic();
     }
 
-    // TODO: Move to VRMapTool.cs
-    // TODO: Wait actually maybe not
     private void MapToolLogic()
     {
         if (!mapTool)

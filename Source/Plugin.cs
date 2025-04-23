@@ -6,6 +6,7 @@ using System.Net;
 using System.Reflection;
 using BepInEx;
 using JetBrains.Annotations;
+using RepoXR.Assets;
 using RepoXR.Patches;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -82,7 +83,7 @@ public class Plugin : BaseUnityPlugin
             return;
         }
 
-        if (!Assets.AssetCollection.LoadAssets())
+        if (!AssetCollection.LoadAssets())
         {
             Logger.LogError("Disabling mod because assets could not be loaded!");
             return;
@@ -96,7 +97,8 @@ public class Plugin : BaseUnityPlugin
         Logger.LogDebug("Inserted universal patches using Harmony");
         
         Native.BringGameWindowToFront();
-
+        Config.SetupGlobalCallbacks();
+        
         SceneManager.sceneLoaded += (scene, _) =>
         {
             if (Flags.HasFlag(Flags.VR))
