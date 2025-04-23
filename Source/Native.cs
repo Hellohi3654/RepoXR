@@ -34,6 +34,9 @@ internal static class Native
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
+    
+    [DllImport("kernel32.dll", CharSet=CharSet.Auto)]
+    public static extern IntPtr GetModuleHandle(string lpModuleName);
 
     [DllImport("user32.dll")]
     private static extern void AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);

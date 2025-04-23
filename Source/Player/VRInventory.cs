@@ -7,12 +7,12 @@ namespace RepoXR.Player;
 
 public class VRInventory : MonoBehaviour
 {
-    [SerializeField] private Transform visualsTransform;
+    [SerializeField] protected Transform visualsTransform;
     
-    [SerializeField] private VRInventorySlot[] slots;
+    [SerializeField] protected VRInventorySlot[] slots;
     
-    [SerializeField] private Color holdColor;
-    [SerializeField] private Color hoverColor;
+    [SerializeField] protected Color holdColor;
+    [SerializeField] protected Color hoverColor;
 
     public FirstPersonVRRig rig;
 

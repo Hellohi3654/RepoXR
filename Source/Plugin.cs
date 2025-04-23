@@ -124,6 +124,10 @@ public class Plugin : BaseUnityPlugin
 
     private bool VerifyGameVersion()
     {
+        // Almost always causes issues, so we just shut down if we detect this module
+        if (Native.GetModuleHandle("OnlineFix64.dll") != IntPtr.Zero)
+            return false;
+        
         var location = Path.Combine(Paths.ManagedPath, "Assembly-CSharp.dll");
         var hash = BitConverter.ToString(Utils.ComputeHash(File.ReadAllBytes(location))).Replace("-", "");
         

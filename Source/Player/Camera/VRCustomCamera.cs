@@ -10,9 +10,9 @@ public class VRCustomCamera : MonoBehaviour
 {
     public static VRCustomCamera instance;
     
-    [SerializeField] private UnityEngine.Camera mainCamera;
-    [SerializeField] private UnityEngine.Camera topCamera;
-    [SerializeField] private UnityEngine.Camera uiCamera;
+    [SerializeField] protected UnityEngine.Camera mainCamera;
+    [SerializeField] protected UnityEngine.Camera topCamera;
+    [SerializeField] protected UnityEngine.Camera uiCamera;
     
     private Transform gameplayCamera;
 
