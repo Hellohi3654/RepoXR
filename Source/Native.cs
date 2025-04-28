@@ -99,6 +99,15 @@ internal static class Native
         return true;
     }
 
+    public static bool HasIncompatibleModules()
+    {
+        foreach (var module in (ReadOnlySpan<string>)["OnlineFix64"])
+            if (GetModuleHandle(module) != IntPtr.Zero)
+                return true;
+
+        return false;
+    }
+    
     public static bool IsElevated()
     {
         var hToken = IntPtr.Zero;

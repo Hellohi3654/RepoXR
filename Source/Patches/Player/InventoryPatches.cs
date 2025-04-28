@@ -25,13 +25,17 @@ internal static class InventoryPatches
     {
         return new CodeMatcher(instructions)
             .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 0.01f))
-            .SetInstructionAndAdvance(new CodeInstruction(OpCodes.Ldarg_0))
-            .Insert(new CodeInstruction(OpCodes.Call, ((Func<ItemEquippable, float>)MinimumScale).Method))
+            .Advance(-2)
+            .RemoveInstructions(4)
+            .Insert(
+                new CodeInstruction(OpCodes.Ldloc_1), // `this` is `ldloc.1` because we're in an enumerator, I don't make the rules
+                new CodeInstruction(OpCodes.Call, ((Func<ItemEquippable, Vector3>)MinimumScale).Method)
+            )
             .InstructionEnumeration();
 
-        static float MinimumScale(ItemEquippable item)
+        static Vector3 MinimumScale(ItemEquippable item)
         {
-            return ItemIsMine(item) ? 0.5f : 0.01f;
+            return ItemIsMine(item) ? Vector3.one * 0.1667f : item.transform.localScale * 0.01f;
         }
     }
 
@@ -83,16 +87,6 @@ internal static class InventoryPatches
 
         return false;
     }
-
-    /// <summary>
-    /// Prevent melee weapons from hurting the player when in their inventory
-    /// </summary>
-    [HarmonyPatch(typeof(ItemMelee), nameof(ItemMelee.FixedUpdate))]
-    [HarmonyPrefix]
-    private static bool DontMeleeWhenEquipped(ItemMelee __instance)
-    {
-        return __instance.itemEquippable.currentState != ItemEquippable.ItemState.Equipped;
-    }
     
     /// <summary>
     /// Prevent items from being "hidden" when equipped in an inventory
@@ -115,7 +109,6 @@ internal static class InventoryPatches
 
         return matcher.InstructionEnumeration();
 
-        // TODO: Test if work in multiplayer
         static bool ShouldTeleport(PhysGrabObject @object)
         {
             if (!@object.TryGetComponent<ItemEquippable>(out var item))
@@ -143,5 +136,30 @@ internal static class InventoryPatches
             return;
     
         VRSession.Instance.Player.Rig.inventoryController.UnequipItem(__instance.CurrentItem);
+    }
+
+    /// <summary>
+    /// Hide the battery UI if it's equipped
+    /// </summary>
+    [HarmonyPatch(typeof(ItemBattery), nameof(ItemBattery.OverrideBatteryShow))]
+    [HarmonyPrefix]
+    private static bool HideBatteryIfEquipped(ItemBattery __instance)
+    {
+        return __instance.itemEquippable.currentState != ItemEquippable.ItemState.Equipped;
+    }
+}
+
+[RepoXRPatch(RepoXRPatchTarget.Universal)]
+internal static class UniversalInventoryPatches
+{
+    /// <summary>
+    /// Prevent melee weapons from hurting VR players when in their inventory
+    /// </summary>
+    [HarmonyPatch(typeof(ItemMelee), nameof(ItemMelee.FixedUpdate))]
+    [HarmonyPrefix]
+    private static bool DontMeleeWhenEquipped(ItemMelee __instance)
+    {
+        return !(__instance.itemEquippable.currentState == ItemEquippable.ItemState.Equipped &&
+                 __instance.playerAvatar != null && __instance.playerAvatar.IsVRPlayer());
     }
 }

@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Linq;
+using HarmonyLib;
 using RepoXR.Input;
+using RepoXR.Networking;
 using RepoXR.Player.Camera;
 using Unity.XR.CoreUtils;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace RepoXR.Player;
 
@@ -25,6 +28,7 @@ public class FirstPersonVRRig : MonoBehaviour
     public Transform leftHandTip;
     public Transform rightHandTip;
     
+    public RectTransform infoHud;
     public Transform inventory;
     public Transform map;
 
@@ -65,6 +69,8 @@ public class FirstPersonVRRig : MonoBehaviour
         playerAvatarRightArm.grabberClawParent.SetParent(rightHandTip);
         playerAvatarRightArm.grabberClawParent.localPosition = Vector3.zero;
         playerAvatarRightArm.grabberClawParent.gameObject.SetLayerRecursively(6);
+        playerAvatarRightArm.grabberClawParent.GetComponentsInChildren<MeshRenderer>()
+            .Do(mesh => mesh.shadowCastingMode = ShadowCastingMode.Off);
 
         // Everything else is only available after the first frame
         yield return null;
@@ -121,11 +127,16 @@ public class FirstPersonVRRig : MonoBehaviour
         leftArmMesh.localEulerAngles = Vector3.up * 90;
         rightArmMesh.localEulerAngles = Vector3.down * 90;
         
-        leftArmMesh.Rotate(Vector3.right, leftArmTarget.localEulerAngles.z);
+        leftArmMesh.Rotate(Vector3.left, leftArmTarget.localEulerAngles.z);
         rightArmMesh.Rotate(Vector3.right, rightArmTarget.localEulerAngles.z);
 
         leftHandTip.rotation = leftArmTarget.rotation;
         rightHandTip.rotation = rightArmTarget.rotation;
+
+        // Synchronize multiplayer rig
+        if (SemiFunc.IsMultiplayer())
+            NetworkSystem.instance.SendRigData(leftHandTip.position, rightHandTip.position, leftHandTip.rotation,
+                rightHandTip.rotation);
     }
 
     private void UpdateClaw()
@@ -204,6 +215,8 @@ public class FirstPersonVRRig : MonoBehaviour
         // Left hand "let-go" logic
         if (mapTool.Active && !Actions.Instance["MapGrabLeft"].IsPressed() && mapHeldLeftHand && mapTool.HideLerp <= 0)
             mapTool.Active = false;
+                
+        NetworkSystem.instance.UpdateMapToolState(FlashlightController.Instance.hideFlashlight, mapHeldLeftHand);
     }
     
     public void SetVisible(bool visible)
@@ -211,6 +224,7 @@ public class FirstPersonVRRig : MonoBehaviour
         foreach (var mesh in meshes)
             mesh.enabled = visible;
 
+        infoHud.gameObject.SetActive(visible);
         map.gameObject.SetActive(visible);
         inventory.gameObject.SetActive(visible);
     }

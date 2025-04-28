@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using Photon.Pun;
 using RepoXR.Managers;
+using RepoXR.Networking;
 using RepoXR.Player;
 using UnityEngine;
 
@@ -13,7 +15,7 @@ namespace RepoXR.Patches.Player;
 [RepoXRPatch]
 internal static class MapToolPatches
 {
-    private const float MAP_HOLD_ANGLE = 300f;
+    internal const float MAP_HOLD_ANGLE = 300f;
     
     [HarmonyPatch(typeof(MapToolController), nameof(MapToolController.Start))]
     [HarmonyPostfix]
@@ -108,9 +110,57 @@ internal static class MapToolPatches
             return controller.PlayerAvatar.isLocal || original;
         }
     }
+}
+
+[RepoXRPatch(RepoXRPatchTarget.Universal)]
+internal static class UniversalMapToolPatches
+{
+    /// <summary>
+    /// Fix VR player's map tool's transforms
+    /// </summary>
+    [HarmonyPatch(typeof(MapToolController), nameof(MapToolController.Update))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> MapToolTransformPatch(IEnumerable<CodeInstruction> instructions)
+    {
+        var shouldMutate = new CodeInstruction(OpCodes.Call, ((Func<PhotonView, bool>)ShouldMutateTransforms).Method);
+        
+        return new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 90f))
+            .SetAndAdvance(OpCodes.Ldarg_0, null)
+            .Insert(new CodeInstruction(OpCodes.Call, ((Func<MapToolController, float>)GetHoldAngle).Method))
+            .MatchForward(false, new CodeMatch(OpCodes.Callvirt, PropertyGetter(typeof(PhotonView), nameof(PhotonView.IsMine))))
+            .SetInstructionAndAdvance(shouldMutate)
+            .SetOpcodeAndAdvance(OpCodes.Brfalse_S)
+            .MatchForward(false, new CodeMatch(OpCodes.Callvirt, PropertyGetter(typeof(PhotonView), nameof(PhotonView.IsMine))))
+            .SetInstructionAndAdvance(shouldMutate)
+            .SetOpcodeAndAdvance(OpCodes.Brfalse_S)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld,
+                    Field(typeof(MapToolController), nameof(MapToolController.FollowTransformClient))))
+            .Advance(-6)
+            .SetInstructionAndAdvance(shouldMutate)
+            .SetOpcodeAndAdvance(OpCodes.Brfalse_S)
+            .InstructionEnumeration();
+        
+        static bool ShouldMutateTransforms(PhotonView view)
+        {
+            return !view.IsMine && !NetworkSystem.instance.IsVRView(view);
+        }
+
+        static float GetHoldAngle(MapToolController mapTool)
+        {
+            if (mapTool.PlayerAvatar.isLocal && VRSession.InVR)
+                return MapToolPatches.MAP_HOLD_ANGLE;
+
+            if (!mapTool.PlayerAvatar.isLocal && NetworkSystem.instance.IsVRPlayer(mapTool.PlayerAvatar))
+                return MapToolPatches.MAP_HOLD_ANGLE;
+
+            return 90;
+        }
+    }
 
     /// <summary>
-    /// Fixes the pickup animation for the map tool in VR
+    /// Fix VR player's map tool's animations
     /// </summary>
     [HarmonyPatch(typeof(MapToolController), nameof(MapToolController.Update))]
     [HarmonyTranspiler]
@@ -118,16 +168,12 @@ internal static class MapToolPatches
     {
         return new CodeMatcher(instructions)
             // Fix intro animation
-            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 90f))
-            .SetOperandAndAdvance(MAP_HOLD_ANGLE)
             .MatchForward(false,
                 new CodeMatch(OpCodes.Call,
                     Method(typeof(Quaternion), nameof(Quaternion.Euler),
                         [typeof(float), typeof(float), typeof(float)])))
-            .Advance(3)
-            .Insert(new CodeInstruction(OpCodes.Ldc_R4, 1f))
-            .Advance(3)
-            .Insert(new CodeInstruction(OpCodes.Sub))
+            .Advance(4)
+            .SetInstruction(new CodeInstruction(OpCodes.Call, ((Func<MapToolController, float>)GetIntroLerp).Method))
             // Fix outro animation
             .MatchForward(false, new CodeMatch(OpCodes.Ldfld, Field(typeof(MapToolController), nameof(MapToolController.OutroCurve))))
             .Advance(5)
@@ -137,9 +183,20 @@ internal static class MapToolPatches
             )
             .InstructionEnumeration();
 
+        static float GetIntroLerp(MapToolController controller)
+        {
+            if (!controller.PlayerAvatar.IsVRPlayer())
+                return controller.HideLerp;
+
+            return 1 - controller.HideLerp;
+        }
+
         static void OutroAnimation(MapToolController controller)
         {
-            controller.HideTransform.localRotation = Quaternion.Slerp(Quaternion.Euler(MAP_HOLD_ANGLE, 0, 0),
+            if (!controller.PlayerAvatar.IsVRPlayer())
+                return;
+            
+            controller.HideTransform.localRotation = Quaternion.Slerp(Quaternion.Euler(MapToolPatches.MAP_HOLD_ANGLE, 0, 0),
                 Quaternion.identity, controller.OutroCurve.Evaluate(controller.HideLerp));
         }
     }

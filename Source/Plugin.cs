@@ -101,8 +101,7 @@ public class Plugin : BaseUnityPlugin
         
         SceneManager.sceneLoaded += (scene, _) =>
         {
-            if (Flags.HasFlag(Flags.VR))
-                Entrypoint.OnSceneLoad(scene.name);
+            Entrypoint.OnSceneLoad(scene.name);
         };
     }
 
@@ -124,8 +123,8 @@ public class Plugin : BaseUnityPlugin
 
     private bool VerifyGameVersion()
     {
-        // Almost always causes issues, so we just shut down if we detect this module
-        if (Native.GetModuleHandle("OnlineFix64.dll") != IntPtr.Zero)
+        // Assume that incompatible modules alter the game in such a way that it makes VR incompatible
+        if (Native.HasIncompatibleModules())
             return false;
         
         var location = Path.Combine(Paths.ManagedPath, "Assembly-CSharp.dll");
@@ -227,6 +226,13 @@ public class Plugin : BaseUnityPlugin
         InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus; // Prevent VR from getting disabled when losing focus
 
         return true;
+    }
+
+    public static MethodInfo GetConfigGetter()
+    {
+        return typeof(Plugin).GetProperty(nameof(Config),
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)!
+            .GetGetMethod(true);
     }
 }
 

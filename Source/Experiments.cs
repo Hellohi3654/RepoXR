@@ -1,21 +1,23 @@
 ﻿using HarmonyLib;
-using RepoXR.Patches;
 
 namespace RepoXR;
 
 #if DEBUG
-[RepoXRPatch(RepoXRPatchTarget.Universal)]
+// [RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class Experiments
 {
     [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.Awake))]
     [HarmonyPostfix]
     private static void FuckLolEnemy(EnemyDirector __instance)
     {
+        // Only allow eyeyeyeyeyeye spawning
+        var enemy = __instance.enemiesDifficulty1[0];
+        
         // Only allow thin-man spawning
         // var enemy = __instance.enemiesDifficulty1[1];
-
-        // Only allow eyeyeyeyeyeye spawning
-        var enemy = __instance.enemiesDifficulty1[1];
+        
+        // Only allow upSCREAM! spawning
+        // var enemy = __instance.enemiesDifficulty2[2];
         
         __instance.enemiesDifficulty1.Clear();
         __instance.enemiesDifficulty2.Clear();

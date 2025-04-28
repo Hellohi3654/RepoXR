@@ -64,13 +64,15 @@ public class XRRayInteractorManager : MonoBehaviour
         UpdateActiveController(ActiveController.Right);
     }
 
-    public Vector2 GetUIHitPosition(RectTransform rect)
+    public Vector2 GetUIHitPosition(RectTransform? rect)
     {
-        var canvas = rect.GetComponentInParent<Canvas>().transform;
-        
         if (!GetActiveInteractor().TryGetCurrentUIRaycastResult(out var result))
-            return Vector2.zero;
-        
+            return Vector2.one * -1000;
+
+        var canvas = rect == null
+            ? result.gameObject.GetComponentInParent<Canvas>().transform
+            : rect.GetComponentInParent<Canvas>().transform;
+
         var local = canvas.InverseTransformPoint(result.worldPosition);
         return new Vector2(local.x, local.y);
     }

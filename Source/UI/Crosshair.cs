@@ -10,6 +10,7 @@ public class Crosshair : MonoBehaviour
     
     private Transform handTransform;
     private Transform camera;
+    private Transform sprite;
     
     private IEnumerator Start()
     {
@@ -20,6 +21,7 @@ public class Crosshair : MonoBehaviour
 
         handTransform = session.Player.MainHand;
         camera = Camera.main!.transform;
+        sprite = GetComponentInChildren<Aim>().transform;
     }
 
     private void Update()
@@ -32,7 +34,7 @@ public class Crosshair : MonoBehaviour
             transform.position = Vector3.down * 3000;
             return;
         }
-
+        
         var upness = Mathf.Abs(Mathf.Max(0, Vector3.Dot(hit.normal, Vector3.up) - 0.5f)) / 0.5f;
         var toCamera = camera.position - hit.point;
         var projectedToCamera = Vector3.ProjectOnPlane(toCamera, hit.normal).normalized;
@@ -43,5 +45,6 @@ public class Crosshair : MonoBehaviour
                 calculatedRotation, upness);
 
         transform.SetPositionAndRotation(hit.point, finalRotation);
+        sprite.localScale = Vector3.Lerp(Vector3.one * 0.3f, Vector3.one, hit.distance * 0.33f);
     }
 }

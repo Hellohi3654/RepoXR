@@ -57,6 +57,28 @@ internal static class UIPatches
     }
 
     /// <summary>
+    /// Properly set the mouse hold position
+    /// </summary>
+    [HarmonyPatch(typeof(MenuManager), nameof(MenuManager.Update))]
+    [HarmonyPrefix]
+    private static void UpdateMouseHoldPosition(MenuManager __instance)
+    {
+        var manager = XRRayInteractorManager.Instance;
+        if (manager == null)
+            return;
+
+        if (manager.GetTriggerButton())
+        {
+            if (__instance.mouseHoldPosition == Vector2.zero)
+                __instance.mouseHoldPosition = manager.GetUIHitPosition(null);
+        }
+        else
+        {
+            __instance.mouseHoldPosition = Vector2.zero;
+        }
+    }
+
+    /// <summary>
     /// Detect UI hits using VR pointers instead of mouse cursor
     /// </summary>
     [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseGetLocalPositionWithinRectTransform))]
@@ -100,6 +122,7 @@ internal static class UIPatches
     /// <summary>
     /// Fix the button hover outline position
     /// </summary>
+    // TODO: Clean up
     [HarmonyPatch(typeof(MenuSelectionBoxTop), nameof(MenuSelectionBoxTop.Update))]
     [HarmonyPostfix]
     private static void FixButtonOverlayPosition(MenuSelectionBoxTop __instance)
@@ -118,39 +141,6 @@ internal static class UIPatches
         __instance.rectTransform.position = MenuManager.instance.activeSelectionBox.rectTransform.position;
         // __instance.rectTransform.rotation = MenuManager.instance.activeSelectionBox.rectTransform.rotation;
         // __instance.rectTransform.parent.localScale = scaleFactor;
-    }
-    
-    /// <summary>
-    /// Handle VR inputs for UI buttons
-    /// </summary>
-    // TODO: Maybe look at also patching out the original code? Since the mouse can sometimes click on UI elements.
-    [HarmonyPatch(typeof(MenuButton), nameof(MenuButton.HoverLogic))]
-    [HarmonyPostfix]
-    private static void HandleVRButtonLogic(MenuButton __instance)
-    {
-        var manager = XRRayInteractorManager.Instance;
-        
-        if (!__instance.hovering || manager == null)
-            return;
-
-        if (manager.GetTriggerDown())
-        {
-            __instance.OnSelect();
-            __instance.holdTimer = 0;
-            __instance.clickTimer = 0.2f;
-        }
-
-        if (!__instance.hasHold)
-            return;
-        
-        if (manager.GetTriggerButton())
-            __instance.holdTimer += Time.deltaTime;
-        else
-        {
-            __instance.holdTimer = 0;
-            __instance.clickFrequencyTicker = 0;
-            __instance.clickFrequency = 0.2f;
-        }
     }
 
     /// <summary>
@@ -192,6 +182,40 @@ internal static class UIPatches
     }
 
     /// <summary>
+    /// Handle VR button presses
+    /// </summary>
+    [HarmonyPatch(typeof(UnityEngine.Input), nameof(UnityEngine.Input.GetMouseButtonDown))]
+    [HarmonyPrefix]
+    private static bool MouseButtonDownVR(int button, ref bool __result)
+    {
+        var manager = XRRayInteractorManager.Instance;
+
+        if (button != 0 || manager == null)
+            return true;
+
+        __result = manager.GetTriggerDown();
+
+        return false;
+    }
+
+    /// <summary>
+    /// Handle VR button holds
+    /// </summary>
+    [HarmonyPatch(typeof(UnityEngine.Input), nameof(UnityEngine.Input.GetMouseButton))]
+    [HarmonyPrefix]
+    private static bool MouseButtonHoldVR(int button, ref bool __result)
+    {
+        var manager = XRRayInteractorManager.Instance;
+
+        if (button != 0 || manager == null)
+            return true;
+
+        __result = manager.GetTriggerButton();
+
+        return false;
+    }
+
+    /// <summary>
     /// Disable scrolling using the built-in keybinds (Movement and Scroll), in favor of XR UI Scroll
     /// </summary>
     [HarmonyPatch(typeof(MenuScrollBox), nameof(MenuScrollBox.Update))]
@@ -216,5 +240,25 @@ internal static class UIPatches
     private static void OnControlsPageOpened(MenuPageSettingsControls __instance)
     {
         __instance.gameObject.AddComponent<RebindManager>();
+    }
+
+    /// <summary>
+    /// Detect if a save menu element is pressed
+    /// </summary>
+    [HarmonyPatch(typeof(MenuElementSaveFile), nameof(MenuElementSaveFile.Update))]
+    [HarmonyPostfix]
+    private static void OnSaveFilePressed(MenuElementSaveFile __instance)
+    {
+        var manager = XRRayInteractorManager.Instance;
+
+        if (!__instance.menuElementHover.isHovering || manager == null || SemiFunc.InputDown(InputKey.Confirm) ||
+            SemiFunc.InputDown(InputKey.Grab))
+            return;
+
+        if (!manager.GetTriggerDown())
+            return;
+        
+        MenuManager.instance.MenuEffectClick(MenuManager.MenuClickEffectType.Confirm);
+        __instance.parentPageSaves.SaveFileSelected(__instance.saveFileName);
     }
 }

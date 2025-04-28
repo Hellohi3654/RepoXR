@@ -1,11 +1,14 @@
 using System;
+using RepoXR.Input;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace RepoXR.Player.Camera;
 
 /// <summary>
 /// Contrary to the name, this script actually deals with non-vr cameras (but they only exist if VR is enabled so lalalala)
 /// </summary>
+[DefaultExecutionOrder(100)]
 public class VRCustomCamera : MonoBehaviour
 {
     public static VRCustomCamera instance;
@@ -13,6 +16,8 @@ public class VRCustomCamera : MonoBehaviour
     [SerializeField] protected UnityEngine.Camera mainCamera;
     [SerializeField] protected UnityEngine.Camera topCamera;
     [SerializeField] protected UnityEngine.Camera uiCamera;
+
+    [SerializeField] protected Image overlayImage;
     
     private Transform gameplayCamera;
 
@@ -27,6 +32,9 @@ public class VRCustomCamera : MonoBehaviour
         uiCamera.fieldOfView = fov;
         
         gameplayCamera = UnityEngine.Camera.main!.transform;
+        
+        transform.localPosition = TrackingInput.instance.HeadTransform.localPosition;
+        transform.localRotation = TrackingInput.instance.HeadTransform.localRotation;
         
         Plugin.Config.CustomCameraFOV.SettingChanged += OnFOVChanged;
     }
@@ -61,5 +69,13 @@ public class VRCustomCamera : MonoBehaviour
         // Some weird fog thing, I don't know why but this is needed
         RenderSettings.fogDensity =
             SemiFunc.MenuLevel() || SemiFunc.RunIsShop() || SemiFunc.RunIsLobby() ? 0.015f : 0.15f;
+    }
+
+    
+    private void LateUpdate()
+    {
+        // Since we override the FadeOverlay image color in a LateUpdate, we need to read it back in a late update as well
+        // Also this script needs to execute *after* the override, hence the [DefaultExecutionOrder(100)]
+        overlayImage.color = FadeOverlay.Instance.Image.color;
     }
 }

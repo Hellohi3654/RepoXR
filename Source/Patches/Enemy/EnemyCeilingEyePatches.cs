@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
+using BepInEx.Configuration;
 using HarmonyLib;
 using RepoXR.Player.Camera;
 using static HarmonyLib.AccessTools;
@@ -22,10 +23,16 @@ internal static class EnemyCeilingEyePatches
             .Advance(-11)
             .SetOperandAndAdvance(Field(typeof(VRCameraAim), nameof(VRCameraAim.instance)))
             .Advance(10)
+            // Make the rotation less severe if reduced aim impact is enabled
+            .InsertAndAdvance(new CodeInstruction(OpCodes.Call, Plugin.GetConfigGetter()))
+            .InsertAndAdvance(new CodeInstruction(OpCodes.Callvirt,
+                PropertyGetter(typeof(Config), nameof(Config.ReducedAimImpact))))
+            .InsertAndAdvance(new CodeInstruction(OpCodes.Callvirt,
+                PropertyGetter(typeof(ConfigEntry<bool>), nameof(ConfigEntry<bool>.Value))))
             .SetOperandAndAdvance(Method(typeof(VRCameraAim), nameof(VRCameraAim.SetAimTargetSoft)))
             .InstructionEnumeration();
     }
-    
+
     /// <summary>
     /// Replace <see cref="CameraAim.AimTargetSet"/> with <see cref="VRCameraAim.SetAimTarget"/>
     /// </summary>
@@ -39,8 +46,12 @@ internal static class EnemyCeilingEyePatches
             .Advance(-10)
             .SetOperandAndAdvance(Field(typeof(VRCameraAim), nameof(VRCameraAim.instance)))
             .Advance(9)
-            // TODO: Make configurable I guess
-            .InsertAndAdvance(new CodeInstruction(OpCodes.Ldc_I4_0))
+            // Make the rotation less severe if reduced aim impact is enabled
+            .InsertAndAdvance(new CodeInstruction(OpCodes.Call, Plugin.GetConfigGetter()))
+            .InsertAndAdvance(new CodeInstruction(OpCodes.Callvirt,
+                PropertyGetter(typeof(Config), nameof(Config.ReducedAimImpact))))
+            .InsertAndAdvance(new CodeInstruction(OpCodes.Callvirt,
+                PropertyGetter(typeof(ConfigEntry<bool>), nameof(ConfigEntry<bool>.Value))))
             .SetOperandAndAdvance(Method(typeof(VRCameraAim), nameof(VRCameraAim.SetAimTarget)))
             .InstructionEnumeration();
     }

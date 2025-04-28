@@ -2,6 +2,7 @@
 using RepoXR.Input;
 using Unity.XR.CoreUtils;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace RepoXR.Player;
 
@@ -110,9 +111,10 @@ public class VRInventory : MonoBehaviour
         var slot = slots[item.equippedSpot.inventorySpotIndex];
 
         if (GameDirector.instance.currentState != GameDirector.gameState.Main)
-            item.transform.localScale = Vector3.one * 0.1667f * 2;
+            item.transform.localScale = Vector3.one * 0.1667f * 2; // During state changes, the item is reduced in size by 50%, so double the current scale
 
         slot.heldItem = item;
+        
         item.transform.parent = slot.transform;
         item.rb.interpolation = RigidbodyInterpolation.None;
         item.gameObject.SetLayerRecursively(6);
@@ -120,6 +122,9 @@ public class VRInventory : MonoBehaviour
         // Prevent getting hurt by item in inventory
         if (item.TryGetComponent<ItemMelee>(out var melee))
             melee.hurtCollider.gameObject.SetActive(false);
+        
+        // Disable shadows
+        item.GetComponentsInChildren<MeshRenderer>().Do(mesh => mesh.shadowCastingMode = ShadowCastingMode.Off);
     }
 
     public void UnequipItem(ItemEquippable item)
@@ -131,6 +136,9 @@ public class VRInventory : MonoBehaviour
         item.rb.interpolation = RigidbodyInterpolation.Interpolate;
         item.gameObject.SetLayerRecursively(16);
         item.enabled = true;
+        
+        // Re-enable shadows
+        item.GetComponentsInChildren<MeshRenderer>().Do(mesh => mesh.shadowCastingMode = ShadowCastingMode.On);
     }
 
     private static bool IsHoldingItem()

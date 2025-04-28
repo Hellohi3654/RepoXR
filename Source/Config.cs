@@ -20,6 +20,9 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<bool> EnableVerboseLogging { get; } = file.Bind("General", nameof(EnableVerboseLogging), false,
         "Enables verbose debug logging during OpenXR initialization");
 
+    public ConfigEntry<bool> ReducedAimImpact { get; } = file.Bind("General", nameof(ReducedAimImpact), false,
+        "When enabled, lowers the severity of force-look events (like the ceiling eye), which can be helpful for people with motion sickness");
+
     // Performance configuration
     
     // Input configuration

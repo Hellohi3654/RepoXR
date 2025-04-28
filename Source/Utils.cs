@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using RepoXR.Managers;
+using RepoXR.Networking;
 using Steamworks;
 using UnityEngine;
 
@@ -98,5 +101,44 @@ internal static class Utils
     {
         return Physics.ComputePenetration(lhs, lhs.transform.position, lhs.transform.rotation, rhs,
             rhs.transform.position, rhs.transform.rotation, out _, out _);
+    }
+
+    public static void DisableScanlines(this SemiUI ui)
+    {
+        if (ui.GetComponentInChildren<UIScanlines>() is not { } scanlines)
+            return;
+
+        scanlines.enabled = false;
+        scanlines.image.color = Color.clear;
+    }
+
+    public static void SetUIAnchoredPosition(this SemiUI ui, Vector2 anchoredPosition)
+    {
+        var hidePosition = ui.hidePosition - ui.showPosition;
+        var rect = ui.GetComponent<RectTransform>();
+        
+        rect.anchoredPosition = anchoredPosition;
+        ui.showPosition = Vector2.zero;
+        ui.hidePosition = hidePosition;
+        ui.Start();
+    }
+
+    public static IEnumerable<T> GetFlags<T>(this T input) where T : Enum
+    {
+        return Enum.GetValues(input.GetType()).Cast<T>().Where(value => input.HasFlag(value));
+    }
+
+    public static void ReplaceOrInsert<T>(this List<T> list, T item, Predicate<T> match)
+    {
+        var index = list.FindIndex(match);
+        if (index >= 0)
+            list[index] = item;
+        else
+            list.Add(item);
+    }
+
+    public static bool IsVRPlayer(this PlayerAvatar player)
+    {
+        return (player.isLocal && VRSession.InVR) || (!player.isLocal && NetworkSystem.instance.IsVRPlayer(player));
     }
 }

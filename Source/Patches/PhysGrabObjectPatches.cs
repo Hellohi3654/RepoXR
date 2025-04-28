@@ -3,32 +3,29 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
 using RepoXR.Managers;
+using RepoXR.Networking;
 using UnityEngine;
 
 using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches;
 
-[RepoXRPatch]
+[RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class PhysGrabObjectPatches
 {
-    // TODO: Multiplayer support. This means that if the host does not have the VR mod, this specific patch won't work
-    // TODO: meaning that item rotations are a bit goofy unless the host has the mod
     private static Transform GetTargetTransform(PlayerAvatar player)
     {
-        if (!player.isLocal)
-            return player.localCameraTransform;
+        if (player.isLocal)
+            return VRSession.Instance is { } session ? session.Player.MainHand : player.localCameraTransform;
 
-        return VRSession.Instance is not { } session ? player.localCameraTransform : session.Player.MainHand;
+        return NetworkSystem.instance.GetNetworkPlayer(player, out var networkPlayer)
+            ? networkPlayer.GrabberHand
+            : player.localCameraTransform;
     }
 
-    // TODO: Same as above, something something multiplayer
     private static Transform GetTargetTransformGrabber(PhysGrabber grabber)
     {
-        if (!grabber.playerAvatar || !grabber.playerAvatar.isLocal)
-            return grabber.transform;
-
-        return VRSession.Instance is not { } session ? grabber.transform : session.Player.MainHand;
+        return GetTargetTransform(grabber.playerAvatar);
     }
 
     /// <summary>

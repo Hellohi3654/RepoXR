@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using RepoXR.Managers;
 using UnityEngine;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
@@ -27,9 +28,10 @@ public class GameHud : MonoBehaviour
         SetupOverlayCanvas();
         SetupSmoothedCanvas();
         SetupPauseMenu();
+        SetupInfoHUD();
 
-        // TODO: Temporary
-        HUDCanvas.instance.transform.position = Vector3.down * 10000; // Move the world space hud far away
+        // Move the world space hud far away
+        HUDCanvas.instance.transform.position = Vector3.down * 10000;
     }
 
     private void LateUpdate()
@@ -54,9 +56,9 @@ public class GameHud : MonoBehaviour
         pause.Show();
     }
 
-    public void ResumeGame()
+    public void ResumeGame(bool instant = false)
     {
-        pause.Hide();
+        pause.Hide(instant);
     }
     
     private static void DisableEventSystem()
@@ -115,7 +117,7 @@ public class GameHud : MonoBehaviour
         var rect = SmoothedCanvas.GetComponent<RectTransform>();
         rect.sizeDelta = new Vector2(712, 400);
 
-        // TODO: For now we dump all the game hud onto this smoothed canvas
+        // Dump all the game hud onto this smoothed canvas
         var gameHud = HUDCanvas.instance.transform.Find("HUD/Game Hud");
         gameHud.transform.SetParent(rect, false);
     }
@@ -151,5 +153,31 @@ public class GameHud : MonoBehaviour
         
         pause = canvas.gameObject.AddComponent<PauseUI>();
         pause.positionOffset = new Vector3(pixelOffset.x * 0.01f, pixelOffset.y * 0.01f, 0);
+    }
+
+    /// <summary>
+    /// Move a bunch of UI elements to the rig's info HUD
+    /// </summary>
+    private void SetupInfoHUD()
+    {
+        var goal = GoalUI.instance.GetComponent<SemiUI>();
+        var haul = HaulUI.instance.GetComponent<SemiUI>();
+        var health = HealthUI.instance.GetComponent<SemiUI>();
+        var energy = EnergyUI.instance.GetComponent<SemiUI>();
+
+        goal.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
+        haul.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
+        health.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
+        energy.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
+        
+        goal.DisableScanlines();
+        haul.DisableScanlines();
+        health.DisableScanlines();
+        energy.DisableScanlines();
+        
+        goal.SetUIAnchoredPosition(new Vector2(0, -30));
+        haul.SetUIAnchoredPosition(Vector2.zero);
+        health.SetUIAnchoredPosition(new Vector2(30, 0));
+        energy.SetUIAnchoredPosition(new Vector2(30, -30));
     }
 }

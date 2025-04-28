@@ -108,6 +108,7 @@ public class VRCameraZoom : MonoBehaviour
         targetPosition = GetTargetVector(target.position);
 
         // Prevent audio from being distorted by fast movement
+        // TODO: This needs to be moved up to around eye-height
         AudioManager.instance.AudioListener.TargetPositionTransform = PlayerController.instance.transform;
     }
 }

@@ -59,10 +59,16 @@ public class PauseUI : MonoBehaviour
         interactor.SetVisible(true);
     }
 
-    public void Hide()
+    public void Hide(bool instant)
     {
         isOpen = false;
         interactor.SetVisible(false);
+
+        if (instant)
+        {
+            MenuManager.instance.PageCloseAll();
+            darkness = 0;
+        }
     }
 
     public void ResetPosition(bool instant = false)

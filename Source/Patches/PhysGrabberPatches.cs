@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using HarmonyLib;
 using RepoXR.Input;
 using RepoXR.Managers;
+using RepoXR.Networking;
 using RepoXR.Player;
 using UnityEngine;
 
@@ -21,9 +22,9 @@ internal static class PhysGrabberPatches
         if (VRSession.Instance is { } session)
             return session.Player.MainHand;
 
-        return Camera.main!.transform;
+        return PhysGrabber.instance.playerCamera.transform;
     }
-    
+
     private static CodeMatcher ReplaceCameraWithHand(this CodeMatcher matcher)
     {
         var labels = matcher.Instruction.labels;
@@ -56,7 +57,7 @@ internal static class PhysGrabberPatches
     }
 
     /// <summary>
-    /// Slow down the push/pull logic since it's way to fast in VR
+    /// Slow down the push/pull logic since it's way too fast in VR
     /// </summary>
     [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.Update))]
     [HarmonyTranspiler]
@@ -106,17 +107,6 @@ internal static class PhysGrabberPatches
         
         __instance.physGrabPointPlane.position = hand.position + hand.forward * distancePlane;
         __instance.physGrabPointPuller.position = hand.position + hand.forward * distancePuller;
-    }
-
-    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.PhysGrabLogic))]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> PhysGrabLogicPatches(IEnumerable<CodeInstruction> instructions)
-    {
-        return new CodeMatcher(instructions)
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Ldfld, Field(typeof(PhysGrabber), nameof(PhysGrabber.playerCamera))))
-            .Repeat(matcher => matcher.Advance(-1).ReplaceCameraWithHand())
-            .InstructionEnumeration();
     }
     
     /// <summary>
@@ -175,8 +165,9 @@ internal static class PhysGrabberPatches
             .InstructionEnumeration();
     }
 
-    // TODO: This method takes into account everyone who is holding it
-    // TODO: So we need to add special detection for if these other players are VR players
+    /// <summary>
+    /// Make the object turning input use the controller inputs instead of mouse inputs
+    /// </summary>
     [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ObjectTurning))]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> ObjectTurningPatches(IEnumerable<CodeInstruction> instructions)
@@ -186,17 +177,6 @@ internal static class PhysGrabberPatches
             .MatchForward(false, new CodeMatch(OpCodes.Ldstr, "Mouse X"))
             .RemoveInstructions(12)
             .Insert(new CodeInstruction(OpCodes.Call, ((Func<Vector3>)GetRotationInput).Method))
-            // Replace camera transform with hand transform (local player)
-            .MatchForward(false, new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraTransform))))
-            .Advance(-2)
-            .RemoveInstructions(3)
-            .Insert(new CodeInstruction(OpCodes.Call, ((Func<Transform>)GetHandTransform).Method))
-            // Replace camera transform with hand transform (remote player)
-            // TODO: VERY TODO, DOES NOT WORK PROPERLY YET
-            .MatchForward(false, new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraTransform))))
-            .Advance(-2)
-            .RemoveInstructions(3)
-            .Insert(new CodeInstruction(OpCodes.Call, ((Func<Transform>)GetHandTransform).Method))
             .InstructionEnumeration();
 
         static Vector3 GetRotationInput()
@@ -295,5 +275,55 @@ internal static class PhysGrabberPatches
 
             return grabber.overrideGrab && forceGrabTimer <= 0;
         }
+    }
+}
+
+[RepoXRPatch(RepoXRPatchTarget.Universal)]
+internal static class PhysGrabberUniversalPatches
+{
+    private static Transform GetHandTransform(PhysGrabber grabber)
+    {
+        if (grabber.playerAvatar.isLocal)
+            return VRSession.InVR ? VRSession.Instance.Player.MainHand : grabber.playerCamera.transform;
+
+        return NetworkSystem.instance.GetNetworkPlayer(grabber.playerAvatar, out var networkPlayer)
+            ? networkPlayer.GrabberHand
+            : grabber.playerCamera.transform;
+    }
+
+    /// <summary>
+    /// Make certain phys grabber logic be applied based on the hand instead of the head
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.PhysGrabLogic))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> PhysGrabLogicPatches(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(PhysGrabber), nameof(PhysGrabber.playerCamera))))
+            .SetInstructionAndAdvance(new CodeInstruction(OpCodes.Call,
+                ((Func<PhysGrabber, Transform>)GetHandTransform).Method))
+            .InstructionEnumeration();
+    }
+
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ObjectTurning))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> ObjectTurningPatches(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            // Replace camera transform with hand transform (local player)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraTransform))))
+            .Advance(-1)
+            .RemoveInstructions(2)
+            .Insert(new CodeInstruction(OpCodes.Call, ((Func<PhysGrabber, Transform>)GetHandTransform).Method))
+            // Replace camera transform with hand transform (remote player)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraTransform))))
+            .Advance(-1)
+            .RemoveInstructions(2)
+            .Insert(new CodeInstruction(OpCodes.Call,
+                ((Func<PhysGrabber, Transform>)GetHandTransform).Method))
+            .InstructionEnumeration();
     }
 }

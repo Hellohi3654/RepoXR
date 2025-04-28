@@ -32,7 +32,8 @@ public class VRCameraAim : MonoBehaviour
     private float aimTargetSoftStrength;
     private float aimTargetSoftStrengthNoAim;
     private int aimTargetSoftPriority = 999;
-
+    private bool aimTargetSoftLowImpact;
+    
     private float aimTargetSoftStrengthCurrent;
 
     private Quaternion lastCameraRotation;
@@ -91,8 +92,13 @@ public class VRCameraAim : MonoBehaviour
             var targetStrength = playerAimingTimer <= 0 ? aimTargetSoftStrengthNoAim : aimTargetSoftStrength;
 
             aimTargetSoftStrengthCurrent = Mathf.Lerp(aimTargetSoftStrengthCurrent, targetStrength, 10 * Time.deltaTime);
-            rotation = Quaternion.Lerp(rotation, GetLookRotation(aimTargetSoftPosition),
-                aimTargetSoftStrengthCurrent * Time.deltaTime);
+
+            targetRotation = GetLookRotation(aimTargetSoftPosition);
+
+            if (aimTargetSoftLowImpact)
+                targetRotation = Quaternion.Euler(0, targetRotation.eulerAngles.y, 0);
+            
+            rotation = Quaternion.Lerp(rotation, targetRotation, aimTargetSoftStrengthCurrent * Time.deltaTime);
 
             aimTargetSoftTimer -= Time.deltaTime;
 
@@ -159,7 +165,7 @@ public class VRCameraAim : MonoBehaviour
         if (CameraNoPlayerTarget.instance)
             yRot = CameraNoPlayerTarget.instance.transform.eulerAngles.y;
         
-        var angle = new Vector3(0, yRot - TrackingInput.Instance.HeadTransform.localEulerAngles.y, 0);
+        var angle = new Vector3(0, yRot - TrackingInput.instance.HeadTransform.localEulerAngles.y, 0);
         
         ForceSetRotation(angle);
     }
@@ -182,7 +188,7 @@ public class VRCameraAim : MonoBehaviour
     }
 
     public void SetAimTargetSoft(Vector3 position, float time, float strength, float strengthNoAim, GameObject obj,
-        int priority)
+        int priority, bool lowImpact = false)
     {
         if (priority > aimTargetSoftPriority)
             return;
@@ -199,6 +205,7 @@ public class VRCameraAim : MonoBehaviour
         aimTargetSoftStrengthNoAim = strengthNoAim;
         aimTargetSoftObject = obj;
         aimTargetSoftPriority = priority;
+        aimTargetSoftLowImpact = lowImpact;
     }
 }
 

@@ -33,10 +33,13 @@ public class VRPlayer : MonoBehaviour
     
     // Public state
     public float disableRotateTimer;
+    public bool physicalCrouch;
     
     // Private state
+    private float movementRelative;
     private bool turnedLastInput;
     private Vector3 lastPosition;
+    private bool wasPhysicalCrouch;
     
     private void Awake()
     {
@@ -92,6 +95,7 @@ public class VRPlayer : MonoBehaviour
     private void FixedUpdate()
     {
         HandleMovement();
+        HandleCrouching();
     }
 
     private void Update()
@@ -143,7 +147,6 @@ public class VRPlayer : MonoBehaviour
     private void HandleMovement()
     {
         // No tracking data yet
-        // TODO: Can probably be removed
         if (mainCamera.transform.localPosition == Vector3.zero)
             return;
 
@@ -155,18 +158,61 @@ public class VRPlayer : MonoBehaviour
         var movement = new Vector3(headPosition.x - lastPosition.x, 0, headPosition.z - lastPosition.z);
 
         cameraPosition.additionalOffset = -(mainCamera.transform.parent.rotation *
-                                          new Vector3(mainCamera.localPosition.x, 0,
-                                              mainCamera.localPosition.z)); // Will make the game run like 3-DoF
+                                            new Vector3(mainCamera.localPosition.x, 0,
+                                                mainCamera.localPosition.z)); // Will make the game run like 3-DoF
         PlayerController.instance.rb.MovePosition(PlayerController.instance.rb.transform.position +
-                                                  mainCamera.transform.parent.rotation * movement);
+                                                  mainCamera.transform.parent.rotation *
+                                                  movement); // Will make the game run like 6-DoF again
+
+        movementRelative += movement.sqrMagnitude;
+
+        if (movementRelative > 0.00025f)
+        {
+            PlayerController.instance.movingResetTimer = 0.1f;
+            PlayerController.instance.moving = true;
+        }
+
+        movementRelative = Mathf.Lerp(movementRelative, 0, 5 * Time.fixedDeltaTime);
 
         lastPosition = headPosition;
     }
 
+    private void HandleCrouching()
+    {
+        var offset = 1.5f - cameraPosition.original.playerOffset.y;
+        var diff = mainCamera.transform.localPosition.y - offset;
+        
+        if (diff > 0.5f) // Check if we're getting too tall
+            ResetHeight();
+        else if (diff < -offset + 0.05f) // Check if going through floor (with 5cm offset)
+            ResetHeight();
+
+        if (diff <= -0.6f)
+            physicalCrouch = true;
+        else if (diff > -0.6f)
+            physicalCrouch = false;
+
+        if (physicalCrouch != wasPhysicalCrouch)
+        {
+            wasPhysicalCrouch = physicalCrouch;
+
+            // If we were previously crouching but not anymore, set the player to uncrouch
+            if (!physicalCrouch)
+            {
+                PlayerController.instance.toggleCrouch = false;
+                CameraCrouchPosition.instance.Lerp = 0; // Prevent animation when physically uncrouching
+            }
+        }
+
+        // If we're physically crouching, set the player to crouch
+        if (physicalCrouch)
+            PlayerController.instance.toggleCrouch = true;
+    }
+    
     private void HandleTurning()
     {
-        // Block turning if we are rotating an object
-        if (PlayerAvatar.instance.physGrabber.isRotating)
+        // Block turning if we are rotating an object or being blocked by a menu
+        if (PlayerAvatar.instance.physGrabber.isRotating || PlayerController.instance.InputDisableTimer > 0)
             return;
         
         var value = Actions.Instance["Turn"].ReadValue<float>();

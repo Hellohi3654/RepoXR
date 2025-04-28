@@ -2,6 +2,7 @@
 using RepoXR.Assets;
 using RepoXR.Input;
 using RepoXR.Managers;
+using RepoXR.Networking;
 using RepoXR.Patches;
 using RepoXR.UI;
 using UnityEngine;
@@ -17,7 +18,10 @@ internal static class Entrypoint
 {
     public static void OnSceneLoad(string _)
     {
-        SetupDefaultSceneVR();
+        if (Plugin.Flags.HasFlag(Flags.VR))
+            SetupDefaultSceneVR();
+
+        SetupDefaultSceneUniversal();
     }
 
     /// <summary>
@@ -97,6 +101,14 @@ internal static class Entrypoint
         // Create custom camera (if enabled)
         if (Plugin.Config.EnableCustomCamera.Value)
             Object.Instantiate(AssetCollection.CustomCamera, Camera.main.transform.parent);
+    }
+
+    /// <summary>
+    /// The default setup for every scene (including for non-vr players)
+    /// </summary>
+    private static void SetupDefaultSceneUniversal()
+    {
+        new GameObject("RepoXR Network System").AddComponent<NetworkSystem>();
     }
     
     /// <summary>

@@ -7,10 +7,9 @@ namespace RepoXR.Input;
 /// <summary>
 /// Tracking input can be used to easily read out position and rotation data, even when a new scene is being loaded
 /// </summary>
-// TODO: If possible, see if this can be removed (and instead use Camera.main or something)
 public class TrackingInput : MonoBehaviour
 {
-    public static TrackingInput Instance;
+    public static TrackingInput instance;
     
     public Transform HeadTransform { get; private set; }
     public Transform LeftHandTransform { get; private set; }
@@ -18,13 +17,13 @@ public class TrackingInput : MonoBehaviour
     
     private void Awake()
     {
-        if (Instance != null)
+        if (instance != null)
         {
             Destroy(gameObject);
             return;
         }
         
-        Instance = this;
+        instance = this;
         DontDestroyOnLoad(gameObject);
         
         CreateTrackingOrigins();
