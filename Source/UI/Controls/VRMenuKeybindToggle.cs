@@ -1,9 +1,9 @@
 ﻿using RepoXR.Input;
 using UnityEngine;
 
-namespace RepoXR.UI;
+namespace RepoXR.UI.Controls;
 
-// TODO: Move to UI.Controls namespace;
+// TODO: Move to UI.Controls namespace in Unity!
 public class VRMenuKeybindToggle: MonoBehaviour
 {
     public string inputAction;

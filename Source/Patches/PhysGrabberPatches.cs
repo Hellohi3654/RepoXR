@@ -104,11 +104,11 @@ internal static class PhysGrabberPatches
         var hand = GetHandTransform();
         var distancePlane = Vector3.Distance(hand.position, __instance.physGrabPointPlane.position);
         var distancePuller = Vector3.Distance(hand.position, __instance.physGrabPointPuller.position);
-        
+
         __instance.physGrabPointPlane.position = hand.position + hand.forward * distancePlane;
         __instance.physGrabPointPuller.position = hand.position + hand.forward * distancePuller;
     }
-    
+
     /// <summary>
     /// When grabbing items, shoot rays out of the hand, instead of the camera
     /// </summary>
@@ -186,7 +186,7 @@ internal static class PhysGrabberPatches
             return new Vector3(input.x, input.y, 0) * 20 * Time.deltaTime;
         }
     }
-    
+
     /// <summary>
     /// Move the grab beam origin to the hand
     /// </summary>
@@ -196,7 +196,7 @@ internal static class PhysGrabberPatches
     {
         if (!__instance.playerAvatar.isLocal)
             return;
-        
+
         __instance.PhysGrabPointOrigin.SetParent(VRSession.Instance.Player.MainHand);
         __instance.PhysGrabPointOrigin.localPosition = Vector3.zero;
     }

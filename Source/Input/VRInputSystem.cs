@@ -24,6 +24,7 @@ public class VRInputSystem : MonoBehaviour
         playerInput = gameObject.AddComponent<PlayerInput>();
         playerInput.actions = AssetCollection.VRInputs;
         playerInput.defaultActionMap = "VR Actions";
+        playerInput.defaultControlScheme = "Oculus";
         playerInput.neverAutoSwitchControlSchemes = false;
         playerInput.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
         

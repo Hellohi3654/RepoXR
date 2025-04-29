@@ -8,7 +8,7 @@ namespace RepoXR.Player;
 
 public class VRInventory : MonoBehaviour
 {
-    [SerializeField] protected Transform visualsTransform;
+    public Transform visualsTransform;
     
     [SerializeField] protected VRInventorySlot[] slots;
     
@@ -30,6 +30,9 @@ public class VRInventory : MonoBehaviour
         HandleSlotInteract();
     }
 
+    /// <summary>
+    /// The code for handling when an item is held by the player's phys grabber
+    /// </summary>
     private void HandleHoldItem()
     {
         visualsTransform.localScale = Vector3.Lerp(visualsTransform.localScale, Vector3.one * (holdingItem ? 3 : 1),

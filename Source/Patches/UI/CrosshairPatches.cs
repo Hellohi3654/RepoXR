@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RepoXR.UI;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 
 namespace RepoXR.Patches.UI;
@@ -29,5 +30,6 @@ internal static class CrosshairPatches
         __instance.transform.localScale = Vector3.one;
 
         canvas.gameObject.AddComponent<Crosshair>();
+        canvas.gameObject.SetLayerRecursively(0); // We don't need on-top rendering
     }
 }

@@ -25,7 +25,7 @@ jobs:
           # Extract package version from project
           version=$(grep -oP '<Version>\K[^<]+' RepoXR.csproj)
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GIHTUB_OUTPUT
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           
       - name: Setup Dotnet
         uses: actions/setup-dotnet@v4
@@ -40,7 +40,7 @@ jobs:
         
       - name: Configure GPG Key
         run: |
-          echo -N "$GPG_SIGNING_KEY" | base64 --decode | gpg --import
+          echo -n "$GPG_SIGNING_KEY" | base64 --decode | gpg --import
         env:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
           
@@ -52,7 +52,7 @@ jobs:
           
           # Copy and sign debug binaries
           cp bin/Debug/netstandard2.1/RepoXR.dll ./package/BepInEx/plugins/RepoXR/
-          cp bin?Debug/netstandard2.1/RepoXR.Preload.dll ./package/BepInEx/patchers/RepoXR/
+          cp bin/Debug/netstandard2.1/RepoXR.Preload.dll ./package/BepInEx/patchers/RepoXR/
           gpg --output ./package/BepInEx/plugins/RepoXR/RepoXR.dll.sig --detach-sig ./package/BepInEx/plugins/RepoXR/RepoXR.dll
           gpg --output ./package/BepInEx/patchers/RepoXR/RepoXR.Preload.dll.sig --detach-sig ./package/BepInEx/patchers/RepoXR/RepoXR.Preload.dll
 
@@ -61,7 +61,6 @@ jobs:
           
           # Copy docs and license
           cp CHANGELOG.md ./package/CHANGELOG.md
-          cp Docs/Thunderstore/README.md ./package/README.md
           cp LICENSE ./package/LICENSE
           
           # Update Thunderstore manifest

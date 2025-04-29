@@ -4,12 +4,16 @@ using HarmonyLib;
 using RepoXR.Input;
 using RepoXR.Networking;
 using RepoXR.Player.Camera;
+using RepoXR.UI;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace RepoXR.Player;
 
+// TODO: Rename
 public class FirstPersonVRRig : MonoBehaviour
 {
     private static readonly int AlbedoColor = Shader.PropertyToID("_AlbedoColor");
@@ -96,6 +100,7 @@ public class FirstPersonVRRig : MonoBehaviour
         UpdateArms();
         UpdateClaw();
         MapToolLogic();
+        WallClipLogic();
     }
 
     private void UpdateArms()
@@ -218,7 +223,33 @@ public class FirstPersonVRRig : MonoBehaviour
                 
         NetworkSystem.instance.UpdateMapToolState(FlashlightController.Instance.hideFlashlight, mapHeldLeftHand);
     }
-    
+
+    /// <summary>
+    /// Detects clipping through walls with the VR rig arms and disables grabbing and the cursor
+    /// </summary>
+    private void WallClipLogic()
+    {
+        var camera = CameraUtils.Instance.MainCamera.transform;
+        var direction = rightHandTip.position - camera.position;
+
+        // TODO: Disable grabbing new items/enemies/players while occluded
+        
+        if (Physics.Raycast(new Ray(camera.position, direction), out var info,
+                Vector3.Distance(camera.position, rightHandTip.position), Crosshair.LayerMask))
+        {
+            // HIT!
+            Logger.LogDebug("HIT! We should disable grabbing new items (but allow current item if it's still held)");
+            
+            Crosshair.instance.gameObject.SetActive(false);
+        }
+        else
+        {
+            // Not hit!
+            
+            Crosshair.instance.gameObject.SetActive(true);
+        }
+    }
+
     public void SetVisible(bool visible)
     {
         foreach (var mesh in meshes)

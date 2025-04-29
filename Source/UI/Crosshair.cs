@@ -6,12 +6,24 @@ namespace RepoXR.UI;
 
 public class Crosshair : MonoBehaviour
 {
-    private const int LayerMask = 1 << 0 | 1 << 9 | 1 << 10 | 1 << 16 | 1 << 20 | 1 << 23;
+    public static Crosshair instance;
+    
+    public const int LayerMask = 1 << 0 | 1 << 9 | 1 << 10 | 1 << 16 | 1 << 20 | 1 << 23;
     
     private Transform handTransform;
     private Transform camera;
     private Transform sprite;
-    
+
+    private void Awake()
+    {
+        instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        instance = null!;
+    }
+
     private IEnumerator Start()
     {
         yield return null;

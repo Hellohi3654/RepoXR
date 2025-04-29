@@ -11,8 +11,10 @@ public class XRRayInteractorManager : MonoBehaviour
 {
     public static XRRayInteractorManager? Instance { get; private set; }
 
-    private XRRayInteractor leftController;
-    private XRRayInteractor rightController;
+    private XRRayInteractor leftInteractor;
+    private XRRayInteractor rightInteractor;
+    private ActionBasedController leftActions;
+    private ActionBasedController rightActions;
     private LineRenderer leftRenderer;
     private LineRenderer rightRenderer;
 
@@ -22,14 +24,11 @@ public class XRRayInteractorManager : MonoBehaviour
     {
         Instance = this;
         
-        leftController = CreateInteractorController("Left");
-        rightController = CreateInteractorController("Right");
+        (leftActions, leftInteractor, leftRenderer) = CreateInteractorController("Left");
+        (rightActions, rightInteractor, rightRenderer) = CreateInteractorController("Right");
         
-        leftRenderer = leftController.GetComponent<LineRenderer>();
-        rightRenderer = rightController.GetComponent<LineRenderer>();
-        
-        leftController.GetComponent<ActionBasedController>().uiPressAction.action.performed += LeftControllerPressed;
-        rightController.GetComponent<ActionBasedController>().uiPressAction.action.performed += RightControllerPressed;
+        leftActions.uiPressAction.action.performed += LeftControllerPressed;
+        rightActions.uiPressAction.action.performed += RightControllerPressed;
         
         UpdateActiveController(ActiveController.Right);
     }
@@ -38,14 +37,14 @@ public class XRRayInteractorManager : MonoBehaviour
     {
         Instance = null;
         
-        leftController.GetComponent<ActionBasedController>().uiPressAction.action.performed -= LeftControllerPressed;
-        rightController.GetComponent<ActionBasedController>().uiPressAction.action.performed -= RightControllerPressed;
+        leftActions.uiPressAction.action.performed -= LeftControllerPressed;
+        rightActions.uiPressAction.action.performed -= RightControllerPressed;
     }
 
     public void SetVisible(bool visible)
     {
-        leftController.GetComponent<XRInteractorLineVisual>().enabled = visible;
-        rightController.GetComponent<XRInteractorLineVisual>().enabled = visible;
+        leftInteractor.GetComponent<XRInteractorLineVisual>().enabled = visible;
+        rightInteractor.GetComponent<XRInteractorLineVisual>().enabled = visible;
     }
 
     public void SetLineSortingOrder(int sortingOrder)
@@ -66,7 +65,8 @@ public class XRRayInteractorManager : MonoBehaviour
 
     public Vector2 GetUIHitPosition(RectTransform? rect)
     {
-        if (!GetActiveInteractor().TryGetCurrentUIRaycastResult(out var result))
+        var (interactor, _) = GetActiveInteractor();
+        if (!interactor.TryGetCurrentUIRaycastResult(out var result))
             return Vector2.one * -1000;
 
         var canvas = rect == null
@@ -79,30 +79,34 @@ public class XRRayInteractorManager : MonoBehaviour
 
     public bool GetTriggerDown()
     {
-        return GetActiveInteractor().GetComponent<ActionBasedController>().uiPressAction.action.WasPressedThisFrame();
+        var (_, actions) = GetActiveInteractor();
+        return actions.uiPressAction.action.WasPressedThisFrame();
     }
 
     public bool GetTriggerButton()
     {
-        return GetActiveInteractor().GetComponent<ActionBasedController>().uiPressAction.action.IsPressed();
+        var (_, actions) = GetActiveInteractor();
+        return actions.uiPressAction.action.IsPressed();
     }
 
     public float GetUIScrollX()
     {
-        return GetActiveInteractor().GetComponent<ActionBasedController>().uiScrollAction.action.ReadValue<Vector2>().x;
+        var (_, actions) = GetActiveInteractor();
+        return actions.uiScrollAction.action.ReadValue<Vector2>().x;
     }
 
     public float GetUIScrollY()
     {
-        return GetActiveInteractor().GetComponent<ActionBasedController>().uiScrollAction.action.ReadValue<Vector2>().y;
+        var (_, actions) = GetActiveInteractor();
+        return actions.uiScrollAction.action.ReadValue<Vector2>().y;
     }
 
     private void UpdateActiveController(ActiveController newValue)
     {
         activeController = newValue;
         
-        var oldInteractor = newValue == ActiveController.Left ? rightController : leftController;
-        var newInteractor = newValue == ActiveController.Left ? leftController : rightController;
+        var oldInteractor = newValue == ActiveController.Left ? rightInteractor : leftInteractor;
+        var newInteractor = newValue == ActiveController.Left ? leftInteractor : rightInteractor;
 
         var oldVisual = oldInteractor.GetComponent<XRInteractorLineVisual>();
         var newVisual = newInteractor.GetComponent<XRInteractorLineVisual>();
@@ -157,17 +161,17 @@ public class XRRayInteractorManager : MonoBehaviour
         };
     }
 
-    private XRRayInteractor GetActiveInteractor()
+    private (XRRayInteractor, ActionBasedController) GetActiveInteractor()
     {
         return activeController switch
         {
-            ActiveController.Left => leftController,
-            ActiveController.Right => rightController,
+            ActiveController.Left => (leftInteractor, leftActions),
+            ActiveController.Right => (rightInteractor, rightActions),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
     
-    private XRRayInteractor CreateInteractorController(string hand)
+    private (ActionBasedController, XRRayInteractor, LineRenderer) CreateInteractorController(string hand)
     {
         var go = new GameObject($"{hand} Controller")
         {
@@ -206,7 +210,7 @@ public class XRRayInteractorManager : MonoBehaviour
         
         AddActionBasedControllerBinds(controller, hand);
         
-        return interactor;
+        return (controller, interactor, renderer);
     }
 
     private static void AddActionBasedControllerBinds(ActionBasedController controller, string hand)

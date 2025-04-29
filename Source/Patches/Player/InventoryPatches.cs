@@ -83,6 +83,15 @@ internal static class InventoryPatches
     [HarmonyPrefix]
     private static bool ItemUnequipNoTeleport(ItemEquippable __instance)
     {
+        if (VRSession.Instance is not { } session)
+            return true;
+
+        // PlayerAvatar position is at the feet, so if the visuals are below that, they're underneath the floor
+        // So when an item would be unequipped below the floor, we just re-enable the original functionality
+        if (session.Player.Rig.inventoryController.visualsTransform.position.y <
+            PlayerAvatar.instance.transform.position.y)
+            return true;
+        
         __instance.teleportPosition = __instance.transform.position;
 
         return false;

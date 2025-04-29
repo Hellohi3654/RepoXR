@@ -126,16 +126,6 @@ public class VRPlayer : MonoBehaviour
         localRig.SetColor(color);
     }
 
-    public void SetHurtColor(Color color)
-    {
-        localRig.SetHurtColor(color);
-    }
-    
-    public void SetHurtAmount(float amount)
-    {
-        localRig.SetHurtAmount(amount);
-    }
-
     private void ResetHeight()
     {
         const float targetHeight = 1.5f;

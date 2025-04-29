@@ -21,9 +21,9 @@ internal static class PlayerHealthPatches
             return;
 
         if (!__instance.materialEffect)
-            session.Player.SetHurtAmount(0);
+            session.Player.Rig.SetHurtAmount(0);
         else
-            session.Player.SetHurtAmount(__instance.materialEffectCurve.Evaluate(__instance.materialEffectLerp));
+            session.Player.Rig.SetHurtAmount(__instance.materialEffectCurve.Evaluate(__instance.materialEffectLerp));
     }
 
     /// <summary>
@@ -45,11 +45,11 @@ internal static class PlayerHealthPatches
 
         if (VRSession.Instance is not { } session)
             return;
-        
+
         __instance.materialEffect = true;
         __instance.materialEffectLerp = 0;
-        
-        session.Player.SetHurtColor(Color.red);
+
+        session.Player.Rig.SetHurtColor(Color.red);
     }
 
     /// <summary>
@@ -74,8 +74,8 @@ internal static class PlayerHealthPatches
         {
             if (!health.playerAvatar.isLocal || VRSession.Instance is not { } session)
                 return;
-            
-            session.Player.SetHurtColor(newColor);
+
+            session.Player.Rig.SetHurtColor(newColor);
         }
     }
 
@@ -88,7 +88,7 @@ internal static class PlayerHealthPatches
     {
         if (!__instance.playerAvatar.isLocal || VRSession.Instance is not { } session)
             return;
-        
-        session.Player.SetHurtColor(new Color(0, 1, 0.25f));
+
+        session.Player.Rig.SetHurtColor(new Color(0, 1, 0.25f));
     }
 }
