@@ -4,9 +4,9 @@
 
 - TODO: Equipping items as non-host causes player to hit themselves (**fixed**, not tested!)
 - TODO: Teleport items in front of camera if they would be grabbed below the floor (**fixed**, not tested!)
+- TODO: Map not visible for other players (**fixed**, not tested)
 - TODO: Default turn down camera effects by a lot (partially implemented)
 - TODO: Maybe prevent certain interactions through walls (partially implemented)
-- TODO: Map not visible for other players
 - TODO: Crouching needs smaller Z offset on grabber etc
 - TODO: Spectating support better yes idk
 - TODO: Secret flashlight feature that I thought of

@@ -72,7 +72,7 @@ internal static class MapToolPatches
             .InstructionEnumeration();
 
         static float GetMaximumScale(MapToolController controller) =>
-            controller.PlayerAvatar.isLocal && !SemiFunc.MenuLevel() ? 0.75f : 0;
+            controller.PlayerAvatar.isLocal && !SemiFunc.MenuLevel() ? 0.75f : 1;
 
         static float GetMinimumScale(MapToolController controller) =>
             controller.PlayerAvatar.isLocal && !SemiFunc.MenuLevel() ? 0.25f : 0;
