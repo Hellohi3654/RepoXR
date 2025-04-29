@@ -27,19 +27,17 @@ internal static class CameraEffectsPatches
     }
 
     /// <summary>
-    /// Reduce camera bobbing by 80%
+    /// Reduce camera bobbing by 75%
     /// </summary>
-    // TODO: Not tested, transpiler might fail
     [HarmonyPatch(typeof(CameraBob), nameof(CameraBob.Update))]
     [HarmonyTranspiler]
-    [HarmonyDebug]
     private static IEnumerable<CodeInstruction> ReduceCameraBob(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,
                 new CodeMatch(OpCodes.Ldfld, Field(typeof(GameplayManager), nameof(GameplayManager.cameraAnimation))))
-            .Repeat(matcher => matcher.InsertAndAdvance(
-                new CodeInstruction(OpCodes.Ldc_R4, 0.2f),
+            .Repeat(matcher => matcher.Advance(1).InsertAndAdvance(
+                new CodeInstruction(OpCodes.Ldc_R4, 0.25f),
                 new CodeInstruction(OpCodes.Mul)
             ))
             .InstructionEnumeration();

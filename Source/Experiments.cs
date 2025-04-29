@@ -1,9 +1,10 @@
 ﻿using HarmonyLib;
+using RepoXR.Patches;
 
 namespace RepoXR;
 
 #if DEBUG
-// [RepoXRPatch(RepoXRPatchTarget.Universal)]
+[RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class Experiments
 {
     [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.Awake))]

@@ -28,6 +28,8 @@ internal static class AssetCollection
 
     public static TMP_SpriteAsset TMPInputsSpriteAsset;
 
+    public static Shader VignetteShader;
+
     public static bool LoadAssets()
     {
         assetBundle =
@@ -56,6 +58,8 @@ internal static class AssetCollection
         VideoOverlay = assetBundle.LoadAsset<Material>("Video Overlay");
         
         TMPInputsSpriteAsset = assetBundle.LoadAsset<TMP_SpriteAsset>("TMPInputsSpriteAsset");
+
+        VignetteShader = assetBundle.LoadAsset<Shader>("VignetteVR");
         
         return true;
     }

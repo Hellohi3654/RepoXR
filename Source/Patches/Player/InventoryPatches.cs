@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using Photon.Pun;
 using RepoXR.Managers;
+using RepoXR.Networking;
 using UnityEngine;
 using static HarmonyLib.AccessTools;
 
@@ -81,7 +83,7 @@ internal static class InventoryPatches
     /// </summary>
     [HarmonyPatch(typeof(ItemEquippable), nameof(ItemEquippable.RayHitTestNew))]
     [HarmonyPrefix]
-    private static bool ItemUnequipNoTeleport(ItemEquippable __instance)
+    private static bool ItemUnequipNoTeleport(ItemEquippable __instance, float distance)
     {
         if (VRSession.Instance is not { } session)
             return true;
@@ -90,7 +92,17 @@ internal static class InventoryPatches
         // So when an item would be unequipped below the floor, we just re-enable the original functionality
         if (session.Player.Rig.inventoryController.visualsTransform.position.y <
             PlayerAvatar.instance.transform.position.y)
-            return true;
+        {
+            var mask = SemiFunc.LayerMaskGetVisionObstruct() & ~LayerMask.GetMask("Ignore Raycast", "CollisionCheck");
+            if (Physics.Raycast(PlayerAvatar.instance.transform.position + Vector3.up * 0.2f,
+                    PlayerAvatar.instance.transform.forward, out var hit, distance, mask))
+            {
+                __instance.teleportPosition = hit.point;
+                return false;
+            }
+
+            __instance.teleportPosition = PlayerAvatar.instance.transform.position + Vector3.up * 0.2f;
+        }
         
         __instance.teleportPosition = __instance.transform.position;
 
@@ -143,8 +155,11 @@ internal static class InventoryPatches
     {
         if (__instance.currentState != InventorySpot.SpotState.Occupied)
             return;
+
+        if (VRSession.Instance is not { } session)
+            return;
     
-        VRSession.Instance.Player.Rig.inventoryController.UnequipItem(__instance.CurrentItem);
+        session.Player.Rig.inventoryController.UnequipItem(__instance.CurrentItem);
     }
 
     /// <summary>
@@ -169,6 +184,7 @@ internal static class UniversalInventoryPatches
     private static bool DontMeleeWhenEquipped(ItemMelee __instance)
     {
         return !(__instance.itemEquippable.currentState == ItemEquippable.ItemState.Equipped &&
-                 __instance.playerAvatar != null && __instance.playerAvatar.IsVRPlayer());
+            !SemiFunc.IsMultiplayer() || PhotonView.Find(__instance.itemEquippable.ownerPlayerId)
+                .GetComponent<PlayerAvatar>().IsVRPlayer());
     }
 }
