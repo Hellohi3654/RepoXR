@@ -90,6 +90,8 @@ public class GameHud : MonoBehaviour
         tumbleUi.parts1[1].GetComponent<RectTransform>().anchoredPosition += Vector2.down * 0.3f;
         tumbleUi.parts2[0].GetComponent<RectTransform>().anchoredPosition += Vector2.up * 0.3f;
         tumbleUi.parts2[1].GetComponent<RectTransform>().anchoredPosition += Vector2.down * 0.3f;
+        
+        OverlayCanvas.UpdateCanvasRectTransform(true); // TODO: Test if this fixes the sizing stuff?
     }
 
     /// <summary>

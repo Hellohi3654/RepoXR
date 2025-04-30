@@ -16,7 +16,7 @@ public class VRInventory : MonoBehaviour
     [SerializeField] protected Color hoverColor;
     [SerializeField] protected Color equippedColor;
 
-    public FirstPersonVRRig rig;
+    public VRRig rig;
 
     private bool holdingItem;
     private int hoveredSlot = -1;

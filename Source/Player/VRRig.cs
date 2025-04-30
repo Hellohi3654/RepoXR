@@ -13,8 +13,7 @@ using Vector3 = UnityEngine.Vector3;
 
 namespace RepoXR.Player;
 
-// TODO: Rename
-public class FirstPersonVRRig : MonoBehaviour
+public class VRRig : MonoBehaviour
 {
     private static readonly int AlbedoColor = Shader.PropertyToID("_AlbedoColor");
     private static readonly int HurtColor = Shader.PropertyToID("_ColorOverlayAmount");
@@ -232,15 +231,12 @@ public class FirstPersonVRRig : MonoBehaviour
         var camera = CameraUtils.Instance.MainCamera.transform;
         var direction = rightHandTip.position - camera.position;
 
-        // TODO: Disable grabbing new items/enemies/players while occluded
-        
-        if (Physics.Raycast(new Ray(camera.position, direction), out var info,
+        if (Physics.Raycast(new Ray(camera.position, direction), out _,
                 Vector3.Distance(camera.position, rightHandTip.position), Crosshair.LayerMask))
         {
             // HIT!
-            Logger.LogDebug("HIT! We should disable grabbing new items (but allow current item if it's still held)");
-            
             Crosshair.instance.gameObject.SetActive(false);
+            PhysGrabber.instance.grabDisableTimer = 0.1f;
         }
         else
         {

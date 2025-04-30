@@ -123,11 +123,6 @@ internal static class Utils
         ui.Start();
     }
 
-    public static IEnumerable<T> GetFlags<T>(this T input) where T : Enum
-    {
-        return Enum.GetValues(input.GetType()).Cast<T>().Where(value => input.HasFlag(value));
-    }
-
     public static void ReplaceOrInsert<T>(this List<T> list, T item, Predicate<T> match)
     {
         var index = list.FindIndex(match);

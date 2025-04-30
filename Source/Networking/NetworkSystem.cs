@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using HarmonyLib;
 using Photon.Pun;
 using RepoXR.Networking.Frames;
@@ -75,43 +76,59 @@ public class NetworkSystem : MonoBehaviour
         });
     }
 
-    private void EnqueueFrame<T>(T frame) where T : IFrame
+    /// <summary>
+    /// Enqueues a frame to be sent next serialization sequence. This function contains an optimization that removes
+    /// duplicate frames to reduce network usage, which reduces server costs.
+    /// </summary>
+    private void EnqueueFrame<T>(T frame, bool removeDuplicate = true) where T : IFrame
     {
-        scheduledFrames.ReplaceOrInsert(frame, f => f.GetType() == typeof(T));
+        if (removeDuplicate)
+            scheduledFrames.ReplaceOrInsert(frame, f => f.GetType() == typeof(T));
+        else
+            scheduledFrames.Add(frame);
     }
 
     // Handling
 
     private void HandleFrame(PlayerAvatar player, IFrame frame)
     {
-        if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_ANNOUNCEMENT)
+        try
         {
-            if (networkPlayers.ContainsKey(player.photonView.ControllerActorNr))
-                return;
+            if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_ANNOUNCEMENT)
+            {
+                if (networkPlayers.ContainsKey(player.photonView.ControllerActorNr))
+                    return;
 
-            var networkPlayer = new GameObject($"VR Player Rig - {player.playerName}").AddComponent<NetworkPlayer>();
-            networkPlayer.playerAvatar = player;
+                var networkPlayer =
+                    new GameObject($"VR Player Rig - {player.playerName}").AddComponent<NetworkPlayer>();
+                networkPlayer.playerAvatar = player;
 
-            networkPlayers.Add(player.photonView.ControllerActorNr, networkPlayer);
-            knownPhotonIds.Add(player.photonView.ControllerActorNr);
+                networkPlayers.Add(player.photonView.ControllerActorNr, networkPlayer);
+                knownPhotonIds.Add(player.photonView.ControllerActorNr);
+            }
+            else if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_RIG)
+            {
+                var rigFrame = (Rig)frame;
+
+                if (!networkPlayers.TryGetValue(player.photonView.ControllerActorNr, out var networkPlayer))
+                    return;
+
+                networkPlayer.HandleRigFrame(rigFrame);
+            }
+            else if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_MAPTOOL)
+            {
+                var mapFrame = (MapTool)frame;
+
+                if (!networkPlayers.TryGetValue(player.photonView.controllerActorNr, out var networkPlayer))
+                    return;
+
+                networkPlayer.HandleMapFrame(mapFrame);
+            }
         }
-        else if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_RIG)
+        catch (Exception ex)
         {
-            var rigFrame = (Rig)frame;
-
-            if (!networkPlayers.TryGetValue(player.photonView.ControllerActorNr, out var networkPlayer))
-                return;
-
-            networkPlayer.HandleRigFrame(rigFrame);
-        }
-        else if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_MAPTOOL)
-        {
-            var mapFrame = (MapTool)frame;
-
-            if (!networkPlayers.TryGetValue(player.photonView.controllerActorNr, out var networkPlayer))
-                return;
-
-            networkPlayer.HandleMapFrame(mapFrame);
+            Logger.LogError($"Error while handling frame {FrameHelper.GetFrameID(frame)} ({frame.GetType().Name}): {ex.Message}");
+            Logger.LogError(ex.StackTrace);
         }
     }
 

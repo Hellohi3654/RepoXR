@@ -79,3 +79,22 @@ public class VRCustomCamera : MonoBehaviour
         overlayImage.color = FadeOverlay.Instance.Image.color;
     }
 }
+
+/// <summary>
+/// A custom tumble UI that behaves the same as the base game tumble UI, but is exclusively used for the custom camera
+/// </summary>
+public class CustomTumbleUI : TumbleUI
+{
+    public new static CustomTumbleUI? instance;
+    
+    private new void Awake()
+    {
+        instance = this;
+        canvasGroup = GetComponent<CanvasGroup>();
+    }
+
+    private void OnDestroy()
+    {
+        instance = null;
+    }
+}

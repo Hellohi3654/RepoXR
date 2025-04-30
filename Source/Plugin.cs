@@ -27,7 +27,7 @@ public class Plugin : BaseUnityPlugin
     private const string SKIP_CHECKSUM_VAR = $"--repoxr-skip-checksum={PLUGIN_VERSION}";
     #endif
 
-    private const string HASHES_OVERRIDE_URL = "https://gist.githubusercontent.com/DaXcess/033e8ff514c505d2372e6f55a412dc00/raw";
+    private const string HASHES_OVERRIDE_URL = "https://gist.githubusercontent.com/DaXcess/033e8ff514c505d2372e6f55a412dc00/raw/RepoXR%2520Game%2520Hashes";
 
     private readonly string[] GAME_ASSEMBLY_HASHES =
     [

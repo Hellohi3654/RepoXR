@@ -2,6 +2,7 @@
 using System.Reflection.Emit;
 using HarmonyLib;
 using RepoXR.Input;
+using RepoXR.Player.Camera;
 using RepoXR.UI;
 using UnityEngine;
 using static HarmonyLib.AccessTools;
@@ -224,8 +225,7 @@ internal static class UIPatches
     {
         return new CodeMatcher(instructions)
             .MatchForward(false, new CodeMatch(OpCodes.Call, Method(typeof(SemiFunc), nameof(SemiFunc.InputMovementY))))
-            // Can't just replace the instruction as it has labels we need to keep
-            .SetOpcodeAndAdvance(OpCodes.Ldc_R4).Advance(-1).SetOperandAndAdvance(0.0f)
+            .Set(OpCodes.Ldc_R4, 0.0f)
             .MatchForward(false, new CodeMatch(OpCodes.Call, Method(typeof(SemiFunc), nameof(SemiFunc.InputScrollY))))
             // Don't have to keep labels for this one
             .SetInstruction(new CodeInstruction(OpCodes.Ldc_R4, 0.0f))
@@ -260,5 +260,15 @@ internal static class UIPatches
         
         MenuManager.instance.MenuEffectClick(MenuManager.MenuClickEffectType.Confirm);
         __instance.parentPageSaves.SaveFileSelected(__instance.saveFileName);
+    }
+
+    /// <summary>
+    /// Also hide the custom camera tumble UI (if used)
+    /// </summary>
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIHideTumble))]
+    [HarmonyPostfix]
+    private static void HideCustomCameraTumble()
+    {
+        CustomTumbleUI.instance?.Hide();
     }
 }

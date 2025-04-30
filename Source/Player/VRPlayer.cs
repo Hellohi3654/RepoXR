@@ -24,12 +24,12 @@ public class VRPlayer : MonoBehaviour
 
     // Reference stuff
     private PlayerController localController;
-    private FirstPersonVRRig localRig;
+    private VRRig localRig;
     
     // Public accessors
     public Transform MainHand => localRig.rightHandTip;
     public Transform MapParent => localRig.map;
-    public FirstPersonVRRig Rig => localRig;
+    public VRRig Rig => localRig;
     
     // Public state
     public float disableRotateTimer;
@@ -55,7 +55,7 @@ public class VRPlayer : MonoBehaviour
         localController.cameraGameObjectLocal = mainCamera.gameObject;
         
         // Set up hands and stuff
-        localRig = Instantiate(AssetCollection.VRRig).GetComponent<FirstPersonVRRig>();
+        localRig = Instantiate(AssetCollection.VRRig).GetComponent<VRRig>();
         
         leftHand = new GameObject("Left Hand").transform;
         rightHand = new GameObject("Right Hand").transform;
@@ -210,7 +210,7 @@ public class VRPlayer : MonoBehaviour
         switch (Plugin.Config.TurnProvider.Value)
         {
             case Config.TurnProviderOption.Snap:
-                var should = MathF.Abs(value) > 0.75f;
+                var should = Mathf.Abs(value) > 0.75f;
                 
                 if (!turnedLastInput && should)
                     if (value > 0)
