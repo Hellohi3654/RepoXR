@@ -1,9 +1,16 @@
 ﻿using System.Collections;
+using System.Linq;
+using System.Numerics;
+using HarmonyLib;
+using RepoXR.Assets;
 using RepoXR.Managers;
 using UnityEngine;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.UI;
+using Quaternion = UnityEngine.Quaternion;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 namespace RepoXR.UI;
 
@@ -80,18 +87,36 @@ public class GameHud : MonoBehaviour
         // World space scale
         WorldSpaceUIParent.instance.transform.localScale = Vector3.one * 0.005f;
 
-        // Put tumble UI on the overlay canvas, and move the top and bottom elements closer to the edge of the screen
+        // Put tumble UI on the overlay canvas, and replace the tumble lines with custom ones made to work better in VR
         var tumbleUi = TumbleUI.instance;
-        tumbleUi.transform.parent.SetParent(OverlayCanvas.transform, false);
-        tumbleUi.transform.parent.localScale = Vector3.one * 300;
-        tumbleUi.transform.parent.localPosition = Vector3.down * 20;
-        tumbleUi.transform.localPosition = Vector3.back * 1.7f;
-        tumbleUi.parts1[0].GetComponent<RectTransform>().anchoredPosition += Vector2.up * 0.3f;
-        tumbleUi.parts1[1].GetComponent<RectTransform>().anchoredPosition += Vector2.down * 0.3f;
-        tumbleUi.parts2[0].GetComponent<RectTransform>().anchoredPosition += Vector2.up * 0.3f;
-        tumbleUi.parts2[1].GetComponent<RectTransform>().anchoredPosition += Vector2.down * 0.3f;
+        var tumbleRect = tumbleUi.GetComponent<RectTransform>();
+
+        tumbleRect.transform.parent = OverlayCanvas.transform;
         
-        OverlayCanvas.UpdateCanvasRectTransform(true); // TODO: Test if this fixes the sizing stuff?
+        tumbleRect.anchorMin = Vector2.zero;
+        tumbleRect.anchorMax = Vector2.one;
+        tumbleRect.anchoredPosition = Vector2.zero;
+        tumbleRect.sizeDelta = Vector2.zero;
+        
+        tumbleRect.transform.localPosition = Vector3.down * 130;
+        tumbleRect.transform.localRotation = Quaternion.identity;
+        
+        foreach (Transform child in tumbleRect)
+            Destroy(child.gameObject);
+
+        var customTumbleUi = Instantiate(AssetCollection.VRTumble, tumbleRect).transform;
+
+        tumbleUi.parts1[0] = customTumbleUi.Find("Top 1").gameObject;
+        tumbleUi.parts1[1] = customTumbleUi.Find("Bottom 1").gameObject;
+        tumbleUi.parts1[2] = customTumbleUi.Find("Left 1").gameObject;
+        tumbleUi.parts1[3] = customTumbleUi.Find("Right 1").gameObject;
+        tumbleUi.parts2[0] = customTumbleUi.Find("Top 2").gameObject;
+        tumbleUi.parts2[1] = customTumbleUi.Find("Bottom 2").gameObject;
+        tumbleUi.parts2[2] = customTumbleUi.Find("Left 2").gameObject;
+        tumbleUi.parts2[3] = customTumbleUi.Find("Right 2").gameObject;
+
+        tumbleUi.images1 = tumbleUi.parts1.Select(part => part.GetComponent<Image>()).ToArray();
+        tumbleUi.images2 = tumbleUi.parts2.Select(part => part.GetComponent<Image>()).ToArray();
     }
 
     /// <summary>

@@ -55,18 +55,4 @@ internal static class EnemyCeilingEyePatches
             .SetOperandAndAdvance(Method(typeof(VRCameraAim), nameof(VRCameraAim.SetAimTarget)))
             .InstructionEnumeration();
     }
-
-    /// <summary>
-    /// Zoom the camera a bit towards the eye when in trance
-    /// </summary>
-    [HarmonyPatch(typeof(EnemyCeilingEye), nameof(EnemyCeilingEye.Update))]
-    [HarmonyPostfix]
-    private static void CeilingEyeZoomPatch(EnemyCeilingEye __instance)
-    {
-        if (__instance.currentState != EnemyCeilingEye.State.HasTarget || !__instance.targetPlayer ||
-            !__instance.targetPlayer.isLocal)
-            return;
-        
-        VRCameraZoom.instance.SetZoomTarget(-0.5f, 0.1f, 1, 1, __instance.enemy.CenterTransform, 50);
-    }
 }

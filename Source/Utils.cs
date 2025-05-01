@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using RepoXR.Managers;
 using RepoXR.Networking;
@@ -19,6 +20,35 @@ internal static class Utils
         return sha.ComputeHash(input);
     }
 
+    public static string ToHumanReadable(string input)
+    {
+        var builder = new StringBuilder(input[0].ToString());
+        if (builder.Length <= 0)
+            return builder.ToString();
+
+        for (var index = 1; index < input.Length; index++)
+        {
+            var prevChar = input[index - 1];
+            var nextChar = index + 1 < input.Length ? input[index + 1] : '\0';
+
+            var isNextLower = char.IsLower(nextChar);
+            var isNextUpper = char.IsUpper(nextChar);
+            var isPresentUpper = char.IsUpper(input[index]);
+            var isPrevLower = char.IsLower(prevChar);
+            var isPrevUpper = char.IsUpper(prevChar);
+
+            if (!string.IsNullOrWhiteSpace(prevChar.ToString()) &&
+                ((isPrevUpper && isPresentUpper && isNextLower) ||
+                 (isPrevLower && isPresentUpper && isNextLower) ||
+                 (isPrevLower && isPresentUpper && isNextUpper)))
+                builder.Append(' ');
+
+            builder.Append(input[index]);
+        }
+
+        return builder.ToString();
+    }
+    
     public static string[] ParseConfig(string content)
     {
         var lines = content.Split("\n", StringSplitOptions.RemoveEmptyEntries);
@@ -34,10 +64,8 @@ internal static class Utils
 
     public static string GetControlSpriteString(string controlPath)
     {
-        const string unknown = """<sprite name="unknown">""";
-        
         if (string.IsNullOrEmpty(controlPath))
-            return unknown;
+            return "<b><u>NOT BOUND</u></b>";
 
         var path = Regex.Replace(controlPath.ToLowerInvariant(), @"<[^>]+>([^ ]+)", "$1");
         var hand = path.Split('/')[0].TrimStart('{').TrimEnd('}');

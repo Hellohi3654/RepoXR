@@ -78,14 +78,6 @@ public class VRCameraZoom : MonoBehaviour
         var camera = CameraUtils.Instance.MainCamera.transform;
         var unzoomedCameraCoords = cameraPosition.transform.localPosition + camera.localPosition;
         var direction = (position - unzoomedCameraCoords).normalized;
-
-        // If zooming from the player position, try not to zoom past objects (which would cause the camera to clip inside of it)
-        if (zoomPadding < 0 && Physics.Raycast(new Ray(unzoomedCameraCoords, direction), out var hit, 5,
-            SemiFunc.LayerMaskGetVisionObstruct()))
-        {
-            if (hit.distance < -zoomPadding)
-                zoomPadding = -hit.distance;
-        };
         
         if (zoomPadding < 0)
             return unzoomedCameraCoords - direction * zoomPadding - cameraPosition.transform.localPosition - camera.localPosition;

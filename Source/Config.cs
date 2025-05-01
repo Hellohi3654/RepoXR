@@ -1,8 +1,10 @@
 ﻿using System;
 using BepInEx.Configuration;
 using RepoXR.Assets;
+using RepoXR.Managers;
 using RepoXR.Player.Camera;
 using UnityEngine;
+using UnityEngine.XR;
 using Object = UnityEngine.Object;
 
 namespace RepoXR;
@@ -14,29 +16,43 @@ public class Config(string assemblyPath, ConfigFile file)
 
     // General configuration
 
+    [ConfigDescriptor(customName: "Enable VR", trueText: "Disable", falseText: "Enable")]
     public ConfigEntry<bool> DisableVR { get; } = file.Bind("General", nameof(DisableVR), false,
         "Disabled the main functionality of this mod, can be used if you want to play without VR while keeping the mod installed.");
 
+    [ConfigDescriptor]
     public ConfigEntry<bool> EnableVerboseLogging { get; } = file.Bind("General", nameof(EnableVerboseLogging), false,
         "Enables verbose debug logging during OpenXR initialization");
 
-    public ConfigEntry<bool> ReducedAimImpact { get; } = file.Bind("General", nameof(ReducedAimImpact), false,
+    // Gameplay configuration
+
+    [ConfigDescriptor]
+    public ConfigEntry<bool> ReducedAimImpact { get; } = file.Bind("Gameplay", nameof(ReducedAimImpact), false,
         "When enabled, lowers the severity of force-look events (like the ceiling eye), which can be helpful for people with motion sickness");
 
     // Performance configuration
-    
+
+    [ConfigDescriptor(stepSize: 5f, suffix: "%")]
+    public ConfigEntry<int> CameraResolution { get; } = file.Bind("Performance", nameof(CameraResolution), 100,
+        new ConfigDescription(
+            "This setting configures the resolution scale of the game, lower values are more performant, but will make the game look worse.",
+            new AcceptableValueRange<int>(5, 200)));
+
     // Input configuration
 
+    [ConfigDescriptor]
     public ConfigEntry<TurnProviderOption> TurnProvider { get; } = file.Bind("Input", nameof(TurnProvider),
         TurnProviderOption.Smooth,
         new ConfigDescription("Specify which turning provider your player uses, if any.",
             new AcceptableValueEnum<TurnProviderOption>()));
 
+    [ConfigDescriptor(stepSize: 0.05f, pointerSize: 0.01f, suffix: "x")]
     public ConfigEntry<float> SmoothTurnSpeedModifier { get; } = file.Bind("Input", nameof(SmoothTurnSpeedModifier), 1f,
         new ConfigDescription(
             "A multiplier that is added to the smooth turning speed. Requires turn provider to be set to smooth.",
             new AcceptableValueRange<float>(0.25f, 5)));
-    
+
+    [ConfigDescriptor(stepSize: 5, suffix: "°")]
     public ConfigEntry<float> SnapTurnSize { get; } = file.Bind("Input", nameof(SnapTurnSize), 45f,
         new ConfigDescription(
             "The amount of rotation that is applied when performing a snap turn. Requires turn provider to be set to snap.",
@@ -44,19 +60,22 @@ public class Config(string assemblyPath, ConfigFile file)
 
     // Rendering configuration
 
+    [ConfigDescriptor]
     public ConfigEntry<bool> EnableCustomCamera { get; } =
         file.Bind("Rendering", nameof(EnableCustomCamera), false,
             "Adds a second camera mounted on top of the VR camera that will render separately from the VR camera to the display. This requires extra GPU power!");
 
+    [ConfigDescriptor(stepSize: 5)]
     public ConfigEntry<float> CustomCameraFOV { get; } = file.Bind("Rendering", nameof(CustomCameraFOV), 75f,
         new ConfigDescription("The field of view that the custom camera should have.",
             new AcceptableValueRange<float>(45, 120)));
 
+    [ConfigDescriptor(percentage: true, stepSize: 0.1f, pointerSize: 0.05f)]
     public ConfigEntry<float> CustomCameraSmoothing { get; } = file.Bind("Rendering", nameof(CustomCameraSmoothing),
         0.5f,
         new ConfigDescription("The amount of smoothing that is applied to the custom camera.",
             new AcceptableValueRange<float>(0, 1)));
-    
+
     // Internal configuration
 
     public ConfigEntry<string> ControllerBindingsOverride { get; } = file.Bind("Internal",
@@ -73,6 +92,14 @@ public class Config(string assemblyPath, ConfigFile file)
     /// </summary>
     public void SetupGlobalCallbacks()
     {
+        if (!VRSession.InVR)
+            return;
+
+        CameraResolution.SettingChanged += (_, _) =>
+        {
+            XRSettings.eyeTextureResolutionScale = CameraResolution.Value / 100f;
+        };
+
         EnableCustomCamera.SettingChanged += (_, _) =>
         {
             if (EnableCustomCamera.Value)
@@ -98,4 +125,29 @@ internal class AcceptableValueEnum<T>() : AcceptableValueBase(typeof(T))
     public override object Clamp(object value) => value;
     public override bool IsValid(object value) => true;
     public override string ToDescriptionString() => $"# Acceptable values: {string.Join(", ", names)}";
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public class ConfigDescriptorAttribute(
+    string? customName = null,
+    bool percentage = false,
+    float stepSize = 1.0f,
+    float pointerSize = 1.0f,
+    string suffix = "",
+    string trueText = "On",
+    string falseText = "Off") : Attribute
+{
+    public string? CustomName => customName;
+    public bool Percentage => percentage;
+    public float StepSize => stepSize;
+    public float PointerSize => pointerSize;
+    public string Suffix => suffix;
+    public string TrueText => trueText;
+    public string FalseText => falseText;
+
+    public override string ToString()
+    {
+        return
+            $"ConfigDescriptor(Percentage: {percentage}, StepSize: {stepSize}, PointerSize: {pointerSize}, TrueText: {trueText}, FalseText: {falseText})";
+    }
 }

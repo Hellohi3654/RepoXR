@@ -8,6 +8,7 @@ using RepoXR.UI;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
@@ -31,6 +32,7 @@ public class VRRig : MonoBehaviour
     public Transform leftHandTip;
     public Transform rightHandTip;
     
+    public Transform planeOffsetTransform;
     public RectTransform infoHud;
     public Transform inventory;
     public Transform map;
@@ -42,6 +44,11 @@ public class VRRig : MonoBehaviour
     public VRInventory inventoryController;
 
     public Vector3 headOffset;
+    
+    public Vector3 standingPlaneOffset;
+    public Vector3 seatedPlaneOffset;
+    public float seatedHeightOffsetStart;
+    public float seatedHeightOffsetEnd;
     
     private Transform leftArmMesh;
     private Transform rightArmMesh;
@@ -87,6 +94,8 @@ public class VRRig : MonoBehaviour
         
         // Map tool
         mapTool = FindObjectsOfType<MapToolController>().First(tool => tool.PlayerAvatar.isLocal);
+
+        planeOffsetTransform.localPosition = standingPlaneOffset;
     }
 
     private void LateUpdate()
@@ -95,6 +104,9 @@ public class VRRig : MonoBehaviour
         transform.rotation = Quaternion.Lerp(transform.rotation,
             Quaternion.Euler(transform.eulerAngles.x, head.eulerAngles.y, transform.eulerAngles.z),
             10 * Time.deltaTime);
+
+        var offset = Mathf.InverseLerp(seatedHeightOffsetEnd, seatedHeightOffsetStart, head.localPosition.y);
+        planeOffsetTransform.transform.localPosition = Vector3.Lerp(seatedPlaneOffset, standingPlaneOffset, offset);
         
         UpdateArms();
         UpdateClaw();

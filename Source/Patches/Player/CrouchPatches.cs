@@ -10,7 +10,7 @@ using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches.Player;
 
-[RepoXRPatch()]
+[RepoXRPatch]
 internal static class CrouchPatches
 {
     /// <summary>

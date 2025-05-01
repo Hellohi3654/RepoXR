@@ -10,6 +10,7 @@ using RepoXR.Assets;
 using RepoXR.Patches;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.XR;
 
 namespace RepoXR;
 
@@ -219,9 +220,10 @@ public class Plugin : BaseUnityPlugin
         
         RepoXR.Logger.LogDebug("Inserted VR patches using Harmony");
         
-        // TODO: Change render pipeline settings if needed
+        // Change render pipeline settings if needed
+        XRSettings.eyeTextureResolutionScale = Config.CameraResolution.Value / 100f;
         
-        // Input settings (TODO: maybe make configurable)
+        // Input settings
         InputSystem.settings.defaultButtonPressPoint = 0.5f;
         InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus; // Prevent VR from getting disabled when losing focus
 

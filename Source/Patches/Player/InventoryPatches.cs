@@ -184,7 +184,7 @@ internal static class UniversalInventoryPatches
     private static bool DontMeleeWhenEquipped(ItemMelee __instance)
     {
         return !(__instance.itemEquippable.currentState == ItemEquippable.ItemState.Equipped &&
-            !SemiFunc.IsMultiplayer() || PhotonView.Find(__instance.itemEquippable.ownerPlayerId)
-                .GetComponent<PlayerAvatar>().IsVRPlayer());
+                 (!SemiFunc.IsMultiplayer() || PhotonView.Find(__instance.itemEquippable.ownerPlayerId)
+                     .GetComponent<PlayerAvatar>().IsVRPlayer()));
     }
 }

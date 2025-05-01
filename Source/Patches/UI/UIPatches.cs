@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using RepoXR.Assets;
 using RepoXR.Input;
 using RepoXR.Player.Camera;
 using RepoXR.UI;
+using RepoXR.UI.Menu;
 using UnityEngine;
+using UnityEngine.UI;
 using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches.UI;
@@ -36,6 +39,16 @@ internal static class UIPatches
         __instance.transform.localPosition = Vector3.zero;
         __instance.waitTimer = 3;
         __instance.introDone = true;
+    }
+
+    /// <summary>
+    /// Disable UI detection code if the <see cref="XRRayInteractorManager"/> is not yet present
+    /// </summary>
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseHover))]
+    [HarmonyPrefix]
+    private static bool DisableHoverOnEarly()
+    {
+        return XRRayInteractorManager.Instance != null;
     }
 
     /// <summary>
@@ -91,8 +104,10 @@ internal static class UIPatches
         
         var pointer = manager.GetUIHitPosition(rectTransform);
         var rect = SemiFunc.UIGetRectTransformPositionOnScreen(rectTransform, false);
+        var pivotOff = new Vector2(
+            rectTransform.rect.width * rectTransform.pivot.x, rectTransform.rect.height * rectTransform.pivot.y);
 
-        __result = new Vector2(pointer.x - rect.x, pointer.y - rect.y);
+        __result = new Vector2(pointer.x - rect.x, pointer.y - rect.y) + pivotOff;
         
         return false;
     }
@@ -104,10 +119,13 @@ internal static class UIPatches
     [HarmonyPostfix]
     private static void UIGetRectTransformPositionOnCanvas(RectTransform rectTransform, ref Vector2 __result)
     {
-        var canvas = rectTransform.GetComponentInParent<Canvas>().transform;
+        var canvas = rectTransform.GetComponentInParent<MenuPage>().transform;
         var local = canvas.InverseTransformPoint(rectTransform.position);
-        
-        __result = new Vector2(local.x, local.y);
+
+        local -= new Vector3(rectTransform.rect.width * rectTransform.pivot.x,
+            rectTransform.rect.height * rectTransform.pivot.y, 0);
+
+        __result = local;
     }
 
     /// <summary>
@@ -140,8 +158,8 @@ internal static class UIPatches
         );
         
         __instance.rectTransform.position = MenuManager.instance.activeSelectionBox.rectTransform.position;
-        // __instance.rectTransform.rotation = MenuManager.instance.activeSelectionBox.rectTransform.rotation;
-        // __instance.rectTransform.parent.localScale = scaleFactor;
+        __instance.rectTransform.rotation = MenuManager.instance.activeSelectionBox.rectTransform.rotation;
+        __instance.rectTransform.parent.localScale = scaleFactor;
     }
 
     /// <summary>

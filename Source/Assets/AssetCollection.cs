@@ -17,8 +17,16 @@ internal static class AssetCollection
     public static GameObject RebindButtonToggle;
     public static GameObject VRRig;
     public static GameObject CustomCamera;
+    public static GameObject VRTumble;
     public static GameObject Cube;
     public static GameObject Imgage;
+
+    public static GameObject MenuSidebar;
+    public static GameObject MenuSettings;
+    public static GameObject MenuSettingsCategory;
+    public static GameObject BoolSetting;
+    public static GameObject SliderSetting;
+    public static GameObject VRSettingsButton;
     
     public static InputActionAsset DefaultXRActions;
     public static InputActionAsset VRInputs;
@@ -48,9 +56,17 @@ internal static class AssetCollection
         RebindButtonToggle = assetBundle.LoadAsset<GameObject>("Rebind Button Toggle");
         VRRig = assetBundle.LoadAsset<GameObject>("VRRig");
         CustomCamera = assetBundle.LoadAsset<GameObject>("Custom Camera");
+        VRTumble = assetBundle.LoadAsset<GameObject>("VRTumble");
         Cube = assetBundle.LoadAsset<GameObject>("Cube");
-        Imgage = assetBundle.LoadAsset<GameObject>("Imgage");
-
+        Imgage = assetBundle.LoadAsset<GameObject>("Imgage");       
+        
+        MenuSidebar = assetBundle.LoadAsset<GameObject>("RepoXR Sidebar");
+        MenuSettings = assetBundle.LoadAsset<GameObject>("VR Settings Page");
+        MenuSettingsCategory = assetBundle.LoadAsset<GameObject>("VR Settings Page - Category");
+        BoolSetting = assetBundle.LoadAsset<GameObject>("Bool Setting");
+        SliderSetting = assetBundle.LoadAsset<GameObject>("Slider Setting");
+        VRSettingsButton = assetBundle.LoadAsset<GameObject>("VR Settings Button");
+        
         DefaultXRActions = assetBundle.LoadAsset<InputActionAsset>("DefaultXRActions");
         VRInputs = assetBundle.LoadAsset<InputActionAsset>("VRInputs");
         

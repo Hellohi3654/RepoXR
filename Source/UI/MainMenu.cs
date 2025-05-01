@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using RepoXR.Assets;
+using UnityEngine;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.UI;
@@ -10,8 +12,10 @@ public class MainMenu : MonoBehaviour
     private Camera mainCamera;
     private Canvas mainCanvas;
     
-    private void Start()
+    private IEnumerator Start()
     {
+        yield return new WaitUntil(SemiFunc.IsMainMenu);
+        
         DisableEventSystem();
         SetupMainCamera();
         SetupMainCanvas();
@@ -42,7 +46,7 @@ public class MainMenu : MonoBehaviour
         mainCanvas.transform.position = new Vector3(-45, -0.75f, 6);
         mainCanvas.transform.eulerAngles = new Vector3(0, 45, 0);
         mainCanvas.transform.localScale = Vector3.one * 0.03f;
-        mainCanvas.gameObject.AddComponent<RectMask2D>();
+        mainCanvas.transform.Find("HUD").gameObject.AddComponent<RectMask2D>();
         
         Destroy(mainCanvas.GetComponent<GraphicRaycaster>());
         mainCanvas.gameObject.AddComponent<TrackedDeviceGraphicRaycaster>();
@@ -51,6 +55,18 @@ public class MainMenu : MonoBehaviour
         mainCanvas.transform.Find("HUD/Game Hud").gameObject.SetActive(false);
         mainCanvas.transform.Find("HUD/Chat").gameObject.SetActive(false);
         mainCanvas.transform.Find("HUD/Chat Local").gameObject.SetActive(false);
+        
+        // Move top menu selection outline
+        var selection = FindObjectOfType<MenuSelectionBoxTop>();
+        selection.transform.parent.parent = selection.transform.parent.parent.parent;
+        
+        // Create sidebar
+        if (MenuPageMain.instance == null)
+            return;
+        
+        var sidebar = Instantiate(AssetCollection.MenuSidebar, mainCanvas.transform.parent).transform;
+        
+        // TODO: Set transforms
     }
 
     private void SetupControllers()

@@ -15,6 +15,16 @@ namespace RepoXR.Patches;
 internal static class CameraEffectsPatches
 {
     /// <summary>
+    /// Disable camera shake in the main menu
+    /// </summary>
+    [HarmonyPatch(typeof(CameraShake), nameof(CameraShake.Shake))]
+    [HarmonyPrefix]
+    private static bool DisableShakeMenu()
+    {
+        return !SemiFunc.MenuLevel();
+    }
+    
+    /// <summary>
     /// Camera noise is the idle sway, which is a nono in VR
     /// </summary>
     [HarmonyPatch(typeof(CameraNoise), nameof(CameraNoise.Awake))]
@@ -22,6 +32,18 @@ internal static class CameraEffectsPatches
     private static void DisableCameraNoise(CameraNoise __instance)
     {
         __instance.AnimNoise.enabled = false;
+        __instance.transform.localPosition = Vector3.zero;
+        __instance.transform.localRotation = Quaternion.identity;
+    }
+
+    /// <summary>
+    /// No noise please (even when crouched)
+    /// </summary>
+    [HarmonyPatch(typeof(CameraCrouchNoise), nameof(CameraCrouchNoise.Start))]
+    [HarmonyPostfix]
+    private static void DisableCameraCrouchNoise(CameraCrouchNoise __instance)
+    {
+        __instance.enabled = false;
         __instance.transform.localPosition = Vector3.zero;
         __instance.transform.localRotation = Quaternion.identity;
     }
@@ -40,6 +62,58 @@ internal static class CameraEffectsPatches
                 new CodeInstruction(OpCodes.Ldc_R4, 0.25f),
                 new CodeInstruction(OpCodes.Mul)
             ))
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Reduce camera jump effects by 75%
+    /// </summary>
+    [HarmonyPatch(typeof(CameraJump), nameof(CameraJump.Update))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> ReduceCameraJump(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(GameplayManager), nameof(GameplayManager.cameraAnimation))))
+            .Repeat(matcher => matcher.Advance(1).InsertAndAdvance(
+                new CodeInstruction(OpCodes.Ldc_R4, 0.25f),
+                new CodeInstruction(OpCodes.Mul)
+            ))
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Reduce camera shake by 75%
+    /// </summary>
+    [HarmonyPatch(typeof(CameraShake), nameof(CameraShake.ShakeMultiplier))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> ReduceCameraShake(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(GameplayManager), nameof(GameplayManager.cameraShake))))
+            .Advance(1)
+            .Insert(
+                new CodeInstruction(OpCodes.Ldc_R4, 0.25f),
+                new CodeInstruction(OpCodes.Mul)
+            )
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Reduce tilt caused by fast rotation by 75%
+    /// </summary>
+    [HarmonyPatch(typeof(CameraTilt), nameof(CameraTilt.Update))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> ReduceRotationTilt(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Stfld, Field(typeof(CameraTilt), nameof(CameraTilt.tiltZresult))))
+            .Advance(-10)
+            .Insert(
+                new CodeInstruction(OpCodes.Ldc_R4, 0.25f),
+                new CodeInstruction(OpCodes.Mul)
+            )
             .InstructionEnumeration();
     }
 }

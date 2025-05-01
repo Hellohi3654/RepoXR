@@ -91,6 +91,7 @@ public class CustomTumbleUI : TumbleUI
     {
         instance = this;
         canvasGroup = GetComponent<CanvasGroup>();
+        canExitSound = new Sound { Sounds = [] };
     }
 
     private void OnDestroy()

@@ -110,6 +110,23 @@ internal static class MapToolPatches
             return controller.PlayerAvatar.isLocal || original;
         }
     }
+
+    /// <summary>
+    /// Disable camera shake when picking up the map tool
+    /// </summary>
+    [HarmonyPatch(typeof(MapToolController), nameof(MapToolController.Update))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> NoShakePatch(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Callvirt, Method(typeof(CameraShake), nameof(CameraShake.Shake))))
+            .Repeat(matcher => matcher
+                .Advance(-4)
+                .SetOpcodeAndAdvance(OpCodes.Nop)
+                .RemoveInstructions(4)
+            )
+            .InstructionEnumeration();
+    }
 }
 
 [RepoXRPatch(RepoXRPatchTarget.Universal)]
