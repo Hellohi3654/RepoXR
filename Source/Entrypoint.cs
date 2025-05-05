@@ -95,11 +95,12 @@ internal static class Entrypoint
         loadingCanvas.transform.localScale = Vector3.one * 0.01f;      
         loadingCanvas.transform.SetParent(Camera.main!.transform.parent, false);
         loadingCanvas.gameObject.AddComponent<UI.LoadingUI>();
+        loadingCanvas.GetComponent<RectTransform>().sizeDelta = new Vector2(720, 400); // For masking
         
         loading.SetParent(loadingCanvas.transform, false);
         
         // Create custom camera (if enabled)
-        if (Plugin.Config.EnableCustomCamera.Value)
+        if (Plugin.Config.CustomCamera.Value)
             Object.Instantiate(AssetCollection.CustomCamera, Camera.main.transform.parent);
     }
 

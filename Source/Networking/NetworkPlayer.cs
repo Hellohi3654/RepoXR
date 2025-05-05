@@ -52,7 +52,14 @@ public class NetworkPlayer : MonoBehaviour
                 { transform = { parent = playerLeftArm.leftArmTransform, localPosition = Vector3.forward * 0.513f } }
             .transform;
         rightHandAnchor = new GameObject("Right Hand Anchor")
-                { transform = { parent = playerRightArm.rightArmTransform, localPosition = Vector3.forward * 0.513f } }
+            {
+                transform =
+                {
+                    // ANIM ARM R SCALE is the one that scales, not rightArmTransform
+                    parent = playerRightArm.rightArmTransform.Find("ANIM ARM R SCALE"),
+                    localPosition = Vector3.forward * 0.513f
+                }
+            }
             .transform;
 
         // Re-parent tools and grabber
@@ -99,6 +106,20 @@ public class NetworkPlayer : MonoBehaviour
 
         leftHandAnchor.rotation = leftHandTarget.rotation;
         rightHandAnchor.rotation = rightHandTarget.rotation;
+
+        // Counteract any scaling effects on the arms
+        leftHandAnchor.localScale =
+            new Vector3(
+                leftHandAnchor.parent.localScale.x != 0 ? 1 / leftHandAnchor.parent.localScale.x : 0,
+                leftHandAnchor.parent.localScale.y != 0 ? 1 / leftHandAnchor.parent.localScale.y : 0,
+                leftHandAnchor.parent.localScale.z != 0 ? 1 / leftHandAnchor.parent.localScale.z : 0
+            );
+        rightHandAnchor.localScale =
+            new Vector3(
+                rightHandAnchor.parent.localScale.x != 0 ? 1 / rightHandAnchor.parent.localScale.x : 0,
+                rightHandAnchor.parent.localScale.y != 0 ? 1 / rightHandAnchor.parent.localScale.y : 0,
+                rightHandAnchor.parent.localScale.z != 0 ? 1 / rightHandAnchor.parent.localScale.z : 0
+            );
     }
 
     public void HandleRigFrame(Rig rigFrame)

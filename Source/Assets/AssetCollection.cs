@@ -18,10 +18,10 @@ internal static class AssetCollection
     public static GameObject VRRig;
     public static GameObject CustomCamera;
     public static GameObject VRTumble;
+    public static GameObject Keyboard;
     public static GameObject Cube;
     public static GameObject Imgage;
 
-    public static GameObject MenuSidebar;
     public static GameObject MenuSettings;
     public static GameObject MenuSettingsCategory;
     public static GameObject BoolSetting;
@@ -57,10 +57,10 @@ internal static class AssetCollection
         VRRig = assetBundle.LoadAsset<GameObject>("VRRig");
         CustomCamera = assetBundle.LoadAsset<GameObject>("Custom Camera");
         VRTumble = assetBundle.LoadAsset<GameObject>("VRTumble");
+        Keyboard = assetBundle.LoadAsset<GameObject>("NonNativeKeyboard");
         Cube = assetBundle.LoadAsset<GameObject>("Cube");
         Imgage = assetBundle.LoadAsset<GameObject>("Imgage");       
         
-        MenuSidebar = assetBundle.LoadAsset<GameObject>("RepoXR Sidebar");
         MenuSettings = assetBundle.LoadAsset<GameObject>("VR Settings Page");
         MenuSettingsCategory = assetBundle.LoadAsset<GameObject>("VR Settings Page - Category");
         BoolSetting = assetBundle.LoadAsset<GameObject>("Bool Setting");

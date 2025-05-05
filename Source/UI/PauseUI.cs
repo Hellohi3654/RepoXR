@@ -4,6 +4,8 @@ namespace RepoXR.UI;
 
 public class PauseUI : MonoBehaviour
 {
+    public static PauseUI? instance;
+    
     public Vector3 positionOffset;
     
     private Vector3 targetPos;
@@ -17,6 +19,7 @@ public class PauseUI : MonoBehaviour
     
     private void Awake()
     {
+        instance = this;
         camera = Camera.main!.transform;
         interactor = camera.transform.parent.gameObject.AddComponent<XRRayInteractorManager>();
         interactor.SetVisible(false);
@@ -26,6 +29,11 @@ public class PauseUI : MonoBehaviour
         box.transform.parent.localPosition = Vector3.zero;
         box.transform.parent.localRotation = Quaternion.identity;
         box.transform.parent.localScale = Vector3.one;
+    }
+
+    private void OnDestroy()
+    {
+        instance = null;
     }
 
     private void Update()

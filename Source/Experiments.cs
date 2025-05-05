@@ -1,10 +1,11 @@
-﻿using HarmonyLib;
+﻿using System.Diagnostics;
+using HarmonyLib;
 using RepoXR.Patches;
 
 namespace RepoXR;
 
 #if DEBUG
-[RepoXRPatch(RepoXRPatchTarget.Universal)]
+// [RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class Experiments
 {
     [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.Awake))]
@@ -12,7 +13,7 @@ internal static class Experiments
     private static void FuckLolEnemy(EnemyDirector __instance)
     {
         // Only allow eyeyeyeyeyeye spawning
-        var enemy = __instance.enemiesDifficulty1[0];
+        var enemy = __instance.enemiesDifficulty1[2];
         
         // Only allow thin-man spawning
         // var enemy = __instance.enemiesDifficulty1[1];
@@ -34,6 +35,13 @@ internal static class Experiments
     private static void InfiniteSprintPatch(PlayerController __instance)
     {
         __instance.EnergyCurrent = __instance.EnergyStart;
+    }
+
+    [HarmonyPatch(typeof(MenuPageSettings), nameof(MenuPageSettings.ButtonEventControls))]
+    [HarmonyPrefix]
+    private static void A()
+    {
+        Logger.LogDebug(new StackTrace());
     }
 }
 #endif

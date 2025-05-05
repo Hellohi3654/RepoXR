@@ -161,7 +161,7 @@ public class XRRayInteractorManager : MonoBehaviour
         };
     }
 
-    private (XRRayInteractor, ActionBasedController) GetActiveInteractor()
+    public (XRRayInteractor, ActionBasedController) GetActiveInteractor()
     {
         return activeController switch
         {
@@ -186,6 +186,8 @@ public class XRRayInteractorManager : MonoBehaviour
         var interactor = go.AddComponent<XRRayInteractor>();
         var visual = go.AddComponent<XRInteractorLineVisual>();
         var renderer = go.GetComponent<LineRenderer>();
+        
+        interactor.raycastMask = 1 << 5;
 
         visual.lineBendRatio = 1;
         visual.invalidColorGradient = new Gradient

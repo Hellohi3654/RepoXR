@@ -1,7 +1,5 @@
 ﻿using System.Collections;
 using System.Linq;
-using System.Numerics;
-using HarmonyLib;
 using RepoXR.Assets;
 using RepoXR.Managers;
 using UnityEngine;
@@ -146,7 +144,10 @@ public class GameHud : MonoBehaviour
 
         // Dump all the game hud onto this smoothed canvas
         var gameHud = HUDCanvas.instance.transform.Find("HUD/Game Hud");
-        gameHud.transform.SetParent(rect, false);
+        var chatLocal = HUDCanvas.instance.transform.Find("HUD/Chat Local");
+        
+        gameHud.SetParent(rect, false);
+        chatLocal.SetParent(rect, false);
     }
 
     /// <summary>
@@ -154,7 +155,7 @@ public class GameHud : MonoBehaviour
     /// </summary>
     private void SetupPauseMenu()
     {
-        var canvas = new GameObject("VR Pause Menu")
+        var canvas = new GameObject("VR Pause Menu / Chat")
         {
             transform =
             {
@@ -180,6 +181,15 @@ public class GameHud : MonoBehaviour
         
         pause = canvas.gameObject.AddComponent<PauseUI>();
         pause.positionOffset = new Vector3(pixelOffset.x * 0.01f, pixelOffset.y * 0.01f, 0);
+        
+        // Put chat on the pause canvas (or disable if singleplayer)
+        
+        var chat = HUDCanvas.instance.transform.Find("HUD/Chat");
+        
+        if (SemiFunc.IsMultiplayer())
+            chat.SetParent(canvas.transform, false);
+        else
+            chat.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -191,20 +201,24 @@ public class GameHud : MonoBehaviour
         var haul = HaulUI.instance.GetComponent<SemiUI>();
         var health = HealthUI.instance.GetComponent<SemiUI>();
         var energy = EnergyUI.instance.GetComponent<SemiUI>();
+        var upgrades = StatsUI.instance.GetComponent<SemiUI>();
 
         goal.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
         haul.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
         health.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
         energy.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
+        upgrades.transform.SetParent(VRSession.Instance.Player.Rig.infoHud, false);
         
         goal.DisableScanlines();
         haul.DisableScanlines();
         health.DisableScanlines();
         energy.DisableScanlines();
+        upgrades.DisableScanlines();
         
         goal.SetUIAnchoredPosition(new Vector2(0, -30));
         haul.SetUIAnchoredPosition(Vector2.zero);
         health.SetUIAnchoredPosition(new Vector2(30, 0));
         energy.SetUIAnchoredPosition(new Vector2(30, -30));
+        upgrades.SetUIAnchoredPosition(new Vector2(50, 50));
     }
 }

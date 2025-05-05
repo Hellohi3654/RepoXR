@@ -16,7 +16,6 @@ public class FloatMenuSlider : MonoBehaviour
         public int customValueInt;
     }
     
-    public Transform sliderBackground;
     public Transform barSize;
     public Transform barPointer;
     public RectTransform barSizeRectTransform;
@@ -40,34 +39,24 @@ public class FloatMenuSlider : MonoBehaviour
     public bool hasBar = true;
     public bool wrapAround;
     public bool hasCustomOptions;
-    public bool hasCustomValues;
 
     [Space] 
     public UnityEvent onChange;
     public List<CustomOption> customOptions;
     
-    internal float currentValue;
-    internal float prevCurrentValue;
-    internal bool valueChangedImpulse;
+    public float currentValue;
+    
+    private float prevCurrentValue;
+    private bool valueChangedImpulse;
 
     private bool hovering;
 
     private MenuSelectableElement menuSelectableElement;
     private RectTransform rectTransform;
-    private RectTransform barBGRectTransform;
     private MenuPage parentPage;
-    internal MenuSetting menuSetting;
 
     private Vector3 originalPosition;
-    private Vector3 originalPositionBarSize;
-    private Vector3 originalPositionBarBG;
 
-    private string prevSettingString = "";
-    private bool hasBigSettingText;
-
-    private int customValue;
-    private int customValueNull = -123456;
-    
     private bool startPositionSetup;
     private int settingSegments;
 
@@ -81,7 +70,6 @@ public class FloatMenuSlider : MonoBehaviour
         menuSelectableElement = GetComponent<MenuSelectableElement>();
         barSizeRectTransform = barSize.GetComponent<RectTransform>();
         
-        prevSettingString = "";
         settingSegments = Mathf.RoundToInt(endValue - startValue);
 
         if (hasCustomOptions)
@@ -122,12 +110,9 @@ public class FloatMenuSlider : MonoBehaviour
         if (startPositionSetup)
             return;
 
-        barBGRectTransform = sliderBackground.GetComponent<RectTransform>();
         barSizeRectTransform.localPosition = new Vector3(barSizeRectTransform.localPosition.x + 3,
             barSizeRectTransform.localPosition.y, barSizeRectTransform.localPosition.z);
         originalPosition = rectTransform.position;
-        originalPositionBarBG = barBGRectTransform.position;
-        originalPositionBarSize = barSizeRectTransform.transform.position;
         originalPosition = new Vector3(originalPosition.x, originalPosition.y - 1.01f, originalPosition.z);
         
         startPositionSetup = true;
@@ -223,7 +208,6 @@ public class FloatMenuSlider : MonoBehaviour
             if (hasCustomOptions)
             {
                 UpdateSegmentTextAndValue();
-                customValue = GetCustomValue(index);
             }
         }
     }
@@ -234,7 +218,6 @@ public class FloatMenuSlider : MonoBehaviour
         
         if (hasCustomOptions)
         {
-            customValue = GetCustomValue(value);
             if (value < customOptions.Count)
             {
                 var text = customOptions[value].customOptionText;
@@ -248,15 +231,6 @@ public class FloatMenuSlider : MonoBehaviour
         {
             segmentText.text = stringAtStartOfValue + currentValue + stringAtEndOfValue;
         }
-    }
-
-    private int GetCustomValue(int index)
-    {
-        if (!hasCustomOptions || customOptions.Count == 0 || index >= customOptions.Count || index < 0 ||
-            !hasCustomValues)
-            return customValueNull;
-
-        return customOptions[index].customValueInt;
     }
 
     public void OnIncrease()

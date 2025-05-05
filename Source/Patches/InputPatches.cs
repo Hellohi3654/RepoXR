@@ -2,8 +2,10 @@
 using HarmonyLib;
 using RepoXR.Assets;
 using RepoXR.Input;
+using RepoXR.ThirdParty.MRTK;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace RepoXR.Patches;
 
@@ -113,13 +115,24 @@ internal static class InputPatches
     [HarmonyPrefix]
     private static bool KeyDown(InputManager __instance, ref InputKey key, ref bool __result)
     {
-        if (key is InputKey.Jump or InputKey.Crouch or InputKey.Tumble or InputKey.Inventory1 or InputKey.Inventory2
-                or InputKey.Inventory3 or InputKey.Interact && __instance.disableMovementTimer > 0)
-            return true;
+        switch (key)
+        {
+            case InputKey.Jump or InputKey.Crouch or InputKey.Tumble or InputKey.Inventory1 or InputKey.Inventory2
+                or InputKey.Inventory3 or InputKey.Interact when __instance.disableMovementTimer > 0:
+                return true;
+            
+            // Do not allow pause menu during loading
+            case InputKey.Menu when LoadingUI.instance.isActiveAndEnabled:
+            
+            // Do not allow to swap spectated player if chatting
+            case InputKey.SpectateNext or InputKey.SpectatePrevious when ChatManager.instance.chatActive:
+                __result = false;
+                return false;
 
-        __result = __instance.GetAction(key).WasPressedThisFrame();
-
-        return false;
+            default:
+                __result = __instance.GetAction(key).WasPressedThisFrame();
+                return false;
+        }
     }
 
     [HarmonyPatch(typeof(InputManager), nameof(InputManager.KeyUp))]
@@ -243,5 +256,16 @@ internal static class InputPatches
         RebindManager.Instance.ResetControls();
         
         return false;
+    }
+
+    /// <summary>
+    /// Button events are handled manually (unless it's the keyboard), so we block the OnPointerClick unless the
+    /// <see cref="NonNativeKeyboard"/> component is present
+    /// </summary>
+    [HarmonyPatch(typeof(Button), nameof(Button.OnPointerClick))]
+    [HarmonyPrefix]
+    private static bool DisablePointerClick(Button __instance)
+    {
+        return __instance.GetComponentInParent<NonNativeKeyboard>() || Compat.IsLoaded(Compat.UnityExplorer);
     }
 }

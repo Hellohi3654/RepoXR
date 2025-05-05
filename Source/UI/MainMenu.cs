@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using RepoXR.Assets;
+using RepoXR.UI.Menu;
 using UnityEngine;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
@@ -14,7 +15,7 @@ public class MainMenu : MonoBehaviour
     
     private IEnumerator Start()
     {
-        yield return new WaitUntil(SemiFunc.IsMainMenu);
+        yield return null;
         
         DisableEventSystem();
         SetupMainCamera();
@@ -53,20 +54,20 @@ public class MainMenu : MonoBehaviour
         
         // Remove game HUD elements
         mainCanvas.transform.Find("HUD/Game Hud").gameObject.SetActive(false);
-        mainCanvas.transform.Find("HUD/Chat").gameObject.SetActive(false);
         mainCanvas.transform.Find("HUD/Chat Local").gameObject.SetActive(false);
         
+        // Set up chat
+        if (RunManager.instance.levelCurrent == RunManager.instance.levelLobbyMenu)
+        {
+            var chat = mainCanvas.transform.Find("HUD/Chat").GetComponent<RectTransform>();
+            chat.SetParent(mainCanvas.transform.Find("HUD"), false);
+        }
+        else
+            mainCanvas.transform.Find("HUD/Chat").gameObject.SetActive(false);
+
         // Move top menu selection outline
         var selection = FindObjectOfType<MenuSelectionBoxTop>();
         selection.transform.parent.parent = selection.transform.parent.parent.parent;
-        
-        // Create sidebar
-        if (MenuPageMain.instance == null)
-            return;
-        
-        var sidebar = Instantiate(AssetCollection.MenuSidebar, mainCanvas.transform.parent).transform;
-        
-        // TODO: Set transforms
     }
 
     private void SetupControllers()

@@ -21,7 +21,7 @@ public class Config(string assemblyPath, ConfigFile file)
         "Disabled the main functionality of this mod, can be used if you want to play without VR while keeping the mod installed.");
 
     [ConfigDescriptor]
-    public ConfigEntry<bool> EnableVerboseLogging { get; } = file.Bind("General", nameof(EnableVerboseLogging), false,
+    public ConfigEntry<bool> VerboseLogging { get; } = file.Bind("General", nameof(VerboseLogging), false,
         "Enables verbose debug logging during OpenXR initialization");
 
     // Gameplay configuration
@@ -29,6 +29,10 @@ public class Config(string assemblyPath, ConfigFile file)
     [ConfigDescriptor]
     public ConfigEntry<bool> ReducedAimImpact { get; } = file.Bind("Gameplay", nameof(ReducedAimImpact), false,
         "When enabled, lowers the severity of force-look events (like the ceiling eye), which can be helpful for people with motion sickness");
+
+    [ConfigDescriptor]
+    public ConfigEntry<bool> RoomscaleCrouch { get; } = file.Bind("Gameplay", nameof(RoomscaleCrouch), true,
+        "When enabled, allows for the player to physically crouch to also crouch in-game");
 
     // Performance configuration
 
@@ -52,6 +56,10 @@ public class Config(string assemblyPath, ConfigFile file)
             "A multiplier that is added to the smooth turning speed. Requires turn provider to be set to smooth.",
             new AcceptableValueRange<float>(0.25f, 5)));
 
+    [ConfigDescriptor]
+    public ConfigEntry<bool> DynamicSmoothSpeed { get; } = file.Bind("Input", nameof(DynamicSmoothSpeed), true,
+        "When enabled, makes the speed of the smooth turning dependent on how far the analog stick is pushed.");
+    
     [ConfigDescriptor(stepSize: 5, suffix: "°")]
     public ConfigEntry<float> SnapTurnSize { get; } = file.Bind("Input", nameof(SnapTurnSize), 45f,
         new ConfigDescription(
@@ -61,8 +69,12 @@ public class Config(string assemblyPath, ConfigFile file)
     // Rendering configuration
 
     [ConfigDescriptor]
-    public ConfigEntry<bool> EnableCustomCamera { get; } =
-        file.Bind("Rendering", nameof(EnableCustomCamera), false,
+    public ConfigEntry<bool> Vignette { get; } = file.Bind("Rendering", nameof(Vignette), true,
+        "Enables the vignette shader used in certain scenarios and levels in the game.");
+
+    [ConfigDescriptor]
+    public ConfigEntry<bool> CustomCamera { get; } =
+        file.Bind("Rendering", nameof(CustomCamera), false,
             "Adds a second camera mounted on top of the VR camera that will render separately from the VR camera to the display. This requires extra GPU power!");
 
     [ConfigDescriptor(stepSize: 5)]
@@ -100,9 +112,9 @@ public class Config(string assemblyPath, ConfigFile file)
             XRSettings.eyeTextureResolutionScale = CameraResolution.Value / 100f;
         };
 
-        EnableCustomCamera.SettingChanged += (_, _) =>
+        CustomCamera.SettingChanged += (_, _) =>
         {
-            if (EnableCustomCamera.Value)
+            if (CustomCamera.Value)
                 Object.Instantiate(AssetCollection.CustomCamera, Camera.main!.transform.parent);
             else
                 Object.Destroy(VRCustomCamera.instance.gameObject);

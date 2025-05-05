@@ -11,7 +11,7 @@ namespace RepoXR.Rendering;
 public class CustomVignette : PostProcessEffectSettings
 {
     public override bool IsEnabledAndSupported(PostProcessRenderContext context)
-        => enabled.value && intensity.value > 0f;
+        => enabled.value && intensity.value > 0f && Plugin.Config.Vignette.Value;
 
     [Tooltip("Vignette color.")]
     public ColorParameter color = new()

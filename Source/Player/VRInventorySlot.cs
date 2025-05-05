@@ -67,8 +67,8 @@ public class VRInventorySlot : MonoBehaviour
         
         if (spot != null)
         {
-            spot.battery.transform.position = transform.TransformPoint(Vector3.back * 0.05f);
-            spot.battery.transform.rotation = transform.rotation * Quaternion.Euler(90, 0, 0);
+            spot.batteryVisualLogic.transform.position = transform.TransformPoint(Vector3.back * 0.05f);
+            spot.batteryVisualLogic.transform.rotation = transform.rotation * Quaternion.Euler(90, 0, 0);
         }
 
         if (heldItem != null)

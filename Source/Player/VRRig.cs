@@ -8,7 +8,6 @@ using RepoXR.UI;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Serialization;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
@@ -196,7 +195,8 @@ public class VRRig : MonoBehaviour
             {
                 mapTool.transform.parent.parent = rightHandTip;
                 mapTool.Active = true;
-                
+                VRMapTool.instance.leftHanded = false;
+
                 // Prevent picking up items while the map is opened
                 playerAvatar.physGrabber.ReleaseObject();
                 playerAvatar.physGrabber.enabled = false;
@@ -216,22 +216,24 @@ public class VRRig : MonoBehaviour
             {
                 mapTool.transform.parent.parent = leftHandTip;
                 mapHeldLeftHand = true;
+                VRMapTool.instance.leftHanded = true;
                 FlashlightController.Instance.hideFlashlight = true;
                 mapTool.Active = true;
             }
-        
+
         // Disable map when sprinting
         if (PlayerController.instance.sprinting)
             mapTool.Active = false;
 
         // Right hand "let-go" logic
-        if (mapTool.Active && !Actions.Instance["MapGrabRight"].IsPressed() && !mapHeldLeftHand && mapTool.HideLerp <= 0)
+        if (mapTool.Active && !Actions.Instance["MapGrabRight"].IsPressed() && !mapHeldLeftHand &&
+            mapTool.HideLerp <= 0)
             mapTool.Active = false;
 
         // Left hand "let-go" logic
         if (mapTool.Active && !Actions.Instance["MapGrabLeft"].IsPressed() && mapHeldLeftHand && mapTool.HideLerp <= 0)
             mapTool.Active = false;
-                
+
         NetworkSystem.instance.UpdateMapToolState(FlashlightController.Instance.hideFlashlight, mapHeldLeftHand);
     }
 

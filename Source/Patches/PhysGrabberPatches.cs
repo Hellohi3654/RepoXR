@@ -194,10 +194,10 @@ internal static class PhysGrabberPatches
     [HarmonyPostfix]
     private static void OnPhysBeamStart(PhysGrabBeam __instance)
     {
-        if (!__instance.playerAvatar.isLocal)
+        if (!__instance.playerAvatar.isLocal || VRSession.Instance is not {} session)
             return;
 
-        __instance.PhysGrabPointOrigin.SetParent(VRSession.Instance.Player.MainHand);
+        __instance.PhysGrabPointOrigin.SetParent(session.Player.MainHand);
         __instance.PhysGrabPointOrigin.localPosition = Vector3.zero;
     }
 

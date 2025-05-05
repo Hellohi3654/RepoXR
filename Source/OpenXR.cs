@@ -381,15 +381,16 @@ internal static class OpenXR
             var displays = new List<XRDisplaySubsystem>();
             SubsystemManager.GetInstances(displays);
 
-            if (Plugin.Config.EnableVerboseLogging.Value)
+            if (Plugin.Config.VerboseLogging.Value)
             {
                 Logger.LogWarning("OpenXR Diagnostics Report:");
-                
+
                 foreach (var line in GenerateReport().Split("\n"))
                     Logger.LogWarning(line);
-                
+
                 Logger.LogWarning("");
-                Logger.LogWarning("To prevent diagnostic reports from being printed, disable the 'EnableVerboseLogging' option in the settings.");
+                Logger.LogWarning(
+                    $"To prevent diagnostic reports from being printed, disable the '{nameof(Config.VerboseLogging)}' option in the settings.");
             }
 
             return displays.Count > 0;

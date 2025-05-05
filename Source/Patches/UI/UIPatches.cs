@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
-using RepoXR.Assets;
 using RepoXR.Input;
 using RepoXR.Player.Camera;
 using RepoXR.UI;
-using RepoXR.UI.Menu;
 using UnityEngine;
 using UnityEngine.UI;
 using static HarmonyLib.AccessTools;
@@ -52,6 +50,32 @@ internal static class UIPatches
     }
 
     /// <summary>
+    /// Block other UI hover logic if we're checking two different canvasses
+    /// </summary>
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseHover))]
+    [HarmonyPrefix]
+    private static bool UIPointerHoverOtherCanvasPatch(RectTransform rectTransform, ref bool __result)
+    {
+        if (XRRayInteractorManager.Instance is not { } manager)
+            return true;
+        
+        var (interactor, _) = manager.GetActiveInteractor();
+        if (!interactor.TryGetCurrentUIRaycastResult(out var result))
+        {
+            __result = false;
+            return false;
+        }
+
+        if (result.gameObject.GetComponentInParent<Canvas>() != rectTransform.GetComponentInParent<Canvas>())
+        {
+            __result = false;
+            return false;
+        }
+
+        return true;
+    }
+    
+    /// <summary>
     /// Detect UI hits using VR pointers instead of mouse cursor
     /// </summary>
     [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseHover))]
@@ -59,14 +83,20 @@ internal static class UIPatches
     private static IEnumerable<CodeInstruction> UIPointerHoverPatch(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)
+            // Get coords using VR interactor
             .MatchForward(false,
                 new CodeMatch(OpCodes.Call, Method(typeof(SemiFunc), nameof(SemiFunc.UIMousePosToUIPos))))
-            .SetOperandAndAdvance(PropertyGetter(typeof(XRRayInteractorManager), nameof(XRRayInteractorManager.Instance)))
+            .SetOperandAndAdvance(PropertyGetter(typeof(XRRayInteractorManager),
+                nameof(XRRayInteractorManager.Instance)))
             .InsertAndAdvance(
                 new CodeInstruction(OpCodes.Ldarg_1),
                 new CodeInstruction(OpCodes.Callvirt,
                     Method(typeof(XRRayInteractorManager), nameof(XRRayInteractorManager.GetUIHitPosition)))
             )
+            // Fix scrollbox masking
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Callvirt, PropertyGetter(typeof(Transform), nameof(Transform.position))))
+            .SetOperandAndAdvance(PropertyGetter(typeof(Transform), nameof(Transform.localPosition)))
             .InstructionEnumeration();
     }
 
@@ -84,7 +114,7 @@ internal static class UIPatches
         if (manager.GetTriggerButton())
         {
             if (__instance.mouseHoldPosition == Vector2.zero)
-                __instance.mouseHoldPosition = manager.GetUIHitPosition(null);
+                __instance.mouseHoldPosition = manager.GetUIHitPosition(HUDCanvas.instance.rect);
         }
         else
         {
@@ -141,7 +171,6 @@ internal static class UIPatches
     /// <summary>
     /// Fix the button hover outline position
     /// </summary>
-    // TODO: Clean up
     [HarmonyPatch(typeof(MenuSelectionBoxTop), nameof(MenuSelectionBoxTop.Update))]
     [HarmonyPostfix]
     private static void FixButtonOverlayPosition(MenuSelectionBoxTop __instance)
@@ -288,5 +317,42 @@ internal static class UIPatches
     private static void HideCustomCameraTumble()
     {
         CustomTumbleUI.instance?.Hide();
+    }
+
+    /// <summary>
+    /// Fix rotation issue with loading graphics
+    /// </summary>
+    [HarmonyPatch(typeof(MenuLoadingGraphics), nameof(MenuLoadingGraphics.Update))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> MenuGraphicsRotationFix(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Callvirt, PropertySetter(typeof(Transform), nameof(Transform.eulerAngles))))
+            .SetOperandAndAdvance(PropertySetter(typeof(Transform), nameof(Transform.localEulerAngles)))
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Fixes region element positioning since in VR the UI is scaled down
+    /// </summary>
+    [HarmonyPatch(typeof(MenuPageRegions), nameof(MenuPageRegions.GetRegions), MethodType.Enumerator)]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> FixRegionUIPositioning(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 32f))
+            .SetOperandAndAdvance(1f)
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Disable the raycast target on the raw image of the menu selection box
+    /// </summary>
+    [HarmonyPatch(typeof(MenuSelectionBoxTop), nameof(MenuSelectionBoxTop.Start))]
+    [HarmonyPostfix]
+    private static void DisableRaycastSelectionBox(MenuSelectionBoxTop __instance)
+    {
+        __instance.GetComponentInChildren<RawImage>().raycastTarget = false;
     }
 }

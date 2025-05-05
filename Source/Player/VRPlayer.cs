@@ -182,6 +182,17 @@ public class VRPlayer : MonoBehaviour
         else if (diff > -0.6f)
             physicalCrouch = false;
 
+        // Ignore if room scale crouch is disabled
+        if (!Plugin.Config.RoomscaleCrouch.Value)
+        {
+            physicalCrouch = false;
+            
+            if (diff < -.5f)
+                ResetHeight();
+
+            return;
+        }
+
         if (physicalCrouch != wasPhysicalCrouch)
         {
             wasPhysicalCrouch = physicalCrouch;
@@ -223,6 +234,9 @@ public class VRPlayer : MonoBehaviour
                 break;
             
             case Config.TurnProviderOption.Smooth:
+                if (!Plugin.Config.DynamicSmoothSpeed.Value)
+                    value = value == 0 ? 0 : Math.Sign(value);
+                
                 cameraAim.TurnAimNow(180 * Time.deltaTime * Plugin.Config.SmoothTurnSpeedModifier.Value * value);
                 break;
             
