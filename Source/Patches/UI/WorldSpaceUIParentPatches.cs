@@ -15,9 +15,11 @@ internal static class WorldSpaceUIParentPatches
     {
         var position = __instance.worldPosition + __instance.positionOffset;
         var direction = (position - AssetManager.instance.mainCamera.transform.position).normalized;
+        var distance = Vector3.Distance(position, Camera.main!.transform.position);
 
         __instance.myRect.position = position;
         __instance.myRect.rotation = Quaternion.LookRotation(direction, Vector3.up);
+        __instance.myRect.localScale = Vector3.one * Mathf.Lerp(1, 10, Mathf.InverseLerp(3, 20, distance));
 
         return false;
     }

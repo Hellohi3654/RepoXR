@@ -222,12 +222,17 @@ public class VRPlayer : MonoBehaviour
         {
             case Config.TurnProviderOption.Snap:
                 var should = Mathf.Abs(value) > 0.75f;
+                var snapSize = Plugin.Config.SnapTurnSize.Value;
+                
+                // Funny hourglass makes turning slower :)
+                if (PlayerController.instance.overrideTimeScaleTimer > 0)
+                    snapSize *= PlayerController.instance.overrideTimeScaleMultiplier;
                 
                 if (!turnedLastInput && should)
                     if (value > 0)
-                        cameraAim.TurnAimNow(Plugin.Config.SnapTurnSize.Value);
+                        cameraAim.TurnAimNow(snapSize);
                     else
-                        cameraAim.TurnAimNow(-Plugin.Config.SnapTurnSize.Value);
+                        cameraAim.TurnAimNow(-snapSize);
 
                 turnedLastInput = should;
                 
@@ -236,6 +241,9 @@ public class VRPlayer : MonoBehaviour
             case Config.TurnProviderOption.Smooth:
                 if (!Plugin.Config.DynamicSmoothSpeed.Value)
                     value = value == 0 ? 0 : Math.Sign(value);
+
+                if (PlayerController.instance.overrideTimeScaleTimer > 0)
+                    value *= PlayerController.instance.overrideTimeScaleMultiplier;
                 
                 cameraAim.TurnAimNow(180 * Time.deltaTime * Plugin.Config.SmoothTurnSpeedModifier.Value * value);
                 break;

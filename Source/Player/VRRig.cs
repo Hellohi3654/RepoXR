@@ -43,11 +43,12 @@ public class VRRig : MonoBehaviour
     public VRInventory inventoryController;
 
     public Vector3 headOffset;
+
+    public Vector3 mapRightPosition;
+    public Vector3 mapLeftPosition;
     
-    public Vector3 standingPlaneOffset;
-    public Vector3 seatedPlaneOffset;
-    public float seatedHeightOffsetStart;
-    public float seatedHeightOffsetEnd;
+    public Vector3 normalPlaneOffset;
+    public Vector3 gazePlaneOffset;
     
     private Transform leftArmMesh;
     private Transform rightArmMesh;
@@ -94,7 +95,7 @@ public class VRRig : MonoBehaviour
         // Map tool
         mapTool = FindObjectsOfType<MapToolController>().First(tool => tool.PlayerAvatar.isLocal);
 
-        planeOffsetTransform.localPosition = standingPlaneOffset;
+        planeOffsetTransform.localPosition = normalPlaneOffset;
     }
 
     private void LateUpdate()
@@ -103,14 +104,12 @@ public class VRRig : MonoBehaviour
         transform.rotation = Quaternion.Lerp(transform.rotation,
             Quaternion.Euler(transform.eulerAngles.x, head.eulerAngles.y, transform.eulerAngles.z),
             10 * Time.deltaTime);
-
-        var offset = Mathf.InverseLerp(seatedHeightOffsetEnd, seatedHeightOffsetStart, head.localPosition.y);
-        planeOffsetTransform.transform.localPosition = Vector3.Lerp(seatedPlaneOffset, standingPlaneOffset, offset);
         
         UpdateArms();
         UpdateClaw();
         MapToolLogic();
         WallClipLogic();
+        LookAtHUDLogic();
     }
 
     private void UpdateArms()
@@ -164,6 +163,10 @@ public class VRRig : MonoBehaviour
     {
         if (!mapTool)
             return;
+
+        // Move map tool anchor to the left if we're holding an item
+        map.transform.localPosition = Vector3.Lerp(map.transform.localPosition,
+            PhysGrabber.instance.grabbed ? mapLeftPosition : mapRightPosition, 8 * Time.deltaTime);
 
         mapTool.transform.parent.localPosition =
             Vector3.Lerp(mapTool.transform.parent.localPosition, Vector3.zero, 5 * Time.deltaTime);
@@ -258,6 +261,22 @@ public class VRRig : MonoBehaviour
             
             Crosshair.instance.gameObject.SetActive(true);
         }
+    }
+
+    private bool lookingAtHud;
+
+    /// <summary>
+    /// Detect how much the camera is looking downwards and make the info HUD more accessible if looking at it
+    /// </summary>
+    private void LookAtHUDLogic()
+    {
+        if (head.localEulerAngles.x is < 180 and > 30 && !lookingAtHud)
+            lookingAtHud = true;
+        else if (head.localEulerAngles.x is < 20 or > 180 && lookingAtHud)
+            lookingAtHud = false;
+
+        planeOffsetTransform.transform.localPosition = Vector3.Lerp(planeOffsetTransform.transform.localPosition,
+            lookingAtHud ? gazePlaneOffset : normalPlaneOffset, 8 * Time.deltaTime);
     }
 
     public void SetVisible(bool visible)

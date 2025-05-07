@@ -183,11 +183,21 @@ public class GameHud : MonoBehaviour
         pause.positionOffset = new Vector3(pixelOffset.x * 0.01f, pixelOffset.y * 0.01f, 0);
         
         // Put chat on the pause canvas (or disable if singleplayer)
+
+        var chatHolder = new GameObject("Chat Holder") { transform = { parent = canvas.transform } }
+            .AddComponent<RectTransform>();
+
+        chatHolder.sizeDelta = new Vector2(720, 450);
+        chatHolder.pivot = Vector2.zero;
+        chatHolder.localPosition = Vector3.zero;
+        chatHolder.localRotation = Quaternion.identity;
+        chatHolder.localScale = Vector3.one;
+        chatHolder.gameObject.AddComponent<RectMask2D>();
         
         var chat = HUDCanvas.instance.transform.Find("HUD/Chat");
         
         if (SemiFunc.IsMultiplayer())
-            chat.SetParent(canvas.transform, false);
+            chat.SetParent(chatHolder, false);
         else
             chat.gameObject.SetActive(false);
     }

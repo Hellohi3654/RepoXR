@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
-using RepoXR.Managers;
-
-using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches.UI;
 

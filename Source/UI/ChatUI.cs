@@ -1,5 +1,4 @@
 ﻿using RepoXR.Assets;
-using RepoXR.Managers;
 using RepoXR.ThirdParty.MRTK;
 using UnityEngine;
 
@@ -8,8 +7,6 @@ namespace RepoXR.UI;
 public class ChatUI : MonoBehaviour
 {
     private ChatManager chatManager;
-    private global::ChatUI chatUI;
-    private RectTransform rectTransform;
 
     private NonNativeKeyboard keyboard;
     private Vector3 keyboardScale;
@@ -20,8 +17,6 @@ public class ChatUI : MonoBehaviour
     private void Awake()
     {
         chatManager = ChatManager.instance;
-        chatUI = GetComponent<global::ChatUI>();
-        rectTransform = GetComponent<RectTransform>();
 
         keyboard = Instantiate(AssetCollection.Keyboard,
             transform.TransformPoint(new Vector3(360, -100)),
@@ -47,11 +42,8 @@ public class ChatUI : MonoBehaviour
     {
         // Disable during loading
         if (global::LoadingUI.instance.isActiveAndEnabled)
-        {
             chatManager.StateSet(ChatManager.ChatState.Inactive);
-            return;
-        }
-        
+
         // Reset UI position if chat became active or is possessed
         if ((chatManager.chatState == ChatManager.ChatState.Active &&
              chatManager.chatState != prevState) || chatManager.chatState == ChatManager.ChatState.Possessed)

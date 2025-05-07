@@ -1,6 +1,4 @@
 ﻿using System.Collections;
-using RepoXR.Assets;
-using RepoXR.UI.Menu;
 using UnityEngine;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;

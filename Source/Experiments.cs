@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using HarmonyLib;
-using RepoXR.Patches;
+﻿using HarmonyLib;
 
 namespace RepoXR;
 
@@ -35,13 +33,6 @@ internal static class Experiments
     private static void InfiniteSprintPatch(PlayerController __instance)
     {
         __instance.EnergyCurrent = __instance.EnergyStart;
-    }
-
-    [HarmonyPatch(typeof(MenuPageSettings), nameof(MenuPageSettings.ButtonEventControls))]
-    [HarmonyPrefix]
-    private static void A()
-    {
-        Logger.LogDebug(new StackTrace());
     }
 }
 #endif
