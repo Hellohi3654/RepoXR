@@ -120,12 +120,13 @@ internal static class InputPatches
             case InputKey.Jump or InputKey.Crouch or InputKey.Tumble or InputKey.Inventory1 or InputKey.Inventory2
                 or InputKey.Inventory3 or InputKey.Interact when __instance.disableMovementTimer > 0:
                 return true;
-            
+
             // Do not allow pause menu during loading
             case InputKey.Menu when LoadingUI.instance.isActiveAndEnabled:
-            
-            // Do not allow to swap spectated player if chatting
-            case InputKey.SpectateNext or InputKey.SpectatePrevious when ChatManager.instance.chatActive:
+
+            // Do not allow to swap spectated player if chatting or in a menu
+            case InputKey.SpectateNext or InputKey.SpectatePrevious
+                when ChatManager.instance.chatActive || MenuManager.instance.currentMenuPage:
                 __result = false;
                 return false;
 

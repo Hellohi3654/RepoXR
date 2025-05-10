@@ -22,11 +22,14 @@ public class ExpressionRadial : MonoBehaviour
 
     private HapticManager.Hand currentHand = HapticManager.Hand.Both;
     
-    private bool isActive;
+    internal bool isActive;
     private float animationLerp;
     private int hoveredPart = -1;
 
     private List<ExpressionPart.Expression> activeExpressions = [];
+
+    // Helper bool that prevents the chat from opening if the radial menu was closed using the chat key
+    internal bool closedLastPress;
     
     private void Awake()
     {
@@ -47,10 +50,13 @@ public class ExpressionRadial : MonoBehaviour
 
         if (currentHand == HapticManager.Hand.Both)
             return;
+
+        if (closedLastPress)
+            closedLastPress = false;
         
         var pressed = VRInputSystem.instance.ExpressionPressed() ||
                       // Close radial menu when chat becomes active
-                      (isActive && ChatManager.instance.chatState == ChatManager.ChatState.Active);
+                      (isActive && SemiFunc.InputDown(InputKey.Chat));
         switch (pressed)
         {
             case true when !isActive:
@@ -64,6 +70,7 @@ public class ExpressionRadial : MonoBehaviour
                 break;
             case true when isActive:
                 isActive = false;
+                closedLastPress = true;
 
                 MenuManager.instance.MenuEffectClick(MenuManager.MenuClickEffectType.Action, soundOnly: true);
                 break;

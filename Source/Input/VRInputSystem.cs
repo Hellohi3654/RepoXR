@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using RepoXR.Assets;
+using RepoXR.UI.Expressions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -56,12 +57,23 @@ public class VRInputSystem : MonoBehaviour
 
     private void ChatPerformed(InputAction.CallbackContext context)
     {
+        if (ExpressionRadial.instance &&
+            (ExpressionRadial.instance.isActive || ExpressionRadial.instance.closedLastPress))
+            return;
+        
         chatHoldTriggered = false;
         chatHoldCoroutine = StartCoroutine(HoldTimer());
     }
 
     private void ChatCanceled(InputAction.CallbackContext context)
     {
+        if (ExpressionRadial.instance &&
+            (ExpressionRadial.instance.isActive || ExpressionRadial.instance.closedLastPress))
+        {
+            ExpressionRadial.instance.closedLastPress = false;
+            return;
+        }
+        
         if (chatHoldCoroutine != null)
         {
             StopCoroutine(chatHoldCoroutine);

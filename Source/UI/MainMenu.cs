@@ -64,7 +64,7 @@ public class MainMenu : MonoBehaviour
             mainCanvas.transform.Find("HUD/Chat").gameObject.SetActive(false);
 
         // Move top menu selection outline
-        var selection = FindObjectOfType<MenuSelectionBoxTop>();
+        var selection = FindObjectOfType<MenuSelectionBoxTop>(true);
         selection.transform.parent.parent = selection.transform.parent.parent.parent;
     }
 
