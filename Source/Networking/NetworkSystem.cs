@@ -76,6 +76,14 @@ public class NetworkSystem : MonoBehaviour
         });
     }
 
+    public void UpdateHeadlamp(bool headLampEnabled)
+    {
+        EnqueueFrame(new Headlamp
+        {
+            HeadlampEnabled = headLampEnabled
+        });
+    }
+
     /// <summary>
     /// Enqueues a frame to be sent next serialization sequence. This function contains an optimization that removes
     /// duplicate frames to reduce network usage, which reduces server costs.
@@ -94,7 +102,7 @@ public class NetworkSystem : MonoBehaviour
     {
         try
         {
-            if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_ANNOUNCEMENT)
+            if (frame.FrameID == FrameHelper.FrameAnnouncement)
             {
                 if (networkPlayers.ContainsKey(player.photonView.ControllerActorNr))
                     return;
@@ -106,7 +114,7 @@ public class NetworkSystem : MonoBehaviour
                 networkPlayers.Add(player.photonView.ControllerActorNr, networkPlayer);
                 knownPhotonIds.Add(player.photonView.ControllerActorNr);
             }
-            else if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_RIG)
+            else if (frame.FrameID == FrameHelper.FrameRig)
             {
                 var rigFrame = (Rig)frame;
 
@@ -115,7 +123,7 @@ public class NetworkSystem : MonoBehaviour
 
                 networkPlayer.HandleRigFrame(rigFrame);
             }
-            else if (FrameHelper.GetFrameID(frame) == FrameHelper.FRAME_MAPTOOL)
+            else if (frame.FrameID == FrameHelper.FrameMaptool)
             {
                 var mapFrame = (MapTool)frame;
 
@@ -123,11 +131,19 @@ public class NetworkSystem : MonoBehaviour
                     return;
 
                 networkPlayer.HandleMapFrame(mapFrame);
+            } else if (frame.FrameID == FrameHelper.FrameHeadlamp)
+            {
+                var headlampFrame = (Headlamp)frame;
+
+                if (!networkPlayers.TryGetValue(player.photonView.controllerActorNr, out var networkPlayer))
+                    return;
+
+                networkPlayer.HandleHeadlamp(headlampFrame.HeadlampEnabled);
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Error while handling frame {FrameHelper.GetFrameID(frame)} ({frame.GetType().Name}): {ex.Message}");
+            Logger.LogError($"Error while handling frame {frame.FrameID} ({frame.GetType().Name}): {ex.Message}");
             Logger.LogError(ex.StackTrace);
         }
     }
@@ -158,7 +174,7 @@ public class NetworkSystem : MonoBehaviour
         
         foreach (var frame in scheduledFrames)
         {
-            stream.SendNext(FrameHelper.GetFrameID(frame));
+            stream.SendNext(frame.FrameID);
             frame.Serialize(stream);
         }
         

@@ -60,8 +60,6 @@ public class VRMapTool : MonoBehaviour
 
     private void LateUpdate()
     {
-        // TODO: Support for left slotted map tool
-        // TODO: Maybe fix the one-frame delay in animation
         var isAnimating = !((statsUI.showTimer > 0 && statsUI.hidePositionCurrent == statsUI.showPosition) ||
                             (statsUI.hideTimer > 0.1 && statsUI.hidePositionCurrent == statsUI.hidePosition));
         var animOffset = isAnimating

@@ -4,6 +4,12 @@ namespace RepoXR.UI.Menu;
 
 public class SettingsPage : MonoBehaviour
 {
+    private void Start()
+    {
+        MenuManager.instance.PageCloseAllAddedOnTop();
+        MenuHelper.PageAddOnTop(MenuHelper.RepoXRMenuPage.VRShowcase);
+    }
+
     public void ButtonEventOpenCategory(string category)
     {
         MenuManager.instance.PageCloseAllAddedOnTop();

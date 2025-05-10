@@ -102,7 +102,15 @@ internal static class Entrypoint
         // Create custom camera (if enabled)
         if (Plugin.Config.CustomCamera.Value)
             Object.Instantiate(AssetCollection.CustomCamera, Camera.main.transform.parent);
+        
+        // Create haptic feedback manager
+        new GameObject("Haptic Manager").AddComponent<HapticManager>();
+        
+        // Create persistent data manager
+        new GameObject("Data Manager").AddComponent<DataManager>();
     }
+
+    private static bool hasShownErrorMessage;
 
     /// <summary>
     /// The default setup for every scene (including for non-vr players)
@@ -110,8 +118,18 @@ internal static class Entrypoint
     private static void SetupDefaultSceneUniversal()
     {
         new GameObject("RepoXR Network System").AddComponent<NetworkSystem>();
+
+        if (!Plugin.Flags.HasFlag(Flags.StartupFailed) ||
+            hasShownErrorMessage || RunManager.instance.levelCurrent != RunManager.instance.levelMainMenu)
+            return;
+        
+        hasShownErrorMessage = true;
+        MenuManager.instance.PagePopUpScheduled("VR Startup Failed", Color.red,
+            "RepoXR tried to launch the game in VR, however an error occured during initialization.\n\nYou can disable VR in the settings if you are not planning to play in VR.",
+            "Alright fam",
+            true);
     }
-    
+
     /// <summary>
     /// <see cref="GameDirector"/> is always present in the `Main` scene, so we use it as entrypoint
     /// </summary>
@@ -119,7 +137,7 @@ internal static class Entrypoint
     [HarmonyPostfix]
     private static void OnStartup(GameDirector __instance)
     {
-        VRInputSystem.Instance.ActivateInput();
+        VRInputSystem.instance.ActivateInput();
         
         if (RunManager.instance.levelCurrent == RunManager.instance.levelMainMenu ||
             RunManager.instance.levelCurrent == RunManager.instance.levelLobbyMenu)
@@ -131,6 +149,7 @@ internal static class Entrypoint
     private static void OnStartupMainMenu()
     {
         HUDCanvas.instance.gameObject.AddComponent<MainMenu>();
+        DataManager.instance.ResetData();
     }
 
     private static void OnStartupInGame()

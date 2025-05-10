@@ -46,7 +46,16 @@ public class Crosshair : MonoBehaviour
             transform.position = Vector3.down * 3000;
             return;
         }
-        
+
+        // Look straight at camera if we're pointing to an enemy
+        if (hit.collider.CompareTag("Phys Grab Object") && hit.collider.GetComponentInParent<EnemyRigidbody>())
+        {
+            transform.SetPositionAndRotation(hit.point,
+                Quaternion.LookRotation(hit.point - camera.position) * Quaternion.Euler(0, 90, 90));
+
+            return;
+        }
+
         var upness = Mathf.Abs(Mathf.Max(0, Vector3.Dot(hit.normal, Vector3.up) - 0.5f)) / 0.5f;
         var toCamera = camera.position - hit.point;
         var projectedToCamera = Vector3.ProjectOnPlane(toCamera, hit.normal).normalized;

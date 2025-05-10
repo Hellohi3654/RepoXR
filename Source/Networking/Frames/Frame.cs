@@ -9,9 +9,10 @@ namespace RepoXR.Networking.Frames;
 
 public static class FrameHelper
 {
-    public const int FRAME_ANNOUNCEMENT = 1;
-    public const int FRAME_RIG = 2;
-    public const int FRAME_MAPTOOL = 3;
+    public const int FrameAnnouncement = 1;
+    public const int FrameRig = 2;
+    public const int FrameMaptool = 3;
+    public const int FrameHeadlamp = 4;
     
     private static Dictionary<int, Type> cachedTypes = [];
 
@@ -44,6 +45,8 @@ public static class FrameHelper
 
 public interface IFrame
 {
+    public int FrameID => FrameHelper.GetFrameID(this);
+
     public void Serialize(PhotonStream stream);
     public void Deserialize(PhotonStream stream);
 }

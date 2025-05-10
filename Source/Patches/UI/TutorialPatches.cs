@@ -39,6 +39,18 @@ internal static class TutorialPatches
     }
 
     /// <summary>
+    /// Update the tips UI to use our input icons
+    /// </summary>
+    [HarmonyPatch(typeof(TutorialUI), nameof(TutorialUI.SetTipPage))]
+    [HarmonyPrefix]
+    private static void UpdateTipTextSpriteAtlas(TutorialUI __instance, ref string text)
+    {
+        __instance.Text.spriteAsset = AssetCollection.TMPInputsSpriteAsset;
+        
+        text = text.Replace("keyboard", "controller");
+    }
+
+    /// <summary>
     /// Make sure the sprite asset is reverted back to ours after the "good job" message
     /// </summary>
     [HarmonyPatch(typeof(TutorialUI), nameof(TutorialUI.SwitchPage), MethodType.Enumerator)]

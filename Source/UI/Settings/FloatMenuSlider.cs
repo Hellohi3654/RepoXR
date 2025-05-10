@@ -214,10 +214,9 @@ public class FloatMenuSlider : MonoBehaviour
 
     private void UpdateSegmentTextAndValue()
     {
-        var value = Mathf.RoundToInt(currentValue);
-        
         if (hasCustomOptions)
         {
+            var value = Mathf.RoundToInt(currentValue);
             if (value < customOptions.Count)
             {
                 var text = customOptions[value].customOptionText;
@@ -228,9 +227,7 @@ public class FloatMenuSlider : MonoBehaviour
             }
         }
         else
-        {
-            segmentText.text = stringAtStartOfValue + currentValue + stringAtEndOfValue;
-        }
+            segmentText.text = stringAtStartOfValue + DisplayValue + stringAtEndOfValue;
     }
 
     public void OnIncrease()

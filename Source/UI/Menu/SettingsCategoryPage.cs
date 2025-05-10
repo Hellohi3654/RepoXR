@@ -21,6 +21,14 @@ public class SettingsCategoryPage : MonoBehaviour
         categoryText.text = categoryName;
 
         var positionOffset = -50f;
+
+        if (categoryName == "General")
+        {
+            var setting = Instantiate(AssetCollection.RuntimeSetting, scrollerTransform).GetComponent<RuntimeSettingOption>();
+            setting.rectTransform.anchoredPosition += new Vector2(0, positionOffset);
+
+            positionOffset -= 30f;
+        }
         
         foreach (var (def, val) in Plugin.Config.File)
         {
@@ -72,7 +80,7 @@ public class SettingsCategoryPage : MonoBehaviour
                     slider.hasCustomOptions = true;
                     slider.currentValue = (int)val.BoxedValue;
                     slider.isInteger = true;
-                    slider.hasBar = false;
+                    slider.hasBar = !descriptor.EnumDisableBar;
                     slider.wrapAround = true;
                     
                     positionOffset -= 30f;

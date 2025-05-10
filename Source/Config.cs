@@ -18,7 +18,7 @@ public class Config(string assemblyPath, ConfigFile file)
 
     [ConfigDescriptor(customName: "Enable VR", trueText: "Disable", falseText: "Enable")]
     public ConfigEntry<bool> DisableVR { get; } = file.Bind("General", nameof(DisableVR), false,
-        "Disabled the main functionality of this mod, can be used if you want to play without VR while keeping the mod installed.");
+        "Disables the main functionality of this mod, can be used if you want to play without VR while keeping the mod installed.");
 
     [ConfigDescriptor]
     public ConfigEntry<bool> VerboseLogging { get; } = file.Bind("General", nameof(VerboseLogging), false,
@@ -34,6 +34,13 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<bool> RoomscaleCrouch { get; } = file.Bind("Gameplay", nameof(RoomscaleCrouch), true,
         "When enabled, allows for the player to physically crouch to also crouch in-game");
 
+    [ConfigDescriptor]
+    public ConfigEntry<HapticFeedbackOption> HapticFeedback { get; } =
+        file.Bind("Gameplay", nameof(HapticFeedback), HapticFeedbackOption.All,
+            new ConfigDescription(
+                "Controls how much haptic feedback you will experience while playing with the VR mod.",
+                new AcceptableValueEnum<HapticFeedbackOption>()));
+
     // Performance configuration
 
     [ConfigDescriptor(stepSize: 5f, suffix: "%")]
@@ -44,7 +51,7 @@ public class Config(string assemblyPath, ConfigFile file)
 
     // Input configuration
 
-    [ConfigDescriptor]
+    [ConfigDescriptor(enumDisableBar: true)]
     public ConfigEntry<TurnProviderOption> TurnProvider { get; } = file.Bind("Input", nameof(TurnProvider),
         TurnProviderOption.Smooth,
         new ConfigDescription("Specify which turning provider your player uses, if any.",
@@ -59,7 +66,7 @@ public class Config(string assemblyPath, ConfigFile file)
     [ConfigDescriptor]
     public ConfigEntry<bool> DynamicSmoothSpeed { get; } = file.Bind("Input", nameof(DynamicSmoothSpeed), true,
         "When enabled, makes the speed of the smooth turning dependent on how far the analog stick is pushed.");
-    
+
     [ConfigDescriptor(stepSize: 5, suffix: "°")]
     public ConfigEntry<float> SnapTurnSize { get; } = file.Bind("Input", nameof(SnapTurnSize), 45f,
         new ConfigDescription(
@@ -121,6 +128,13 @@ public class Config(string assemblyPath, ConfigFile file)
         };
     }
 
+    public enum HapticFeedbackOption
+    {
+        Off,
+        Reduced,
+        All
+    }
+
     public enum TurnProviderOption
     {
         Snap,
@@ -147,7 +161,8 @@ public class ConfigDescriptorAttribute(
     float pointerSize = 1.0f,
     string suffix = "",
     string trueText = "On",
-    string falseText = "Off") : Attribute
+    string falseText = "Off",
+    bool enumDisableBar = false) : Attribute
 {
     public string? CustomName => customName;
     public bool Percentage => percentage;
@@ -156,10 +171,5 @@ public class ConfigDescriptorAttribute(
     public string Suffix => suffix;
     public string TrueText => trueText;
     public string FalseText => falseText;
-
-    public override string ToString()
-    {
-        return
-            $"ConfigDescriptor(Percentage: {percentage}, StepSize: {stepSize}, PointerSize: {pointerSize}, TrueText: {trueText}, FalseText: {falseText})";
-    }
+    public bool EnumDisableBar => enumDisableBar;
 }

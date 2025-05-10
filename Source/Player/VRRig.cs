@@ -1,10 +1,13 @@
 ﻿using System.Collections;
 using System.Linq;
 using HarmonyLib;
+using RepoXR.Assets;
 using RepoXR.Input;
+using RepoXR.Managers;
 using RepoXR.Networking;
 using RepoXR.Player.Camera;
 using RepoXR.UI;
+using RepoXR.UI.Expressions;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -30,15 +33,18 @@ public class VRRig : MonoBehaviour
     public Transform rightHandAnchor;
     public Transform leftHandTip;
     public Transform rightHandTip;
-    
+
+    public Transform headAnchor;
     public Transform planeOffsetTransform;
     public RectTransform infoHud;
     public Transform inventory;
     public Transform map;
+    public Transform headLamp;
 
     public Collider leftHandCollider;
     public Collider rightHandCollider;
     public Collider mapPickupCollider;
+    public Collider lampTriggerCollider;
 
     public VRInventory inventoryController;
 
@@ -67,6 +73,9 @@ public class VRRig : MonoBehaviour
     {
         leftArmMesh = leftArm.GetComponentInChildren<MeshRenderer>().transform;
         rightArmMesh = rightArm.GetComponentInChildren<MeshRenderer>().transform;
+        
+        // Load persisted data
+        headlampEnabled = DataManager.instance.headlampEnabled;
     }
 
     private IEnumerator Start()
@@ -74,7 +83,7 @@ public class VRRig : MonoBehaviour
         playerAvatar = PlayerController.instance.playerAvatarScript;
         playerAvatarVisuals = playerAvatar.playerAvatarVisuals;
         playerAvatarRightArm = playerAvatarVisuals.GetComponentInChildren<PlayerAvatarRightArm>(true);
-        
+
         // Parent claw to right hand
         playerAvatarRightArm.grabberClawParent.SetParent(rightHandTip);
         playerAvatarRightArm.grabberClawParent.localPosition = Vector3.zero;
@@ -84,18 +93,22 @@ public class VRRig : MonoBehaviour
 
         // Everything else is only available after the first frame
         yield return null;
-        
+
         // Parent flashlight to left hand
         var flashlight = FlashlightController.Instance;
-        
-        flashlight.transform.parent = leftHandTip;
+
+        flashlight.transform.parent = headlampEnabled ? headLamp : leftHandTip;
         flashlight.transform.localPosition = Vector3.zero;
         flashlight.transform.localRotation = Quaternion.identity;
-        
+
         // Map tool
         mapTool = FindObjectsOfType<MapToolController>().First(tool => tool.PlayerAvatar.isLocal);
 
         planeOffsetTransform.localPosition = normalPlaneOffset;
+
+        // Expression wheel
+        Instantiate(AssetCollection.ExpressionWheel, CameraUtils.Instance.MainCamera.transform.parent)
+            .GetComponent<ExpressionRadial>();
     }
 
     private void LateUpdate()
@@ -104,12 +117,16 @@ public class VRRig : MonoBehaviour
         transform.rotation = Quaternion.Lerp(transform.rotation,
             Quaternion.Euler(transform.eulerAngles.x, head.eulerAngles.y, transform.eulerAngles.z),
             10 * Time.deltaTime);
+
+        headAnchor.position = head.position;
+        headAnchor.rotation = head.rotation;
         
         UpdateArms();
         UpdateClaw();
         MapToolLogic();
         WallClipLogic();
         LookAtHUDLogic();
+        HeadLampLogic();
     }
 
     private void UpdateArms()
@@ -159,6 +176,8 @@ public class VRRig : MonoBehaviour
         playerAvatarRightArm.GrabberLogic();
     }
 
+    private bool mapHovered;
+
     private void MapToolLogic()
     {
         if (!mapTool)
@@ -190,6 +209,25 @@ public class VRRig : MonoBehaviour
             mapTool.Active = false;
             return;
         }
+
+        var rightHandHovered = Utils.Collide(rightHandCollider, mapPickupCollider);
+        var leftHandHovered = Utils.Collide(leftHandCollider, mapPickupCollider);
+
+        // Haptic touch logic
+        if (!mapTool.Active && !mapHovered && leftHandHovered)
+        {
+            mapHovered = true;
+
+            HapticManager.Impulse(HapticManager.Hand.Left, HapticManager.Type.Impulse);
+        }
+        else if (!mapTool.Active && !mapHovered && rightHandHovered)
+        {
+            mapHovered = true;
+
+            HapticManager.Impulse(HapticManager.Hand.Right, HapticManager.Type.Impulse);
+        }
+        else if (mapTool.Active || (!leftHandHovered && !rightHandHovered))
+            mapHovered = false;
 
         // Right hand pickup logic
         if (!mapTool.Active && Actions.Instance["MapGrabRight"].WasPressedThisFrame() &&
@@ -279,6 +317,37 @@ public class VRRig : MonoBehaviour
             lookingAtHud ? gazePlaneOffset : normalPlaneOffset, 8 * Time.deltaTime);
     }
 
+    private bool headlampHovered;
+    private bool headlampEnabled;
+    
+    private void HeadLampLogic()
+    {
+        // Disable in shop and lobby
+        if (RunManager.instance.levelCurrent == RunManager.instance.levelLobby ||
+            RunManager.instance.levelCurrent == RunManager.instance.levelShop)
+            return;
+        
+        var collided = Utils.Collide(leftHandCollider, lampTriggerCollider);
+        if (collided && !headlampHovered)
+            HapticManager.Impulse(HapticManager.Hand.Left, HapticManager.Type.Impulse);
+
+        if (collided && Actions.Instance["MapGrabLeft"].WasPressedThisFrame())
+        {
+            var flashlight = FlashlightController.Instance;
+            
+            // Reparent flashlight onto new parent
+            flashlight.transform.SetParent(headlampEnabled ? leftHandTip : headLamp, false);
+            flashlight.lightOnAudio.Play(flashlight.transform.position);            
+            
+            headlampEnabled = !headlampEnabled;
+
+            DataManager.instance.headlampEnabled = headlampEnabled;
+            NetworkSystem.instance.UpdateHeadlamp(headlampEnabled);
+        }
+        
+        headlampHovered = collided;
+    }
+    
     public void SetVisible(bool visible)
     {
         foreach (var mesh in meshes)

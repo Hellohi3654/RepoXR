@@ -30,6 +30,20 @@ internal static class CrosshairPatches
         __instance.transform.localScale = Vector3.one;
 
         canvas.gameObject.AddComponent<Crosshair>();
-        canvas.gameObject.SetLayerRecursively(0); // We don't need on-top rendering
+    }
+
+    /// <summary>
+    /// Re-parent the overcharge UI onto the crosshair
+    /// </summary>
+    [HarmonyPatch(typeof(OverchargeRoundBarUI), nameof(OverchargeRoundBarUI.Start))]
+    [HarmonyPostfix]
+    private static void OnOverchargeCreate(OverchargeRoundBarUI __instance)
+    {
+        __instance.transform.SetParent(Crosshair.instance.transform, false);
+        __instance.transform.localEulerAngles = new Vector3(-90, -90, 0);
+        __instance.transform.localPosition = Vector3.zero;
+        __instance.transform.localScale = Vector3.one * 0.65f;
+
+        Crosshair.instance.gameObject.SetLayerRecursively(5); // Needs to be visible through walls
     }
 }

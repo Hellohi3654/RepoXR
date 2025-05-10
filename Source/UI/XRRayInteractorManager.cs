@@ -69,12 +69,20 @@ public class XRRayInteractorManager : MonoBehaviour
         if (!interactor.TryGetCurrentUIRaycastResult(out var result))
             return Vector2.one * -1000;
 
-        var canvas = rect == null
+        var canvas = rect is null
             ? result.gameObject.GetComponentInParent<Canvas>().transform
             : rect.GetComponentInParent<Canvas>().transform;
 
         var local = canvas.InverseTransformPoint(result.worldPosition);
         return new Vector2(local.x, local.y);
+    }
+
+    public RectTransform GetUIHitRectTransform()
+    {
+        var (interactor, _) = GetActiveInteractor();
+        return !interactor.TryGetCurrentUIRaycastResult(out var result)
+            ? HUDCanvas.instance.GetComponent<RectTransform>()
+            : result.gameObject.GetComponent<RectTransform>();
     }
 
     public bool GetTriggerDown()

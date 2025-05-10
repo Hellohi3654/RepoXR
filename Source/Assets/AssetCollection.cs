@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using RepoXR.Data;
 using RepoXR.Input;
 using TMPro;
 using UnityEngine;
@@ -19,11 +20,12 @@ internal static class AssetCollection
     public static GameObject CustomCamera;
     public static GameObject VRTumble;
     public static GameObject Keyboard;
-    public static GameObject Cube;
-    public static GameObject Imgage;
+    public static GameObject ExpressionWheel;
 
     public static GameObject MenuSettings;
     public static GameObject MenuSettingsCategory;
+    public static GameObject MenuShowcase;
+    public static GameObject RuntimeSetting;
     public static GameObject BoolSetting;
     public static GameObject SliderSetting;
     public static GameObject VRSettingsButton;
@@ -38,6 +40,12 @@ internal static class AssetCollection
 
     public static Shader VignetteShader;
 
+    public static AnimationCurveData OverchargeHapticCurve;
+    public static AnimationCurveData GrabberHapticCurve;
+    public static AnimationCurveData HurtHapticCurve;
+    public static AnimationCurveData EyeAttachHapticCurve;
+    public static AnimationCurveData KeyboardAnimation;
+    
     public static bool LoadAssets()
     {
         assetBundle =
@@ -58,11 +66,12 @@ internal static class AssetCollection
         CustomCamera = assetBundle.LoadAsset<GameObject>("Custom Camera");
         VRTumble = assetBundle.LoadAsset<GameObject>("VRTumble");
         Keyboard = assetBundle.LoadAsset<GameObject>("NonNativeKeyboard");
-        Cube = assetBundle.LoadAsset<GameObject>("Cube");
-        Imgage = assetBundle.LoadAsset<GameObject>("Imgage");       
+        ExpressionWheel = assetBundle.LoadAsset<GameObject>("Expression Radial");
         
         MenuSettings = assetBundle.LoadAsset<GameObject>("VR Settings Page");
         MenuSettingsCategory = assetBundle.LoadAsset<GameObject>("VR Settings Page - Category");
+        MenuShowcase = assetBundle.LoadAsset<GameObject>("VR Showcase Page");
+        RuntimeSetting = assetBundle.LoadAsset<GameObject>("Runtime Setting");
         BoolSetting = assetBundle.LoadAsset<GameObject>("Bool Setting");
         SliderSetting = assetBundle.LoadAsset<GameObject>("Slider Setting");
         VRSettingsButton = assetBundle.LoadAsset<GameObject>("VR Settings Button");
@@ -76,6 +85,12 @@ internal static class AssetCollection
         TMPInputsSpriteAsset = assetBundle.LoadAsset<TMP_SpriteAsset>("TMPInputsSpriteAsset");
 
         VignetteShader = assetBundle.LoadAsset<Shader>("VignetteVR");
+
+        GrabberHapticCurve = assetBundle.LoadAsset<AnimationCurveData>("GrabberHapticCurve");
+        OverchargeHapticCurve = assetBundle.LoadAsset<AnimationCurveData>("OverchargeHapticCurve");
+        HurtHapticCurve = assetBundle.LoadAsset<AnimationCurveData>("HurtHapticCurve");
+        EyeAttachHapticCurve = assetBundle.LoadAsset<AnimationCurveData>("EyeAttachHapticCurve");
+        KeyboardAnimation = assetBundle.LoadAsset<AnimationCurveData>("KeyboardAnimation");
         
         return true;
     }

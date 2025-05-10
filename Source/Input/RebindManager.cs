@@ -52,7 +52,7 @@ public class RebindManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        playerInput = VRInputSystem.Instance.GetPlayerInput();
+        playerInput = VRInputSystem.instance.GetPlayerInput();
         
         DestroyOldUI();
         CreateUI();
@@ -197,5 +197,9 @@ public class RebindManager : MonoBehaviour
     {
         foreach (var option in options)
             option.ReloadBinding();
+        
+        // Reload chat binding in the lobby menu
+        if (MenuPageLobby.instance)
+            MenuPageLobby.instance.UpdateChatPrompt();
     }
 }

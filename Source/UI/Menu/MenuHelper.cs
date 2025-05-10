@@ -16,6 +16,11 @@ internal static class MenuHelper
             {
                 menuPageIndex = (MenuPageIndex)RepoXRMenuPage.VRSettingsCategory,
                 menuPage = AssetCollection.MenuSettingsCategory
+            },
+            new MenuManager.MenuPages
+            {
+                menuPageIndex = (MenuPageIndex)RepoXRMenuPage.VRShowcase,
+                menuPage = AssetCollection.MenuShowcase
             }
         ]);
     }
@@ -36,6 +41,7 @@ internal static class MenuHelper
     public enum RepoXRMenuPage
     {
         VRSettings = 37449,
-        VRSettingsCategory
+        VRSettingsCategory,
+        VRShowcase
     }
 }

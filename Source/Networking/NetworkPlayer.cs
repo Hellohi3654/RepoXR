@@ -21,6 +21,8 @@ public class NetworkPlayer : MonoBehaviour
     
     private Transform leftHandAnchor;
     private Transform rightHandAnchor;
+
+    private Transform headlampTransform;
     
     private Vector3 leftHandPosition;
     private Vector3 rightHandPosition;
@@ -62,6 +64,18 @@ public class NetworkPlayer : MonoBehaviour
             }
             .transform;
 
+        // Headlamp
+
+        headlampTransform = new GameObject("Headlamp Anchor")
+            {
+                transform =
+                {
+                    parent = playerAvatarVisuals.attachPointTopHeadMiddle, 
+                    localPosition = new Vector3(-0.21f, 0.1f, 0)
+                }
+            }
+            .transform;
+        
         // Re-parent tools and grabber
 
         var playerRoot = playerAvatar.transform.parent;
@@ -138,5 +152,12 @@ public class NetworkPlayer : MonoBehaviour
         mapTool.transform.parent.parent = mapFrame.LeftHanded ? leftHandAnchor : rightHandAnchor;
         mapTool.transform.parent.localPosition = Vector3.zero;
         mapTool.transform.parent.localRotation = Quaternion.identity;
+    }
+
+    public void HandleHeadlamp(bool headLampEnabled)
+    {
+        flashlight.transform.SetParent(headLampEnabled ? headlampTransform : leftHandAnchor);
+        flashlight.transform.localPosition = Vector3.zero;
+        flashlight.transform.localRotation = Quaternion.identity;
     }
 }

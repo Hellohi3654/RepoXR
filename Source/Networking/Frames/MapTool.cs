@@ -2,7 +2,7 @@
 
 namespace RepoXR.Networking.Frames;
 
-[Frame(FrameHelper.FRAME_MAPTOOL)]
+[Frame(FrameHelper.FrameMaptool)]
 public class MapTool : IFrame
 {
     public bool HideFlashlight;

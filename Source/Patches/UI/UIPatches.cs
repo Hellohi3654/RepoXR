@@ -6,6 +6,7 @@ using RepoXR.Player.Camera;
 using RepoXR.UI;
 using UnityEngine;
 using UnityEngine.UI;
+
 using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches.UI;
@@ -46,7 +47,7 @@ internal static class UIPatches
     [HarmonyPrefix]
     private static bool DisableHoverOnEarly()
     {
-        return XRRayInteractorManager.Instance != null;
+        return XRRayInteractorManager.Instance is not null;
     }
 
     /// <summary>
@@ -58,7 +59,7 @@ internal static class UIPatches
     {
         if (XRRayInteractorManager.Instance is not { } manager)
             return true;
-        
+
         var (interactor, _) = manager.GetActiveInteractor();
         if (!interactor.TryGetCurrentUIRaycastResult(out var result))
         {
@@ -74,7 +75,7 @@ internal static class UIPatches
 
         return true;
     }
-    
+
     /// <summary>
     /// Detect UI hits using VR pointers instead of mouse cursor
     /// </summary>
@@ -108,13 +109,13 @@ internal static class UIPatches
     private static void UpdateMouseHoldPosition(MenuManager __instance)
     {
         var manager = XRRayInteractorManager.Instance;
-        if (manager == null)
+        if (manager is null)
             return;
 
         if (manager.GetTriggerButton())
         {
             if (__instance.mouseHoldPosition == Vector2.zero)
-                __instance.mouseHoldPosition = manager.GetUIHitPosition(HUDCanvas.instance.rect);
+                __instance.mouseHoldPosition = manager.GetUIHitPosition(manager.GetUIHitRectTransform());
         }
         else
         {
@@ -127,21 +128,22 @@ internal static class UIPatches
     /// </summary>
     [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseGetLocalPositionWithinRectTransform))]
     [HarmonyPrefix]
-    private static bool UIMouseGetLocalPositionWithinRectTransformPatch(RectTransform rectTransform, ref Vector2 __result)
+    private static bool UIMouseGetLocalPositionWithinRectTransformPatch(RectTransform rectTransform,
+        ref Vector2 __result)
     {
         if (XRRayInteractorManager.Instance is not { } manager)
             return true;
-        
+
         var pointer = manager.GetUIHitPosition(rectTransform);
         var rect = SemiFunc.UIGetRectTransformPositionOnScreen(rectTransform, false);
         var pivotOff = new Vector2(
             rectTransform.rect.width * rectTransform.pivot.x, rectTransform.rect.height * rectTransform.pivot.y);
 
         __result = new Vector2(pointer.x - rect.x, pointer.y - rect.y) + pivotOff;
-        
+
         return false;
     }
-    
+
     /// <summary>
     /// Calculate component position on canvasses in local space since screen space canvasses are disabled
     /// </summary>
@@ -185,7 +187,7 @@ internal static class UIPatches
             currentScale.y != 0f ? targetScale.y / currentScale.y : 0f,
             currentScale.z != 0f ? targetScale.z / currentScale.z : 0f
         );
-        
+
         __instance.rectTransform.position = MenuManager.instance.activeSelectionBox.rectTransform.position;
         __instance.rectTransform.rotation = MenuManager.instance.activeSelectionBox.rectTransform.rotation;
         __instance.rectTransform.parent.localScale = scaleFactor;
@@ -238,7 +240,7 @@ internal static class UIPatches
     {
         var manager = XRRayInteractorManager.Instance;
 
-        if (button != 0 || manager == null)
+        if (button != 0 || manager is null)
             return true;
 
         __result = manager.GetTriggerDown();
@@ -255,7 +257,7 @@ internal static class UIPatches
     {
         var manager = XRRayInteractorManager.Instance;
 
-        if (button != 0 || manager == null)
+        if (button != 0 || manager is null)
             return true;
 
         __result = manager.GetTriggerButton();
@@ -304,7 +306,7 @@ internal static class UIPatches
 
         if (!manager.GetTriggerDown())
             return;
-        
+
         MenuManager.instance.MenuEffectClick(MenuManager.MenuClickEffectType.Confirm);
         __instance.parentPageSaves.SaveFileSelected(__instance.saveFileName);
     }

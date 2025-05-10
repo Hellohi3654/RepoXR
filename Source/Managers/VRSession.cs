@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.XR;
-using UnityEngine.XR;
 
 namespace RepoXR.Managers;
 
@@ -62,13 +61,5 @@ public class VRSession : MonoBehaviour
         
         // Initialize VR HUD
         HUD = global::HUD.instance.gameObject.AddComponent<GameHud>();
-    }
-
-    public static void VibrateController(XRNode hand, float duration, float amplitude)
-    {
-        var device = InputDevices.GetDeviceAtXRNode(hand);
-
-        if (device.isValid && device.TryGetHapticCapabilities(out var capabilities) && capabilities.supportsImpulse)
-            device.SendHapticImpulse(0, amplitude, duration);
     }
 }

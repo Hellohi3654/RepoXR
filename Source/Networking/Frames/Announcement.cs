@@ -5,7 +5,7 @@ namespace RepoXR.Networking.Frames;
 /// <summary>
 /// The announcement frame tells other client that the sender is a VR player
 /// </summary>
-[Frame(FrameHelper.FRAME_ANNOUNCEMENT)]
+[Frame(FrameHelper.FrameAnnouncement)]
 public class Announcement : IFrame
 {
     public void Serialize(PhotonStream _)

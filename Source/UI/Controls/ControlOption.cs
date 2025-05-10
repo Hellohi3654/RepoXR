@@ -22,7 +22,7 @@ public class ControlOption : MonoBehaviour
 
     private void Awake()
     {
-        playerInput = VRInputSystem.Instance.GetPlayerInput();
+        playerInput = VRInputSystem.instance.GetPlayerInput();
     }
 
     public void StartRebind()
@@ -32,7 +32,7 @@ public class ControlOption : MonoBehaviour
 
     public void SetBindToggle(bool toggle)
     {
-        VRInputSystem.Instance.InputToggleRebind(action!.name, toggle);
+        VRInputSystem.instance.InputToggleRebind(action!.name, toggle);
     }
 
     public void FetchToggle()
@@ -41,7 +41,7 @@ public class ControlOption : MonoBehaviour
             return;
         
         var menuTwoOptions = GetComponentInChildren<MenuTwoOptions>();
-        menuTwoOptions.startSettingFetch = VRInputSystem.Instance.InputToggleGet(action.name);
+        menuTwoOptions.startSettingFetch = VRInputSystem.instance.InputToggleGet(action.name);
     }
 
     public void Setup(RebindManager rebindManager, RemappableControl remappableControl)

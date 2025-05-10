@@ -48,7 +48,7 @@ internal static class Utils
 
         return builder.ToString();
     }
-    
+
     public static string[] ParseConfig(string content)
     {
         var lines = content.Split("\n", StringSplitOptions.RemoveEmptyEntries);
@@ -103,6 +103,21 @@ internal static class Utils
         return $"""<sprite name="{id}">""";
     }
 
+    public static bool GetControlHand(string controlPath, out HapticManager.Hand hand)
+    {
+        hand = HapticManager.Hand.Both;
+
+        if (string.IsNullOrEmpty(controlPath))
+            return false;
+
+        var path = Regex.Replace(controlPath.ToLowerInvariant(), @"<[^>]+>([^ ]+)", "$1");
+        var handText = path.Split('/')[0].TrimStart('{').TrimEnd('}');
+
+        hand = handText == "lefthand" ? HapticManager.Hand.Left : HapticManager.Hand.Right;
+
+        return true;
+    }
+
     public static T? ExecuteWithSteamAPI<T>(Func<T> func)
     {
         try
@@ -144,7 +159,7 @@ internal static class Utils
     {
         var hidePosition = ui.hidePosition - ui.showPosition;
         var rect = ui.GetComponent<RectTransform>();
-        
+
         rect.anchoredPosition = anchoredPosition;
         ui.showPosition = Vector2.zero;
         ui.hidePosition = hidePosition;

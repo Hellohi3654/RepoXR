@@ -677,7 +677,6 @@ public class NonNativeKeyboard : MonoBehaviour
     public void Space()
     {
         m_CaretPosition = InputField.caretPosition;
-        InputField.text = InputField.text.Insert(m_CaretPosition++, " ");
 
         UpdateCaretPosition(m_CaretPosition);
     }

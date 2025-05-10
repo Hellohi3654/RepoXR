@@ -2,6 +2,8 @@
 using System.Reflection.Emit;
 using BepInEx.Configuration;
 using HarmonyLib;
+using RepoXR.Assets;
+using RepoXR.Managers;
 using RepoXR.Player.Camera;
 using static HarmonyLib.AccessTools;
 
@@ -54,5 +56,20 @@ internal static class EnemyCeilingEyePatches
                 PropertyGetter(typeof(ConfigEntry<bool>), nameof(ConfigEntry<bool>.Value))))
             .SetOperandAndAdvance(Method(typeof(VRCameraAim), nameof(VRCameraAim.SetAimTarget)))
             .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Provide haptic feedback while attached to the ceiling eye
+    /// </summary>
+    [HarmonyPatch(typeof(EnemyCeilingEye), nameof(EnemyCeilingEye.Update))]
+    [HarmonyPostfix]
+    private static void EyeAttachHapticFeedback(EnemyCeilingEye __instance)
+    {
+        if (!__instance.targetPlayer || !__instance.targetPlayer.isLocal)
+            return;
+
+        // Want a higher priority than damage, so we use 11
+        HapticManager.Impulse(HapticManager.Hand.Both, HapticManager.Type.Continuous,
+            0.2f * AssetCollection.EyeAttachHapticCurve.EvaluateTimed(0.25f), priority: 11);
     }
 }

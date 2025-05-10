@@ -198,7 +198,7 @@ internal static class InputPatches
             return false;
         }
 
-        var index = action.GetBindingIndex(VRInputSystem.Instance.CurrentControlScheme);
+        var index = action.GetBindingIndex(VRInputSystem.instance.CurrentControlScheme);
 
         __result = __instance.InputDisplayGetString(action, index);
         
@@ -225,7 +225,7 @@ internal static class InputPatches
     [HarmonyPrefix]
     private static bool InputToggleGet(ref InputKey key, ref bool __result)
     {
-        __result = VRInputSystem.Instance.InputToggleGet(key.ToString());
+        __result = VRInputSystem.instance.InputToggleGet(key.ToString());
 
         return false;
     }

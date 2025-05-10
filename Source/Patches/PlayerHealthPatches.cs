@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using RepoXR.Assets;
 using RepoXR.Managers;
 using UnityEngine;
 
@@ -50,6 +51,8 @@ internal static class PlayerHealthPatches
         __instance.materialEffectLerp = 0;
 
         session.Player.Rig.SetHurtColor(Color.red);
+        
+        AssetCollection.HurtHapticCurve.Pulse(HapticManager.Hand.Both, 0.8f, 2, 10);
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
+using RepoXR.Assets;
 using RepoXR.Input;
 using RepoXR.Managers;
 using RepoXR.Networking;
@@ -107,6 +108,29 @@ internal static class PhysGrabberPatches
 
         __instance.physGrabPointPlane.position = hand.position + hand.forward * distancePlane;
         __instance.physGrabPointPuller.position = hand.position + hand.forward * distancePuller;
+    }
+
+    /// <summary>
+    /// Provide haptic feedback while something is grabbed
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.Update))]
+    [HarmonyPostfix]
+    private static void HapticFeedbackPatch(PhysGrabber __instance)
+    {
+        if (!__instance.isLocal)
+            return;
+
+        var grabbed = __instance.grabbed
+            ? AssetCollection.GrabberHapticCurve.EvaluateTimed(__instance.loopSound.Source.pitch * 1.12667f) * 0.1f
+            : 0;
+        var overcharge = __instance.physGrabBeamOverChargeFloat * 0.4f *
+                         AssetCollection.OverchargeHapticCurve.EvaluateTimed(__instance.physGrabBeamOverChargeFloat *
+                                                                             3);
+
+        if (grabbed + overcharge <= 0)
+            return;
+
+        HapticManager.Impulse(HapticManager.Hand.Right, HapticManager.Type.Continuous, grabbed + overcharge);
     }
 
     /// <summary>

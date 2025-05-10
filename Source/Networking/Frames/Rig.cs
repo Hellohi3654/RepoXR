@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RepoXR.Networking.Frames;
 
-[Frame(FrameHelper.FRAME_RIG)]
+[Frame(FrameHelper.FrameRig)]
 public class Rig : IFrame
 {
     public Vector3 LeftPosition;

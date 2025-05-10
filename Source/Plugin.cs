@@ -20,7 +20,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string PLUGIN_GUID = "io.daxcess.repoxr";
     public const string PLUGIN_NAME = "RepoXR";
-    public const string PLUGIN_VERSION = "0.1.0";
+    public const string PLUGIN_VERSION = "0.1.1";
     
     #if DEBUG
     private const string SKIP_CHECKSUM_VAR = $"--repoxr-skip-checksum={PLUGIN_VERSION}-dev";
@@ -32,7 +32,7 @@ public class Plugin : BaseUnityPlugin
 
     private readonly string[] GAME_ASSEMBLY_HASHES =
     [
-        "D9352139C214C8337B0464A3FE5F1EA44A57227F7C81F55312B656A386F63217" // v0.1.2_22beta
+        "67F0573F52930DA80902394F45584CDCDBC884D1525FBA23A77567024E6F26E3" // v0.1.2_23beta
     ];
     
     public new static Config Config { get; private set; } = null!;
@@ -106,7 +106,7 @@ public class Plugin : BaseUnityPlugin
         };
     }
 
-    private static string GetCommitHash()
+    public static string GetCommitHash()
     {            
         try
         {
@@ -224,7 +224,6 @@ public class Plugin : BaseUnityPlugin
         XRSettings.eyeTextureResolutionScale = Config.CameraResolution.Value / 100f;
         
         // Input settings
-        InputSystem.settings.defaultButtonPressPoint = 0.5f;
         InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus; // Prevent VR from getting disabled when losing focus
 
         return true;

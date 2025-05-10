@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using RepoXR.Input;
+using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches.UI;
 
@@ -18,6 +20,21 @@ internal static class ChatPatches
     }
 
     /// <summary>
+    /// Use the alternative input system to detect chat opens
+    /// </summary>
+    [HarmonyPatch(typeof(ChatManager), nameof(ChatManager.StateInactive))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> ChatOpenButtonPatch(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Call, Method(typeof(SemiFunc), nameof(SemiFunc.InputDown))))
+            .Advance(-1)
+            .SetAndAdvance(OpCodes.Ldsfld, Field(typeof(VRInputSystem), nameof(VRInputSystem.instance)))
+            .SetAndAdvance(OpCodes.Callvirt, Method(typeof(VRInputSystem), nameof(VRInputSystem.ChatPressed)))
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
     /// Make the chat button also close the chat
     /// </summary>
     [HarmonyPatch(typeof(ChatManager), nameof(ChatManager.StateActive))]
@@ -26,7 +43,8 @@ internal static class ChatPatches
     {
         return new CodeMatcher(instructions)
             .MatchForward(false, new CodeMatch(OpCodes.Ldc_I4_S, (sbyte)InputKey.Back))
-            .SetOperandAndAdvance((sbyte)InputKey.Chat)
+            .SetAndAdvance(OpCodes.Ldsfld, Field(typeof(VRInputSystem), nameof(VRInputSystem.instance)))
+            .SetAndAdvance(OpCodes.Callvirt, Method(typeof(VRInputSystem), nameof(VRInputSystem.ChatPressed)))
             .InstructionEnumeration();
     }
 }

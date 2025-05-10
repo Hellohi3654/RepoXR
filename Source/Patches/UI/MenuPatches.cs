@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RepoXR.Assets;
+using RepoXR.Managers;
 using RepoXR.UI.Menu;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,6 +30,10 @@ internal static class MenuPatches
     [HarmonyPostfix]
     private static void AddVRSettingsPatch(MenuPageSettings __instance)
     {
+        // On PC, only add the VR settings menu on the main menu
+        if (!SemiFunc.MenuLevel() && !VRSession.InVR)
+            return;
+        
         var vrButton = Object.Instantiate(AssetCollection.VRSettingsButton, __instance.transform)
             .GetComponent<Button>();
         var vrRect = vrButton.GetComponent<RectTransform>();

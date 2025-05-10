@@ -36,5 +36,5 @@ public class Actions
         AssetCollection.DefaultXRActions.Enable();
     }
 
-    public InputAction this[string name] => VRInputSystem.Instance.Actions[name];
+    public InputAction this[string name] => VRInputSystem.instance.Actions[name];
 }
