@@ -53,8 +53,8 @@ public class VRRig : MonoBehaviour
     public Vector3 mapRightPosition;
     public Vector3 mapLeftPosition;
     
-    public Vector3 normalPlaneOffset;
-    public Vector3 gazePlaneOffset;
+    // public Vector3 normalPlaneOffset;
+    // public Vector3 gazePlaneOffset;
     
     private Transform leftArmMesh;
     private Transform rightArmMesh;
@@ -104,7 +104,7 @@ public class VRRig : MonoBehaviour
         // Map tool
         mapTool = FindObjectsOfType<MapToolController>().First(tool => tool.PlayerAvatar.isLocal);
 
-        planeOffsetTransform.localPosition = normalPlaneOffset;
+        planeOffsetTransform.localPosition = Vector3.up * Plugin.Config.HUDPlaneOffset.Value;
 
         // Expression wheel
         Instantiate(AssetCollection.ExpressionWheel, CameraUtils.Instance.MainCamera.transform.parent)
@@ -314,7 +314,8 @@ public class VRRig : MonoBehaviour
             lookingAtHud = false;
 
         planeOffsetTransform.transform.localPosition = Vector3.Lerp(planeOffsetTransform.transform.localPosition,
-            lookingAtHud ? gazePlaneOffset : normalPlaneOffset, 8 * Time.deltaTime);
+            Vector3.up * (lookingAtHud ? Plugin.Config.HUDGazePlaneOffset.Value : Plugin.Config.HUDPlaneOffset.Value),
+            8 * Time.deltaTime);
     }
 
     private bool headlampHovered;

@@ -57,8 +57,13 @@ public class VRInputSystem : MonoBehaviour
 
     private void ChatPerformed(InputAction.CallbackContext context)
     {
+        // Disable chat when expression radial is open
         if (ExpressionRadial.instance &&
             (ExpressionRadial.instance.isActive || ExpressionRadial.instance.closedLastPress))
+            return;
+
+        // Disable chat when pause menu is open
+        if (!SemiFunc.MenuLevel() && MenuManager.instance.currentMenuPage)
             return;
         
         chatHoldTriggered = false;
@@ -67,12 +72,17 @@ public class VRInputSystem : MonoBehaviour
 
     private void ChatCanceled(InputAction.CallbackContext context)
     {
+        // Disable chat when expression radial is open
         if (ExpressionRadial.instance &&
             (ExpressionRadial.instance.isActive || ExpressionRadial.instance.closedLastPress))
         {
             ExpressionRadial.instance.closedLastPress = false;
             return;
         }
+        
+        // Disable chat when pause menu is open
+        if (!SemiFunc.MenuLevel() && MenuManager.instance.currentMenuPage)
+            return;
         
         if (chatHoldCoroutine != null)
         {

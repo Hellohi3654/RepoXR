@@ -65,6 +65,9 @@ internal static class EnemyCeilingEyePatches
     [HarmonyPostfix]
     private static void EyeAttachHapticFeedback(EnemyCeilingEye __instance)
     {
+        if (__instance.currentState != EnemyCeilingEye.State.HasTarget)
+            return;
+        
         if (!__instance.targetPlayer || !__instance.targetPlayer.isLocal)
             return;
 

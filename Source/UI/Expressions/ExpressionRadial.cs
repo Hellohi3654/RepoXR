@@ -11,7 +11,7 @@ namespace RepoXR.UI.Expressions;
 public class ExpressionRadial : MonoBehaviour
 {
     public static ExpressionRadial instance;
-    
+
     public Transform handTransform;
 
     [SerializeField] protected AnimationCurve animationCurve;
@@ -21,22 +21,23 @@ public class ExpressionRadial : MonoBehaviour
     [SerializeField] protected ExpressionPart[] parts;
 
     private HapticManager.Hand currentHand = HapticManager.Hand.Both;
-    
+
     internal bool isActive;
     private float animationLerp;
     private int hoveredPart = -1;
 
-    private List<ExpressionPart.Expression> activeExpressions = [];
-
     // Helper bool that prevents the chat from opening if the radial menu was closed using the chat key
     internal bool closedLastPress;
-    
+
     private void Awake()
     {
         instance = this;
-        
+
+        // Move the preview UI to the middle of the radial menu
         var playerRenderTex = PlayerExpressionsUI.instance.transform;
         playerRenderTex.SetParent(previewTransform, false);
+        
+        ReloadParts();
     }
 
     private void OnDestroy()
@@ -53,7 +54,7 @@ public class ExpressionRadial : MonoBehaviour
 
         if (closedLastPress)
             closedLastPress = false;
-        
+
         var pressed = VRInputSystem.instance.ExpressionPressed() ||
                       // Close radial menu when chat becomes active
                       (isActive && SemiFunc.InputDown(InputKey.Chat));
@@ -62,10 +63,10 @@ public class ExpressionRadial : MonoBehaviour
             case true when !isActive:
                 ResetPosition();
                 isActive = pressed;
-                
+
                 if (ChatManager.instance.chatState == ChatManager.ChatState.Active)
                     ChatManager.instance.StateSet(ChatManager.ChatState.Inactive);
-            
+
                 MenuManager.instance.MenuEffectClick(MenuManager.MenuClickEffectType.Confirm, soundOnly: true);
                 break;
             case true when isActive:
@@ -85,9 +86,10 @@ public class ExpressionRadial : MonoBehaviour
         transform.localScale = Vector3.LerpUnclamped(Vector3.zero, Vector3.one, animationCurve.Evaluate(animationLerp));
 
         // Hide the background if no expressions are active
+        var playerColor = PlayerAvatar.instance.playerAvatarVisuals.color;
         previewBackground.color = Color.Lerp(previewBackground.color,
-            new Color(previewBackground.color.r, previewBackground.color.g, previewBackground.color.b,
-                1f / 255 * (activeExpressions.Count > 0 ? 50 : 0)), 8 * Time.deltaTime);
+            new Color(playerColor.r, playerColor.g, playerColor.b,
+                1f / 255 * (DataManager.instance.activeExpressions.Count > 0 ? 50 : 0)), 8 * Time.deltaTime);
 
         HoverLogic();
         ActivateLogic();
@@ -95,17 +97,20 @@ public class ExpressionRadial : MonoBehaviour
 
     public static bool ExpressionActive(InputKey input)
     {
-        if (instance is not { } radial)
-            return false;
-        
         var expression = (ExpressionPart.Expression)(input - InputKey.Expression1);
-        return radial.activeExpressions.Contains(expression);
+        return DataManager.instance.activeExpressions.Contains(expression);
     }
-    
+
     private void ResetPosition()
     {
         transform.position = handTransform.position;
         transform.LookAt(CameraUtils.Instance.MainCamera.transform.position);
+    }
+
+    private void ReloadParts()
+    {
+        foreach (var part in parts)
+            part.SetActive(DataManager.instance.activeExpressions.Contains(part.expression));
     }
 
     private void UpdateBindingHand()
@@ -117,22 +122,20 @@ public class ExpressionRadial : MonoBehaviour
         if (!Utils.GetControlHand(bindingPath, out var hand))
             return;
 
-        if (currentHand != hand)
-        {
-            currentHand = hand;
+        if (currentHand == hand)
+            return;
 
-            if (hand == HapticManager.Hand.Left)
-                handTransform = VRSession.Instance.Player.Rig.leftArmTarget;
-            else
-                handTransform = VRSession.Instance.Player.Rig.rightArmTarget;
-        }
+        currentHand = hand;
+        handTransform = hand == HapticManager.Hand.Left
+            ? VRSession.Instance.Player.Rig.leftArmTarget
+            : VRSession.Instance.Player.Rig.rightArmTarget;
     }
-    
+
     private void HoverLogic()
     {
         if (!isActive)
             return;
-        
+
         var centerToHand = handTransform.position - canvasTransform.position;
         var projected = Vector3.ProjectOnPlane(centerToHand, canvasTransform.forward);
         var angle = Vector3.SignedAngle(canvasTransform.up, projected, -canvasTransform.forward);
@@ -143,9 +146,9 @@ public class ExpressionRadial : MonoBehaviour
         var currentPart = (int)angle * parts.Length / 360;
         if (currentPart != hoveredPart)
             HapticManager.Impulse(currentHand, HapticManager.Type.Impulse, 0.03f);
-        
+
         hoveredPart = currentPart;
-        
+
         for (var i = 0; i < parts.Length; i++)
             parts[i].SetHovered(i == hoveredPart);
     }
@@ -154,21 +157,25 @@ public class ExpressionRadial : MonoBehaviour
     {
         if (!isActive || hoveredPart < 0)
             return;
-        
-        var action = currentHand == HapticManager.Hand.Left ? "ExpressionLeft" : "ExpressionRight";
-        if (!Actions.Instance[action].WasPressedThisFrame()) 
+
+        // Not while the pause menu is open
+        if (MenuManager.instance.currentMenuPage)
             return;
-        
+
+        var action = currentHand == HapticManager.Hand.Left ? "ExpressionLeft" : "ExpressionRight";
+        if (!Actions.Instance[action].WasPressedThisFrame())
+            return;
+
         MenuManager.instance.MenuEffectClick(MenuManager.MenuClickEffectType.Tick, soundOnly: true);
         HapticManager.Impulse(currentHand, HapticManager.Type.Impulse);
-        
+
         var part = parts[hoveredPart];
         var active = part.Toggle();
 
         if (active)
-            activeExpressions.Add(part.expression);
+            DataManager.instance.activeExpressions.Add(part.expression);
         else
-            activeExpressions.Remove(part.expression);
+            DataManager.instance.activeExpressions.Remove(part.expression);
     }
 }
 
@@ -202,9 +209,18 @@ public class ExpressionPart : MonoBehaviour
 
     private void Update()
     {
-        text.color = Color.Lerp(text.color, isActive ? textActiveColor : textDefaultColor, 8 * Time.deltaTime);
-        background.color = Color.Lerp(background.color, isActive ? activeColor : isHovered ? hoverColor : defaultColor,
-            8 * Time.deltaTime);
+        var playerColor = PlayerAvatar.instance.playerAvatarVisuals.color;
+
+        var targetTextColor =
+            isActive ? Utils.GetTextColor(playerColor) : Utils.GetTextColor(playerColor, 0.6f, 0.85f);
+        var targetBgColor = isActive ? Color.Lerp(playerColor, Color.white, 0.4f) :
+            isHovered ? Color.Lerp(playerColor, Color.white, 0.2f) : Color.Lerp(playerColor, Color.black, 0.2f);
+        
+        targetTextColor.a = isActive ? 1 : 0.85f;
+        targetBgColor.a = isActive ? 0.5f : isHovered ? 0.3f : 0.2f;
+
+        text.color = Color.Lerp(text.color, targetTextColor, 8 * Time.deltaTime);
+        background.color = Color.Lerp(background.color, targetBgColor, 8 * Time.deltaTime);
 
         currentScale = Vector3.Lerp(currentScale, Vector3.one * (isHovered ? 1.1f : 1), 8 * Time.deltaTime);
 
@@ -236,6 +252,11 @@ public class ExpressionPart : MonoBehaviour
         return isActive;
     }
 
+    public void SetActive(bool active)
+    {
+        isActive = active;
+    }
+    
     public enum Expression
     {
         Angry,

@@ -41,6 +41,14 @@ public class Config(string assemblyPath, ConfigFile file)
                 "Controls how much haptic feedback you will experience while playing with the VR mod.",
                 new AcceptableValueEnum<HapticFeedbackOption>()));
 
+    [ConfigDescriptor(pointerSize: 0.01f, stepSize: 0.05f)]
+    public ConfigEntry<float> HUDPlaneOffset { get; } = file.Bind("Gameplay", nameof(HUDPlaneOffset), -0.45f,
+        new ConfigDescription("The default height offset for the HUD", new AcceptableValueRange<float>(-0.6f, 0.5f)));
+
+    [ConfigDescriptor(pointerSize: 0.01f, stepSize: 0.05f)]
+    public ConfigEntry<float> HUDGazePlaneOffset { get; } = file.Bind("Gameplay", nameof(HUDGazePlaneOffset), -0.25f,
+        new ConfigDescription("The height offset for the HUD when looking at it", new AcceptableValueRange<float>(-0.6f, 0.5f)));
+
     // Performance configuration
 
     [ConfigDescriptor(stepSize: 5f, suffix: "%")]

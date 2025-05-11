@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using RepoXR.UI.Expressions;
+using UnityEngine;
 
 namespace RepoXR.Managers;
 
@@ -7,6 +9,7 @@ public class DataManager : MonoBehaviour
     public static DataManager instance;
 
     public bool headlampEnabled;
+    public List<ExpressionPart.Expression> activeExpressions = [];
     
     private void Awake()
     {
@@ -26,5 +29,6 @@ public class DataManager : MonoBehaviour
     public void ResetData()
     {
         headlampEnabled = false;
+        activeExpressions.Clear();
     }
 }

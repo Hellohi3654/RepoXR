@@ -308,11 +308,32 @@ internal static class PhysGrabberUniversalPatches
     private static Transform GetHandTransform(PhysGrabber grabber)
     {
         if (grabber.playerAvatar.isLocal)
-            return VRSession.InVR ? VRSession.Instance.Player.MainHand : grabber.playerCamera.transform;
+            return VRSession.InVR ? VRSession.Instance.Player.MainHand : grabber.playerAvatar.localCameraTransform;
 
-        return NetworkSystem.instance.GetNetworkPlayer(grabber.playerAvatar, out var networkPlayer)
-            ? networkPlayer.GrabberHand
-            : grabber.playerCamera.transform;
+        if (!NetworkSystem.instance)
+        {
+            Logger.LogError("NetworkSystem is null?");
+            return grabber.playerAvatar.localCameraTransform;
+        }
+
+        if (NetworkSystem.instance.GetNetworkPlayer(grabber.playerAvatar, out var networkPlayer))
+        {
+            if (!networkPlayer)
+            {
+                Logger.LogError("NetworkPlayer is null?");
+                return grabber.playerAvatar.localCameraTransform;
+            }
+
+            if (!networkPlayer.GrabberHand)
+            {
+                Logger.LogError("GrabberHand is null?");
+                return grabber.playerAvatar.localCameraTransform;
+            }
+
+            return networkPlayer.GrabberHand;
+        }
+
+        return grabber.playerAvatar.localCameraTransform;
     }
 
     /// <summary>

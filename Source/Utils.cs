@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using RepoXR.Managers;
-using RepoXR.Networking;
 using Steamworks;
 using UnityEngine;
 
@@ -175,8 +174,17 @@ internal static class Utils
             list.Add(item);
     }
 
-    public static bool IsVRPlayer(this PlayerAvatar player)
+    public static Color GetTextColor(Color baseColor, float minBrightness = 0.6f, float alpha = 1f)
     {
-        return (player.isLocal && VRSession.InVR) || (!player.isLocal && NetworkSystem.instance.IsVRPlayer(player));
+        var brightness = 0.2126f * baseColor.r + 0.7152f * baseColor.g + 0.0722f * baseColor.b;
+
+        if (brightness < minBrightness)
+        {
+            var blendAmount = Mathf.Clamp01((minBrightness - brightness) / minBrightness);
+            baseColor = Color.Lerp(baseColor, Color.white, blendAmount);
+        }
+
+        baseColor.a = alpha;
+        return baseColor;
     }
 }

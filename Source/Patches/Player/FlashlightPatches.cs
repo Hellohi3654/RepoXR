@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using RepoXR.Networking;
 using UnityEngine;
+
 using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches.Player;

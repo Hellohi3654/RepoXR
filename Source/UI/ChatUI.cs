@@ -44,6 +44,10 @@ public class ChatUI : MonoBehaviour
         if (global::LoadingUI.instance.isActiveAndEnabled)
             chatManager.StateSet(ChatManager.ChatState.Inactive);
 
+        // Disable during pause menu
+        if (!SemiFunc.MenuLevel() && MenuManager.instance.currentMenuPage)
+            chatManager.StateSet(ChatManager.ChatState.Inactive);
+        
         // Reset UI position if chat became active or is possessed
         if ((chatManager.chatState == ChatManager.ChatState.Active &&
              chatManager.chatState != prevState) || chatManager.chatState == ChatManager.ChatState.Possessed)
@@ -60,6 +64,8 @@ public class ChatUI : MonoBehaviour
             if (chatManager.chatState != ChatManager.ChatState.Active && chatManager.chatState != prevState)
                 XRRayInteractorManager.Instance?.SetVisible(false);
         }
+
+        prevState = chatManager.chatState;
 
         if (chatManager.chatState == ChatManager.ChatState.Active)
         {
@@ -90,8 +96,6 @@ public class ChatUI : MonoBehaviour
     {
         keyboard.transform.position = transform.TransformPoint(new Vector3(360, -100, 0));
         keyboard.transform.rotation = transform.rotation * Quaternion.Euler(15, 0, 0);
-
-        prevState = chatManager.chatState;
     }
 
     private void AppendText(string text)

@@ -26,14 +26,9 @@ internal static class HarmonyPatcher
         Patch(VRPatcher, RepoXRPatchTarget.VROnly);
     }
 
-    public static void UnpatchVR()
-    {
-        VRPatcher.UnpatchSelf();
-    }
-
     private static void Patch(Harmony patcher, RepoXRPatchTarget target)
     {
-        AccessTools.GetTypesFromAssembly(Assembly.GetExecutingAssembly()).Do(type =>
+        GetTypesFromAssembly(Assembly.GetExecutingAssembly()).Do(type =>
         {
             try
             {
@@ -73,33 +68,6 @@ internal enum RepoXRPatchTarget
     Universal,
     VROnly
 }
-
-[RepoXRPatch(RepoXRPatchTarget.Universal)]
-internal static class HarmonyLibPatches
-{
-    private static readonly MethodInfo[] ForceUnpatchList =
-    [
-        AccessTools.PropertySetter(typeof(Camera), nameof(Camera.targetTexture)),
-        AccessTools.PropertySetter(typeof(Cursor), nameof(Cursor.visible)),
-        AccessTools.PropertySetter(typeof(Cursor), nameof(Cursor.lockState))
-    ];
-
-    /// <summary>
-    /// Ironically, patching harmony like this fixes some issues with unpatching
-    /// </summary>
-    [HarmonyPatch(typeof(MethodBaseExtensions), nameof(MethodBaseExtensions.HasMethodBody))]
-    [HarmonyPrefix]
-    private static bool OnUnpatch(MethodBase member, ref bool __result)
-    {
-        if (!ForceUnpatchList.Contains(member))
-            return true;
-
-        __result = true;
-
-        return false;
-    }
-}
-
 
 /// <summary>
 /// Fixes a bug in older BepInEx versions (shame on you TS for using a 2-year-old BepInEx)
