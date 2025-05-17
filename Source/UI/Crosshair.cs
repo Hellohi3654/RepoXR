@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using RepoXR.Managers;
+﻿using RepoXR.Managers;
 using UnityEngine;
 
 namespace RepoXR.UI;
@@ -10,13 +9,15 @@ public class Crosshair : MonoBehaviour
     
     public const int LayerMask = 1 << 0 | 1 << 9 | 1 << 10 | 1 << 16 | 1 << 20 | 1 << 23;
     
-    private Transform handTransform;
     private Transform camera;
     private Transform sprite;
 
     private void Awake()
     {
         instance = this;
+
+        camera = Camera.main!.transform;
+        sprite = GetComponentInChildren<Aim>(true).transform;
     }
 
     private void OnDestroy()
@@ -24,24 +25,13 @@ public class Crosshair : MonoBehaviour
         instance = null!;
     }
 
-    private IEnumerator Start()
-    {
-        yield return null;
-
-        if (VRSession.Instance is not { } session)
-            yield break;
-
-        handTransform = session.Player.MainHand;
-        camera = Camera.main!.transform;
-        sprite = GetComponentInChildren<Aim>().transform;
-    }
-
     private void Update()
     {
-        if (!handTransform)
+        if (VRSession.Instance is not { } session)
             return;
 
-        if (!Physics.Raycast(new Ray(handTransform.position, handTransform.forward), out var hit, 10, LayerMask))
+        if (!Physics.Raycast(new Ray(session.Player.MainHand.position, session.Player.MainHand.forward), out var hit,
+                10, LayerMask))
         {
             transform.position = Vector3.down * 3000;
             return;

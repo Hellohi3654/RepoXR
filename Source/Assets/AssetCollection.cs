@@ -91,7 +91,15 @@ internal static class AssetCollection
         HurtHapticCurve = assetBundle.LoadAsset<AnimationCurveData>("HurtHapticCurve");
         EyeAttachHapticCurve = assetBundle.LoadAsset<AnimationCurveData>("EyeAttachHapticCurve");
         KeyboardAnimation = assetBundle.LoadAsset<AnimationCurveData>("KeyboardAnimation");
-        
+
+        if (RemappableControls?.controls == null)
+        {
+            Logger.LogError(
+                "Unity failed to deserialize some assets. Are you missing the FixPluginTypesSerialization mod?");
+            Logger.LogWarning(
+                "I swear to god if you screenshot this and ask \"what is wrong?!\" without acknowledging the above error message I'm going to flip (IRL, and break my neck probably).");
+        }
+
         return true;
     }
 }

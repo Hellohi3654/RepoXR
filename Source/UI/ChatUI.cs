@@ -41,13 +41,15 @@ public class ChatUI : MonoBehaviour
     private void Update()
     {
         // Disable during loading
-        if (global::LoadingUI.instance.isActiveAndEnabled)
+        if (global::LoadingUI.instance.isActiveAndEnabled &&
+            ChatManager.instance.chatState == ChatManager.ChatState.Active)
             chatManager.StateSet(ChatManager.ChatState.Inactive);
 
         // Disable during pause menu
-        if (!SemiFunc.MenuLevel() && MenuManager.instance.currentMenuPage)
+        if (!SemiFunc.MenuLevel() && MenuManager.instance.currentMenuPage &&
+            ChatManager.instance.chatState == ChatManager.ChatState.Active)
             chatManager.StateSet(ChatManager.ChatState.Inactive);
-        
+
         // Reset UI position if chat became active or is possessed
         if ((chatManager.chatState == ChatManager.ChatState.Active &&
              chatManager.chatState != prevState) || chatManager.chatState == ChatManager.ChatState.Possessed)
@@ -70,10 +72,10 @@ public class ChatUI : MonoBehaviour
         if (chatManager.chatState == ChatManager.ChatState.Active)
         {
             PhysGrabber.instance.ReleaseObject(); // Drop items while chat is active
-            
+
             if (!keyboard.gameObject.activeSelf)
                 keyboard.PresentKeyboard();
-            
+
             keyboardLerp += 8 * Time.deltaTime;
             keyboardLerp = Mathf.Clamp01(keyboardLerp);
             keyboard.transform.localScale = Vector3.Slerp(Vector3.zero, keyboardScale, keyboardLerp);
@@ -86,7 +88,7 @@ public class ChatUI : MonoBehaviour
             keyboardLerp -= 8 * Time.deltaTime;
             keyboardLerp = Mathf.Clamp01(keyboardLerp);
             keyboard.transform.localScale = Vector3.Slerp(Vector3.zero, keyboardScale, keyboardLerp);
-            
+
             if (keyboardLerp == 0)
                 keyboard.Close();
         }

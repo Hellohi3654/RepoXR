@@ -13,19 +13,39 @@ namespace RepoXR.Patches;
 [RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class PhysGrabObjectPatches
 {
+    private static Transform GetTargetTransformGrabber(PhysGrabber grabber)
+    {
+        return GetTargetTransform(grabber.playerAvatar);
+    }
+
     private static Transform GetTargetTransform(PlayerAvatar player)
     {
         if (player.isLocal)
             return VRSession.Instance is { } session ? session.Player.MainHand : player.localCameraTransform;
 
         return NetworkSystem.instance.GetNetworkPlayer(player, out var networkPlayer)
-            ? networkPlayer.GrabberHand
+            ? networkPlayer.PrimaryHand
             : player.localCameraTransform;
     }
 
-    private static Transform GetTargetTransformGrabber(PhysGrabber grabber)
+    private static Quaternion GetTargetRotation(PlayerAvatar player)
     {
-        return GetTargetTransform(grabber.playerAvatar);
+        if (player.isLocal)
+            return VRSession.Instance is { } session ? session.Player.MainHand.rotation : player.localCameraRotation;
+
+        return NetworkSystem.instance.GetNetworkPlayer(player, out var networkPlayer)
+            ? networkPlayer.PrimaryHand.rotation
+            : player.localCameraRotation;
+    }
+
+    private static Vector3 GetTargetPosition(PlayerAvatar player)
+    {
+        if (player.isLocal)
+            return VRSession.Instance is { } session ? session.Player.MainHand.position : player.localCameraPosition;
+
+        return NetworkSystem.instance.GetNetworkPlayer(player, out var networkPlayer)
+            ? networkPlayer.PrimaryHand.position
+            : player.localCameraPosition;
     }
 
     /// <summary>
@@ -69,6 +89,40 @@ internal static class PhysGrabObjectPatches
             .Advance(-7)
             .SetInstruction(new CodeInstruction(OpCodes.Call,
                 ((Func<PhysGrabber, Transform>)GetTargetTransformGrabber).Method))
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Apply cart cannon rotations based on the hand position and rotation
+    /// </summary>
+    [HarmonyPatch(typeof(ItemCartCannonMain), nameof(ItemCartCannonMain.GrabLogic))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> HandRelativeCartCannonPatch(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraRotation))))
+            .Set(OpCodes.Call, ((Func<PlayerAvatar, Quaternion>)GetTargetRotation).Method)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraRotation))))
+            .Set(OpCodes.Call, ((Func<PlayerAvatar, Quaternion>)GetTargetRotation).Method)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraPosition))))
+            .Set(OpCodes.Call, ((Func<PlayerAvatar, Vector3>)GetTargetPosition).Method)
+            .InstructionEnumeration();
+    }
+
+    /// <summary>
+    /// Update the rotation target based on the hand rotation
+    /// </summary>
+    [HarmonyPatch(typeof(ItemCartCannonMain), nameof(ItemCartCannonMain.CorrectorAndLightLogic))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> RotationTargetHandRelative(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(PlayerAvatar), nameof(PlayerAvatar.localCameraRotation))))
+            .Set(OpCodes.Call, ((Func<PlayerAvatar, Quaternion>)GetTargetRotation).Method)
             .InstructionEnumeration();
     }
 }

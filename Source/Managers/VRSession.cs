@@ -17,6 +17,8 @@ public class VRSession : MonoBehaviour
     /// </summary>
     public static bool InVR => Plugin.Flags.HasFlag(Flags.VR);
 
+    public static bool IsLeftHanded => Plugin.Config.LeftHandDominant.Value;
+
     public Camera MainCamera { get; private set; }
     public VRPlayer Player { get; private set; }
     public GameHud HUD { get; private set; }

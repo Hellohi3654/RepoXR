@@ -34,6 +34,10 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<bool> RoomscaleCrouch { get; } = file.Bind("Gameplay", nameof(RoomscaleCrouch), true,
         "When enabled, allows for the player to physically crouch to also crouch in-game");
 
+    [ConfigDescriptor(customName: "Dominant Hand", falseText: "Right", trueText: "Left")]
+    public ConfigEntry<bool> LeftHandDominant { get; } = file.Bind("Gameplay", nameof(LeftHandDominant), false,
+        "Whether to use the left or right hand as dominant hand (the hand used to pick up items)");
+
     [ConfigDescriptor]
     public ConfigEntry<HapticFeedbackOption> HapticFeedback { get; } =
         file.Bind("Gameplay", nameof(HapticFeedback), HapticFeedbackOption.All,
@@ -58,7 +62,7 @@ public class Config(string assemblyPath, ConfigFile file)
             new AcceptableValueRange<int>(5, 200)));
 
     // Input configuration
-
+    
     [ConfigDescriptor(enumDisableBar: true)]
     public ConfigEntry<TurnProviderOption> TurnProvider { get; } = file.Bind("Input", nameof(TurnProvider),
         TurnProviderOption.Smooth,

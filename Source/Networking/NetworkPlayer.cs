@@ -30,8 +30,10 @@ public class NetworkPlayer : MonoBehaviour
     private Quaternion leftHandRotation;
     private Quaternion rightHandRotation;
 
-    public Transform GrabberHand => rightHandTarget;
+    public Transform PrimaryHand => isLeftHanded ? leftHandTarget : rightHandTarget;
 
+    private bool isLeftHanded;
+    
     private void Start()
     {
         playerAvatarVisuals = playerAvatar.playerAvatarVisuals;
@@ -80,13 +82,13 @@ public class NetworkPlayer : MonoBehaviour
 
         var playerRoot = playerAvatar.transform.parent;
         
-        flashlight = playerRoot.GetComponentInChildren<FlashlightController>();
+        flashlight = playerRoot.GetComponentInChildren<FlashlightController>(true);
         flashlight.transform.parent = leftHandAnchor;
         flashlight.transform.localScale = Vector3.one * flashlight.hiddenScale;
         flashlight.transform.localPosition = Vector3.zero;
         flashlight.transform.localRotation = Quaternion.identity;
 
-        mapTool = playerRoot.GetComponentInChildren<MapToolController>();
+        mapTool = playerRoot.GetComponentInChildren<MapToolController>(true);
         mapTool.transform.parent.parent = rightHandAnchor;
         mapTool.transform.parent.localPosition = Vector3.zero;
         mapTool.transform.parent.localRotation = Quaternion.identity;
@@ -159,5 +161,23 @@ public class NetworkPlayer : MonoBehaviour
         flashlight.transform.SetParent(headLampEnabled ? headlampTransform : leftHandAnchor);
         flashlight.transform.localPosition = Vector3.zero;
         flashlight.transform.localRotation = Quaternion.identity;
+    }
+
+    public void UpdateDominantHand(bool leftHanded)
+    {
+        isLeftHanded = leftHanded;
+
+        flashlight.transform.parent = isLeftHanded ? rightHandAnchor : leftHandAnchor;
+        flashlight.transform.localScale = Vector3.one * flashlight.hiddenScale;
+        flashlight.transform.localPosition = Vector3.zero;
+        flashlight.transform.localRotation = Quaternion.identity;
+
+        headlampTransform.transform.localPosition = new Vector3(isLeftHanded ? 0.21f : -0.21f, 0.1f, 0);
+
+        playerRightArm.grabberClawParent.SetParent(isLeftHanded ? leftHandAnchor : rightHandAnchor);
+        playerRightArm.grabberClawParent.localPosition = Vector3.zero;
+
+        playerRightArm.physGrabBeam.PhysGrabPointOrigin.SetParent(isLeftHanded ? leftHandAnchor : rightHandAnchor);
+        playerRightArm.physGrabBeam.PhysGrabPointOrigin.localPosition = Vector3.zero;
     }
 }

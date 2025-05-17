@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RepoXR.Input;
+using RepoXR.Managers;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -45,7 +46,8 @@ public class VRInventory : MonoBehaviour
 
         hoveredSlot = -1;
 
-        if (!holdingItem || !Physics.Raycast(new Ray(rig.rightHandTip.position, rig.rightHandTip.forward), out var hit,
+        var hand = VRSession.Instance.Player.MainHand;
+        if (!holdingItem || !Physics.Raycast(new Ray(hand.position, hand.forward), out var hit,
                 3, 1 << 27))
             return;
 
@@ -73,7 +75,7 @@ public class VRInventory : MonoBehaviour
                 slot.targetColor = hoverColor;
             else if (holdingItem)
                 slot.targetColor = holdColor;
-            else if (slot.heldItem != null)
+            else if (slot.heldItem)
                 slot.targetColor = equippedColor;
             else
                 slot.targetColor = Color.clear;
@@ -92,7 +94,8 @@ public class VRInventory : MonoBehaviour
             if (!slot.heldItem || !slot.spot.isActiveAndEnabled)
                 return;
 
-            slot.isCollided = Utils.Collide(slot.collider, rig.rightHandCollider);
+            slot.isCollided = Utils.Collide(slot.collider,
+                VRSession.IsLeftHanded ? rig.leftHandCollider : rig.rightHandCollider);
             
             if (Actions.Instance["Grab"].WasPressedThisFrame() && slot.isCollided)
                 slot.spot.HandleInput();

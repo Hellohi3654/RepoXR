@@ -109,4 +109,5 @@ In this folder, also create a new directory called `RuntimeDeps` (again, has to 
 
 You can now run the game with RepoXR installed.
 
+- TODO: Left handed mode (**fixed**, not tested!)
 - TODO: Remind youtube commenter that they can stop holding my beer since the mod is finished and I know it's very heavy but thank you for holding my beer while I coded this it means a lot to me

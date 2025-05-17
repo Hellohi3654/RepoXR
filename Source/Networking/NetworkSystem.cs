@@ -12,24 +12,24 @@ public class NetworkSystem : MonoBehaviour
 {
     private const long REPOXR_MAGIC = 0x5245504F5852;
     private const int PROTOCOL_VERSION = 1;
-    
+
     public static NetworkSystem instance;
 
-    private List<IFrame> scheduledFrames = [];
-    private Dictionary<int, NetworkPlayer> networkPlayers = [];
-    private List<int> knownPhotonIds = [];
-    
+    private readonly List<IFrame> scheduledFrames = [];
+    private readonly Dictionary<int, NetworkPlayer> networkPlayers = [];
+    private readonly List<int> cachedPhotonIds = [];
+
     private void Awake()
     {
-        if (instance != null)
+        if (instance)
         {
             // On new scene load, clear the network players cache
             instance.networkPlayers.Clear();
-            
+
             Destroy(gameObject);
             return;
         }
-        
+
         instance = this;
         DontDestroyOnLoad(gameObject);
     }
@@ -41,16 +41,16 @@ public class NetworkSystem : MonoBehaviour
 
     public bool IsVRPlayer(PlayerAvatar player)
     {
-        return knownPhotonIds.Contains(player.photonView.ControllerActorNr);
+        return cachedPhotonIds.Contains(player.photonView.ControllerActorNr);
     }
 
     public bool IsVRView(PhotonView view)
     {
-        return knownPhotonIds.Contains(view.ControllerActorNr);
+        return cachedPhotonIds.Contains(view.ControllerActorNr);
     }
 
     // Sending
-    
+
     public void AnnounceVRPlayer()
     {
         scheduledFrames.Add(new Announcement());
@@ -84,6 +84,14 @@ public class NetworkSystem : MonoBehaviour
         });
     }
 
+    public void UpdateDominantHand(bool leftHanded)
+    {
+        EnqueueFrame(new DominantHand
+        {
+            LeftHanded = leftHanded
+        });
+    }
+
     /// <summary>
     /// Enqueues a frame to be sent next serialization sequence. This function contains an optimization that removes
     /// duplicate frames to reduce network usage, which reduces server costs.
@@ -102,43 +110,66 @@ public class NetworkSystem : MonoBehaviour
     {
         try
         {
-            if (frame.FrameID == FrameHelper.FrameAnnouncement)
+            switch (frame.FrameID)
             {
-                if (networkPlayers.ContainsKey(player.photonView.ControllerActorNr))
-                    return;
+                case FrameHelper.FrameAnnouncement:
+                {
+                    if (networkPlayers.ContainsKey(player.photonView.ControllerActorNr))
+                        return;
 
-                var networkPlayer =
-                    new GameObject($"VR Player Rig - {player.playerName}").AddComponent<NetworkPlayer>();
-                networkPlayer.playerAvatar = player;
+                    var networkPlayer =
+                        new GameObject($"VR Player Rig - {player.playerName}").AddComponent<NetworkPlayer>();
+                    networkPlayer.playerAvatar = player;
 
-                networkPlayers.Add(player.photonView.ControllerActorNr, networkPlayer);
-                knownPhotonIds.Add(player.photonView.ControllerActorNr);
-            }
-            else if (frame.FrameID == FrameHelper.FrameRig)
-            {
-                var rigFrame = (Rig)frame;
+                    networkPlayers.Add(player.photonView.ControllerActorNr, networkPlayer);
+                    cachedPhotonIds.Add(player.photonView.ControllerActorNr);
 
-                if (!networkPlayers.TryGetValue(player.photonView.ControllerActorNr, out var networkPlayer))
-                    return;
+                    break;
+                }
 
-                networkPlayer.HandleRigFrame(rigFrame);
-            }
-            else if (frame.FrameID == FrameHelper.FrameMaptool)
-            {
-                var mapFrame = (MapTool)frame;
+                case FrameHelper.FrameRig:
+                {
+                    var rigFrame = (Rig)frame;
+                    if (!networkPlayers.TryGetValue(player.photonView.ControllerActorNr, out var networkPlayer))
+                        return;
 
-                if (!networkPlayers.TryGetValue(player.photonView.controllerActorNr, out var networkPlayer))
-                    return;
+                    networkPlayer.HandleRigFrame(rigFrame);
 
-                networkPlayer.HandleMapFrame(mapFrame);
-            } else if (frame.FrameID == FrameHelper.FrameHeadlamp)
-            {
-                var headlampFrame = (Headlamp)frame;
+                    break;
+                }
 
-                if (!networkPlayers.TryGetValue(player.photonView.controllerActorNr, out var networkPlayer))
-                    return;
+                case FrameHelper.FrameMaptool:
+                {
+                    var mapFrame = (MapTool)frame;
+                    if (!networkPlayers.TryGetValue(player.photonView.controllerActorNr, out var networkPlayer))
+                        return;
 
-                networkPlayer.HandleHeadlamp(headlampFrame.HeadlampEnabled);
+                    networkPlayer.HandleMapFrame(mapFrame);
+
+                    break;
+                }
+
+                case FrameHelper.FrameHeadlamp:
+                {
+                    var headlampFrame = (Headlamp)frame;
+                    if (!networkPlayers.TryGetValue(player.photonView.controllerActorNr, out var networkPlayer))
+                        return;
+
+                    networkPlayer.HandleHeadlamp(headlampFrame.HeadlampEnabled);
+
+                    break;
+                }
+
+                case FrameHelper.FrameDominantHand:
+                {
+                    var dominantHandFrame = (DominantHand)frame;
+                    if (!networkPlayers.TryGetValue(player.photonView.controllerActorNr, out var networkPlayer))
+                        return;
+
+                    networkPlayer.UpdateDominantHand(dominantHandFrame.LeftHanded);
+
+                    break;
+                }
             }
         }
         catch (Exception ex)
@@ -154,30 +185,30 @@ public class NetworkSystem : MonoBehaviour
     {
         scheduledFrames.Clear();
         networkPlayers.Clear();
-        knownPhotonIds.Clear();
+        cachedPhotonIds.Clear();
     }
 
     internal void OnPlayerLeave(int actorNumber)
     {
         if (networkPlayers.Remove(actorNumber, out var networkPlayer))
             Destroy(networkPlayer.gameObject);
-        
-        knownPhotonIds.Remove(actorNumber);
+
+        cachedPhotonIds.Remove(actorNumber);
     }
-    
+
     internal void WriteAdditionalData(PhotonStream stream)
     {
         stream.SendNext(REPOXR_MAGIC);
         stream.SendNext(PROTOCOL_VERSION);
 
         stream.SendNext(scheduledFrames.Count);
-        
+
         foreach (var frame in scheduledFrames)
         {
             stream.SendNext(frame.FrameID);
             frame.Serialize(stream);
         }
-        
+
         scheduledFrames.Clear();
     }
 
@@ -192,14 +223,13 @@ public class NetworkSystem : MonoBehaviour
 
             if ((int)stream.ReceiveNext() != PROTOCOL_VERSION)
                 return;
-            
-            var frames = (int)stream.ReceiveNext();
-            
-            for (var i = 0; i < frames; i++)
+
+            var frameCount = (int)stream.ReceiveNext();
+            for (var i = 0; i < frameCount; i++)
             {
                 var frameId = (int)stream.ReceiveNext();
                 var frame = FrameHelper.CreateFrame(frameId);
-                
+
                 frame.Deserialize(stream);
                 HandleFrame(playerAvatar, frame);
             }

@@ -4,32 +4,32 @@ using RepoXR.Patches;
 namespace RepoXR;
 
 #if DEBUG
-// [RepoXRPatch(RepoXRPatchTarget.Universal)]
+[RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class Experiments
 {
     [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.Awake))]
-    [HarmonyPostfix]
+    // [HarmonyPostfix]
     private static void FuckLolEnemy(EnemyDirector __instance)
     {
         // Only allow eyeyeyeyeyeye spawning
-        // var enemy = __instance.enemiesDifficulty1[0];
-        
+        var enemy = __instance.enemiesDifficulty1[0];
+
         // Only allow mouth spawning
         // var enemy = __instance.enemiesDifficulty1[4];
-        
+
         // Only allow thin-man spawning
         // var enemy = __instance.enemiesDifficulty1[1];
-        
+
         // Only allow upSCREAM! spawning
         // var enemy = __instance.enemiesDifficulty2[2];
-        
+
         // Only allow beamer spawning
-        var enemy = __instance.enemiesDifficulty3[4];
+        // var enemy = __instance.enemiesDifficulty3[4];
 
         __instance.enemiesDifficulty1.Clear();
         __instance.enemiesDifficulty2.Clear();
         __instance.enemiesDifficulty3.Clear();
-        
+
         __instance.enemiesDifficulty1.Add(enemy);
         __instance.enemiesDifficulty2.Add(enemy);
         __instance.enemiesDifficulty3.Add(enemy);
@@ -43,42 +43,54 @@ internal static class Experiments
     }
 
     [HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Hurt))]
-    [HarmonyPrefix]
+    // [HarmonyPrefix]
     private static bool NoDamage()
     {
         return false;
     }
 
-    [HarmonyPatch(typeof(RunManager), nameof(RunManager.Awake))]
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.DebugDev))]
     [HarmonyPrefix]
-    private static void HeheMuseum(RunManager __instance)
+    private static bool SemiWorkHehehehahahahahahEhehehehahaha(ref bool __result)
     {
-        if (RunManager.instance || true)
+        __result = true;
+        return false;
+    }
+
+    private static bool done;
+
+    [HarmonyPatch(typeof(MenuButton), nameof(MenuButton.OnHovering))]
+    [HarmonyPrefix]
+    private static void HeheMuseum()
+    {
+        if (done)
             return;
-        
-        __instance.levels.RemoveRange(0, 1);
-        __instance.levels.RemoveRange(1, 2);
-        __instance.levels[0].NarrativeName = "Wie dit leest is gek";
 
-        __instance.levels[0].ValuablePresets.RemoveAt(0);
+        done = true;
 
-        var hourglass = __instance.levels[0].ValuablePresets[0].medium[1];
-        
-        __instance.levels[0].ValuablePresets[0].tiny.Clear();
-        __instance.levels[0].ValuablePresets[0].small.Clear();
-        __instance.levels[0].ValuablePresets[0].medium.Clear();
-        __instance.levels[0].ValuablePresets[0].big.Clear();
-        __instance.levels[0].ValuablePresets[0].wide.Clear();
-        __instance.levels[0].ValuablePresets[0].tall.Clear();
-        __instance.levels[0].ValuablePresets[0].veryTall.Clear();
-        
-        __instance.levels[0].ValuablePresets[0].tiny.Add(hourglass);
-        __instance.levels[0].ValuablePresets[0].small.Add(hourglass);
-        __instance.levels[0].ValuablePresets[0].medium.Add(hourglass);
-        __instance.levels[0].ValuablePresets[0].big.Add(hourglass);
-        __instance.levels[0].ValuablePresets[0].wide.Add(hourglass);
-        __instance.levels[0].ValuablePresets[0].tall.Add(hourglass);
-        __instance.levels[0].ValuablePresets[0].veryTall.Add(hourglass);
+        var mgr = RunManager.instance;
+
+        mgr.levels.RemoveRange(1, 3);
+        mgr.levels[0].NarrativeName = "Wie dit leest is gek";
+
+        Logger.LogDebug(mgr.levels[0].ValuablePresets[0].small.Count);
+
+        var logoTiny = mgr.levels[0].ValuablePresets[0].tiny[^2];
+        var headsetTiny = mgr.levels[0].ValuablePresets[0].tiny[^1];
+
+        var logoSmall = mgr.levels[0].ValuablePresets[0].small[^2];
+        var headsetSmall = mgr.levels[0].ValuablePresets[0].small[^1];
+
+        var logoMedium = mgr.levels[0].ValuablePresets[0].medium[^2];
+        var headsetMedium = mgr.levels[0].ValuablePresets[0].medium[^1];
+
+        mgr.levels[0].ValuablePresets[0].tiny.Clear();
+        mgr.levels[0].ValuablePresets[0].small.Clear();
+        mgr.levels[0].ValuablePresets[0].medium.Clear();
+
+        mgr.levels[0].ValuablePresets[0].tiny.AddRange([logoTiny, headsetTiny]);
+        mgr.levels[0].ValuablePresets[0].small.AddRange([logoSmall, headsetSmall]);
+        mgr.levels[0].ValuablePresets[0].medium.AddRange([logoMedium, headsetMedium]);
     }
 }
 #endif

@@ -13,6 +13,7 @@ public static class FrameHelper
     public const int FrameRig = 2;
     public const int FrameMaptool = 3;
     public const int FrameHeadlamp = 4;
+    public const int FrameDominantHand = 5;
     
     private static Dictionary<int, Type> cachedTypes = [];
 

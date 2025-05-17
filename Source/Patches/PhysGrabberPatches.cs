@@ -130,7 +130,7 @@ internal static class PhysGrabberPatches
         if (grabbed + overcharge <= 0)
             return;
 
-        HapticManager.Impulse(HapticManager.Hand.Right, HapticManager.Type.Continuous, grabbed + overcharge);
+        HapticManager.Impulse(HapticManager.Hand.Dominant, HapticManager.Type.Continuous, grabbed + overcharge);
     }
 
     /// <summary>
@@ -324,13 +324,13 @@ internal static class PhysGrabberUniversalPatches
                 return grabber.playerAvatar.localCameraTransform;
             }
 
-            if (!networkPlayer.GrabberHand)
+            if (!networkPlayer.PrimaryHand)
             {
                 Logger.LogError("GrabberHand is null?");
                 return grabber.playerAvatar.localCameraTransform;
             }
 
-            return networkPlayer.GrabberHand;
+            return networkPlayer.PrimaryHand;
         }
 
         return grabber.playerAvatar.localCameraTransform;

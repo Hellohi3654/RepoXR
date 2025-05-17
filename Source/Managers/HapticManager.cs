@@ -70,6 +70,8 @@ public class HapticManager : MonoBehaviour
             [
                 InputDevices.GetDeviceAtXRNode(hand switch
                 {
+                    Hand.Dominant => VRSession.IsLeftHanded ? XRNode.LeftHand : XRNode.RightHand,
+                    Hand.Secondary => VRSession.IsLeftHanded ? XRNode.RightHand : XRNode.LeftHand,
                     Hand.Left => XRNode.LeftHand,
                     Hand.Right => XRNode.RightHand,
                     _ => throw new ArgumentOutOfRangeException(nameof(hand), hand, null)
@@ -117,6 +119,9 @@ public class HapticManager : MonoBehaviour
     {
         Left,
         Right,
-        Both
+        Both,
+        
+        Dominant,
+        Secondary
     }
 }

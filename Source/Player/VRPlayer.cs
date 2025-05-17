@@ -27,7 +27,8 @@ public class VRPlayer : MonoBehaviour
     private VRRig localRig;
     
     // Public accessors
-    public Transform MainHand => localRig.rightHandTip;
+    public Transform MainHand => VRSession.IsLeftHanded ? localRig.leftHandTip : localRig.rightHandTip;
+    public Transform SecondaryHand => VRSession.IsLeftHanded ? localRig.rightHandTip : localRig.leftHandTip;
     public Transform MapParent => localRig.map;
     public VRRig Rig => localRig;
     
@@ -40,7 +41,7 @@ public class VRPlayer : MonoBehaviour
     private bool turnedLastInput;
     private Vector3 lastPosition;
     private bool wasPhysicalCrouch;
-    
+
     private void Awake()
     {
         cameraPosition = VRCameraPosition.instance;

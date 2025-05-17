@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using HarmonyLib;
 using RepoXR.Input;
 using RepoXR.Managers;
 using TMPro;
@@ -20,10 +21,14 @@ public class ExpressionRadial : MonoBehaviour
     [SerializeField] protected Image previewBackground;
     [SerializeField] protected ExpressionPart[] parts;
 
+    private PlayerExpression playerExpression;
+    
     private HapticManager.Hand currentHand = HapticManager.Hand.Both;
 
     internal bool isActive;
+    private bool isOverridden;
     private float animationLerp;
+    private float overrideAnimationLerp = 1;
     private int hoveredPart = -1;
 
     // Helper bool that prevents the chat from opening if the radial menu was closed using the chat key
@@ -36,6 +41,8 @@ public class ExpressionRadial : MonoBehaviour
         // Move the preview UI to the middle of the radial menu
         var playerRenderTex = PlayerExpressionsUI.instance.transform;
         playerRenderTex.SetParent(previewTransform, false);
+
+        playerExpression = PlayerExpressionsUI.instance.playerExpression;
         
         ReloadParts();
     }
@@ -61,8 +68,8 @@ public class ExpressionRadial : MonoBehaviour
         switch (pressed)
         {
             case true when !isActive:
+                isActive = true;
                 ResetPosition();
-                isActive = pressed;
 
                 if (ChatManager.instance.chatState == ChatManager.ChatState.Active)
                     ChatManager.instance.StateSet(ChatManager.ChatState.Inactive);
@@ -80,17 +87,26 @@ public class ExpressionRadial : MonoBehaviour
         if (isActive)
             PlayerExpressionsUI.instance.Show();
 
-        animationLerp += Time.deltaTime * (isActive ? 4 : -4);
+        animationLerp += Time.deltaTime * (isActive || isOverridden ? 4 : -4);
         animationLerp = Mathf.Clamp01(animationLerp);
 
+        // Hide the buttons but keep the preview if any override is active but the radial is not active
+        overrideAnimationLerp += Time.deltaTime * (!isActive && isOverridden ? -4 : 4);
+        overrideAnimationLerp = Mathf.Clamp01(overrideAnimationLerp);
+        
         transform.localScale = Vector3.LerpUnclamped(Vector3.zero, Vector3.one, animationCurve.Evaluate(animationLerp));
+        parts.Do(part => part.transform.localScale =
+            Vector3.LerpUnclamped(Vector3.zero, Vector3.one, animationCurve.Evaluate(overrideAnimationLerp)));
 
         // Hide the background if no expressions are active
+        var activeExpressions = DataManager.instance.activeExpressions.Count > 0 ||
+                                playerExpression.overrideExpressions.Count > 0;
         var playerColor = PlayerAvatar.instance.playerAvatarVisuals.color;
         previewBackground.color = Color.Lerp(previewBackground.color,
-            new Color(playerColor.r, playerColor.g, playerColor.b,
-                1f / 255 * (DataManager.instance.activeExpressions.Count > 0 ? 50 : 0)), 8 * Time.deltaTime);
+            new Color(playerColor.r, playerColor.g, playerColor.b, 1f / 255 * (activeExpressions ? 50 : 0)),
+            8 * Time.deltaTime);
 
+        OverrideLogic();
         HoverLogic();
         ActivateLogic();
     }
@@ -101,10 +117,28 @@ public class ExpressionRadial : MonoBehaviour
         return DataManager.instance.activeExpressions.Contains(expression);
     }
 
-    private void ResetPosition()
+    private void ResetPosition(bool overrideOnly = false)
     {
-        transform.position = handTransform.position;
-        transform.LookAt(CameraUtils.Instance.MainCamera.transform.position);
+        var camera = CameraUtils.Instance.MainCamera.transform;
+        
+        if (isActive)
+        {
+            if (overrideOnly)
+                return;
+            
+            transform.position = handTransform.position;
+            transform.LookAt(camera.position);
+        }
+
+        if (!overrideOnly)
+            return;
+
+        var forward = camera.forward;
+        // forward.y = 0;
+        // forward.Normalize();
+
+        transform.position = camera.position + forward * .5f + camera.up * -0.15f;
+        transform.LookAt(camera.position);
     }
 
     private void ReloadParts()
@@ -129,6 +163,14 @@ public class ExpressionRadial : MonoBehaviour
         handTransform = hand == HapticManager.Hand.Left
             ? VRSession.Instance.Player.Rig.leftArmTarget
             : VRSession.Instance.Player.Rig.rightArmTarget;
+    }
+
+    private void OverrideLogic()
+    {
+        isOverridden = playerExpression.overrideExpressions.Count > 0;
+        
+        if (isOverridden)
+            ResetPosition(true);
     }
 
     private void HoverLogic()
@@ -157,6 +199,10 @@ public class ExpressionRadial : MonoBehaviour
     {
         if (!isActive || hoveredPart < 0)
             return;
+        
+        // Ignore while overridden
+        if (playerExpression.overrideExpressions.Any(expr => expr.index - 1 == hoveredPart))
+            return;
 
         // Not while the pause menu is open
         if (MenuManager.instance.currentMenuPage)
@@ -183,17 +229,11 @@ public class ExpressionPart : MonoBehaviour
 {
     public Expression expression;
 
-    public Color defaultColor;
-    public Color hoverColor;
-    public Color activeColor;
-
-    public Color textDefaultColor;
-    public Color textActiveColor;
-
     public AnimationCurve triggerAnimation;
 
     private Image background;
     private TextMeshProUGUI text;
+    private PlayerExpression playerExpression;
 
     private Vector3 currentScale;
     private bool isHovered;
@@ -205,19 +245,22 @@ public class ExpressionPart : MonoBehaviour
     {
         background = GetComponent<Image>();
         text = GetComponentInChildren<TextMeshProUGUI>();
+        playerExpression = PlayerExpressionsUI.instance.playerExpression;
     }
 
     private void Update()
     {
         var playerColor = PlayerAvatar.instance.playerAvatarVisuals.color;
+        var activeOrOverride =
+            isActive || playerExpression.overrideExpressions.Any(expr => expr.index - 1 == (int)expression);
 
         var targetTextColor =
-            isActive ? Utils.GetTextColor(playerColor) : Utils.GetTextColor(playerColor, 0.6f, 0.85f);
-        var targetBgColor = isActive ? Color.Lerp(playerColor, Color.white, 0.4f) :
+            activeOrOverride ? Utils.GetTextColor(playerColor) : Utils.GetTextColor(playerColor, 0.6f, 0.85f);
+        var targetBgColor = activeOrOverride ? Color.Lerp(playerColor, Color.white, 0.4f) :
             isHovered ? Color.Lerp(playerColor, Color.white, 0.2f) : Color.Lerp(playerColor, Color.black, 0.2f);
         
-        targetTextColor.a = isActive ? 1 : 0.85f;
-        targetBgColor.a = isActive ? 0.5f : isHovered ? 0.3f : 0.2f;
+        targetTextColor.a = activeOrOverride ? 1 : 0.85f;
+        targetBgColor.a = activeOrOverride ? 0.5f : isHovered ? 0.3f : 0.2f;
 
         text.color = Color.Lerp(text.color, targetTextColor, 8 * Time.deltaTime);
         background.color = Color.Lerp(background.color, targetBgColor, 8 * Time.deltaTime);
@@ -233,10 +276,12 @@ public class ExpressionPart : MonoBehaviour
 
             var animValue = Vector3.one * (triggerAnimation.Evaluate(animTimer) * 0.15f);
 
-            targetScale += isActive ? animValue : -animValue;
+            targetScale += activeOrOverride ? animValue : -animValue;
         }
 
-        transform.localScale = targetScale;
+        // Only apply scale if the radial menu is active
+        if (ExpressionRadial.instance.isActive)
+            transform.localScale = targetScale;
     }
 
     public void SetHovered(bool hovered)

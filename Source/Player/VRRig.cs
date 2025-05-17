@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Linq;
 using HarmonyLib;
 using RepoXR.Assets;
@@ -63,6 +64,10 @@ public class VRRig : MonoBehaviour
     private PlayerAvatarVisuals playerAvatarVisuals;
     private PlayerAvatarRightArm playerAvatarRightArm;
     
+    // Flashlight
+
+    private FlashlightController flashlight;
+    
     // Map tool stuff
 
     private MapToolController mapTool;
@@ -76,6 +81,13 @@ public class VRRig : MonoBehaviour
         
         // Load persisted data
         headlampEnabled = DataManager.instance.headlampEnabled;
+
+        Plugin.Config.LeftHandDominant.SettingChanged += OnDominantHandChanged;
+    }
+
+    private void OnDestroy()
+    {
+        Plugin.Config.LeftHandDominant.SettingChanged -= OnDominantHandChanged;
     }
 
     private IEnumerator Start()
@@ -84,9 +96,7 @@ public class VRRig : MonoBehaviour
         playerAvatarVisuals = playerAvatar.playerAvatarVisuals;
         playerAvatarRightArm = playerAvatarVisuals.GetComponentInChildren<PlayerAvatarRightArm>(true);
 
-        // Parent claw to right hand
-        playerAvatarRightArm.grabberClawParent.SetParent(rightHandTip);
-        playerAvatarRightArm.grabberClawParent.localPosition = Vector3.zero;
+        // Set up grabber claw
         playerAvatarRightArm.grabberClawParent.gameObject.SetLayerRecursively(6);
         playerAvatarRightArm.grabberClawParent.GetComponentsInChildren<MeshRenderer>()
             .Do(mesh => mesh.shadowCastingMode = ShadowCastingMode.Off);
@@ -94,12 +104,8 @@ public class VRRig : MonoBehaviour
         // Everything else is only available after the first frame
         yield return null;
 
-        // Parent flashlight to left hand
-        var flashlight = FlashlightController.Instance;
-
-        flashlight.transform.parent = headlampEnabled ? headLamp : leftHandTip;
-        flashlight.transform.localPosition = Vector3.zero;
-        flashlight.transform.localRotation = Quaternion.identity;
+        // Grab flashlight reference
+        flashlight = FlashlightController.Instance;
 
         // Map tool
         mapTool = FindObjectsOfType<MapToolController>().First(tool => tool.PlayerAvatar.isLocal);
@@ -109,6 +115,9 @@ public class VRRig : MonoBehaviour
         // Expression wheel
         Instantiate(AssetCollection.ExpressionWheel, CameraUtils.Instance.MainCamera.transform.parent)
             .GetComponent<ExpressionRadial>();
+        
+        // Update parents
+        UpdateDominantTransforms();
     }
 
     private void LateUpdate()
@@ -129,6 +138,28 @@ public class VRRig : MonoBehaviour
         HeadLampLogic();
     }
 
+    /// <summary>
+    /// Update transform parents and positions based on the current dominant hand
+    /// </summary>
+    private void UpdateDominantTransforms()
+    {
+        playerAvatarRightArm.grabberClawParent.SetParent(VRSession.Instance.Player.MainHand);
+        playerAvatarRightArm.grabberClawParent.localPosition = Vector3.zero;
+
+        var beamOrigin = PhysGrabber.instance.physGrabBeamComponent.PhysGrabPointOrigin;
+        beamOrigin.SetParent(VRSession.Instance.Player.MainHand);
+        beamOrigin.localPosition = Vector3.zero;
+        
+        flashlight.transform.parent = headlampEnabled ? headLamp : VRSession.Instance.Player.SecondaryHand;
+        flashlight.transform.localPosition = Vector3.zero;
+        flashlight.transform.localRotation = Quaternion.identity;
+
+        lampTriggerCollider.transform.localPosition = new Vector3(VRSession.IsLeftHanded ? 0.2f : -0.2f,
+            lampTriggerCollider.transform.localPosition.y, lampTriggerCollider.transform.localPosition.z);
+        
+        NetworkSystem.instance.UpdateDominantHand(Plugin.Config.LeftHandDominant.Value);
+    }
+    
     private void UpdateArms()
     {
         leftArm.localPosition = new Vector3(leftArm.localPosition.x, leftArm.localPosition.y, 0);
@@ -172,10 +203,16 @@ public class VRRig : MonoBehaviour
 
     private void UpdateClaw()
     {
+        if (playerAvatarVisuals.isMenuAvatar || playerAvatarRightArm.playerAvatar.playerHealth.hurtFreeze)
+            return;
+        
         playerAvatarRightArm.deltaTime = playerAvatarVisuals.deltaTime;
         playerAvatarRightArm.GrabberLogic();
     }
 
+    private Vector3 MapPrimaryPosition => VRSession.IsLeftHanded ? mapLeftPosition : mapRightPosition;
+    private Vector3 MapSecondaryPosition => VRSession.IsLeftHanded ? mapRightPosition : mapLeftPosition;
+    
     private bool mapHovered;
 
     private void MapToolLogic()
@@ -185,7 +222,7 @@ public class VRRig : MonoBehaviour
 
         // Move map tool anchor to the left if we're holding an item
         map.transform.localPosition = Vector3.Lerp(map.transform.localPosition,
-            PhysGrabber.instance.grabbed ? mapLeftPosition : mapRightPosition, 8 * Time.deltaTime);
+            PhysGrabber.instance.grabbed ? MapSecondaryPosition : MapPrimaryPosition, 8 * Time.deltaTime);
 
         mapTool.transform.parent.localPosition =
             Vector3.Lerp(mapTool.transform.parent.localPosition, Vector3.zero, 5 * Time.deltaTime);
@@ -228,6 +265,14 @@ public class VRRig : MonoBehaviour
         }
         else if (mapTool.Active || (!leftHandHovered && !rightHandHovered))
             mapHovered = false;
+        
+        // Flashlight hide logic (before picking up)
+        if (!mapTool.Active &&
+            Utils.Collide(VRSession.IsLeftHanded ? rightHandCollider : leftHandCollider,
+                mapPickupCollider) && !PlayerController.instance.sprinting)
+            flashlight.hideFlashlight = !headlampEnabled;
+        else if (!mapTool.Active)
+            flashlight.hideFlashlight = false;
 
         // Right hand pickup logic
         if (!mapTool.Active && Actions.Instance["MapGrabRight"].WasPressedThisFrame() &&
@@ -237,18 +282,15 @@ public class VRRig : MonoBehaviour
                 mapTool.transform.parent.parent = rightHandTip;
                 mapTool.Active = true;
                 VRMapTool.instance.leftHanded = false;
+                flashlight.hideFlashlight = !headlampEnabled && VRSession.IsLeftHanded;
 
                 // Prevent picking up items while the map is opened
-                playerAvatar.physGrabber.ReleaseObject();
-                playerAvatar.physGrabber.enabled = false;
+                if (!VRSession.IsLeftHanded)
+                {
+                    playerAvatar.physGrabber.ReleaseObject();
+                    playerAvatar.physGrabber.enabled = false;
+                }
             }
-
-        // Left hand touch logic (before picking up)
-        if (!mapTool.Active && Utils.Collide(leftHandCollider, mapPickupCollider) &&
-            !PlayerController.instance.sprinting)
-            FlashlightController.Instance.hideFlashlight = true;
-        else if (!mapTool.Active)
-            FlashlightController.Instance.hideFlashlight = false;
 
         // Left hand pickup logic
         if (!mapTool.Active && Actions.Instance["MapGrabLeft"].WasPressedThisFrame() &&
@@ -256,10 +298,17 @@ public class VRRig : MonoBehaviour
             if (mapTool.HideLerp >= 1)
             {
                 mapTool.transform.parent.parent = leftHandTip;
-                mapHeldLeftHand = true;
-                VRMapTool.instance.leftHanded = true;
-                FlashlightController.Instance.hideFlashlight = true;
                 mapTool.Active = true;
+                VRMapTool.instance.leftHanded = true;
+                mapHeldLeftHand = true;
+                flashlight.hideFlashlight = !headlampEnabled && !VRSession.IsLeftHanded;
+                
+                // Prevent picking up items while the map is opened
+                if (VRSession.IsLeftHanded)
+                {
+                    playerAvatar.physGrabber.ReleaseObject();
+                    playerAvatar.physGrabber.enabled = false;
+                }
             }
 
         // Disable map when sprinting
@@ -275,7 +324,7 @@ public class VRRig : MonoBehaviour
         if (mapTool.Active && !Actions.Instance["MapGrabLeft"].IsPressed() && mapHeldLeftHand && mapTool.HideLerp <= 0)
             mapTool.Active = false;
 
-        NetworkSystem.instance.UpdateMapToolState(FlashlightController.Instance.hideFlashlight, mapHeldLeftHand);
+        NetworkSystem.instance.UpdateMapToolState(flashlight.hideFlashlight, mapHeldLeftHand);
     }
 
     /// <summary>
@@ -284,10 +333,10 @@ public class VRRig : MonoBehaviour
     private void WallClipLogic()
     {
         var camera = CameraUtils.Instance.MainCamera.transform;
-        var direction = rightHandTip.position - camera.position;
+        var direction = VRSession.Instance.Player.MainHand.position - camera.position;
 
         if (Physics.Raycast(new Ray(camera.position, direction), out _,
-                Vector3.Distance(camera.position, rightHandTip.position), Crosshair.LayerMask))
+                Vector3.Distance(camera.position, VRSession.Instance.Player.MainHand.position), Crosshair.LayerMask))
         {
             // HIT!
             Crosshair.instance.gameObject.SetActive(false);
@@ -328,24 +377,25 @@ public class VRRig : MonoBehaviour
             RunManager.instance.levelCurrent == RunManager.instance.levelShop)
             return;
         
-        var collided = Utils.Collide(leftHandCollider, lampTriggerCollider);
+        var collided = Utils.Collide(VRSession.IsLeftHanded ? rightHandCollider : leftHandCollider, lampTriggerCollider);
         if (collided && !headlampHovered)
-            HapticManager.Impulse(HapticManager.Hand.Left, HapticManager.Type.Impulse);
+            HapticManager.Impulse(HapticManager.Hand.Secondary, HapticManager.Type.Impulse);
 
-        if (collided && Actions.Instance["MapGrabLeft"].WasPressedThisFrame())
+        if (collided && Actions.Instance[VRSession.IsLeftHanded ? "MapGrabRight" : "MapGrabLeft"]
+                .WasPressedThisFrame())
         {
-            var flashlight = FlashlightController.Instance;
-            
             // Reparent flashlight onto new parent
-            flashlight.transform.SetParent(headlampEnabled ? leftHandTip : headLamp, false);
-            flashlight.lightOnAudio.Play(flashlight.transform.position);            
-            
+            flashlight.transform.SetParent(
+                headlampEnabled ? (VRSession.IsLeftHanded ? rightHandTip : leftHandTip) : headLamp,
+                false);
+            flashlight.lightOnAudio.Play(flashlight.transform.position);
+
             headlampEnabled = !headlampEnabled;
 
             DataManager.instance.headlampEnabled = headlampEnabled;
             NetworkSystem.instance.UpdateHeadlamp(headlampEnabled);
         }
-        
+
         headlampHovered = collided;
     }
     
@@ -375,5 +425,12 @@ public class VRRig : MonoBehaviour
     {
         foreach (var mesh in meshes)
             mesh.sharedMaterial.SetFloat(HurtAmount, amount);
+    }
+    
+    // Event handlers
+
+    private void OnDominantHandChanged(object sender, EventArgs args)
+    {
+        UpdateDominantTransforms();
     }
 }

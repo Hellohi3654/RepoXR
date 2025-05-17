@@ -14,12 +14,12 @@ internal static class ItemBoomboxPatches
     [HarmonyPostfix]
     private static void BoomboxAimPatch(ValuableBoombox __instance)
     {
-        if (!__instance.physgrabObject.grabbed || !PhysGrabber.instance ||
-            PhysGrabber.instance.grabbedObject != __instance.rb)
+        if (!__instance.physGrabObject.grabbed || !PhysGrabber.instance ||
+            PhysGrabber.instance.grabbedObject != __instance.physGrabObject.rb)
             return;
         
         var bopSpeed = Plugin.Config.ReducedAimImpact.Value ? 5 : 15;
-        var bopMultiplier = Plugin.Config.ReducedAimImpact.Value ? 0.5f : 10;
+        var bopMultiplier = Plugin.Config.ReducedAimImpact.Value ? 0.15f : 0.5f;
 
         var cameraPosition = PhysGrabber.instance.playerAvatar.localCameraPosition;
         var cameraForward = PhysGrabber.instance.playerAvatar.localCameraTransform.forward * 2;
