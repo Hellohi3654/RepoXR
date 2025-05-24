@@ -23,6 +23,11 @@ internal static class HarmonyPatcher
         Patch(VRPatcher, RepoXRPatchTarget.VROnly);
     }
 
+    public static void PatchClass(Type type)
+    {
+        UniversalPatcher.CreateClassProcessor(type, true).Patch();
+    }
+
     private static void Patch(Harmony patcher, RepoXRPatchTarget target)
     {
         GetTypesFromAssembly(Assembly.GetExecutingAssembly()).Do(type =>

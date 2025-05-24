@@ -13,7 +13,7 @@ namespace RepoXR.Patches.Player;
 internal static class FlashlightPatches
 {
     /// <summary>
-    /// Disable a few of the flashlight script locally since it doesn't really work well with VR
+    /// Disable a few of the flashlight scripts locally since it doesn't really work well with VR
     /// </summary>
     [HarmonyPatch(typeof(FlashlightController), nameof(FlashlightController.Start))]
     [HarmonyPrefix]

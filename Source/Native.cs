@@ -12,8 +12,10 @@ internal static class Native
 {
     public static readonly IntPtr HKEY_LOCAL_MACHINE = (IntPtr)0x80000002;
 
+    private const int SECURITY_MAX_SID_SIZE = 68;
+
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-    
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetWindowText(IntPtr hWnd, StringBuilder strText, int maxCount);
 
@@ -34,8 +36,8 @@ internal static class Native
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
-    
-    [DllImport("kernel32.dll", CharSet=CharSet.Auto)]
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
     public static extern IntPtr GetModuleHandle(string lpModuleName);
 
     [DllImport("user32.dll")]
@@ -78,15 +80,34 @@ internal static class Native
     private static extern bool OpenProcessToken(IntPtr hProcess, uint dwAccess, out IntPtr hToken);
 
     [DllImport("advapi32.dll", SetLastError = true)]
-    private static extern bool GetTokenInformation(IntPtr hToken, uint tokenInformationClass, IntPtr lpData,
-        uint tokenInformationLength, out uint returnLength);
+    private static extern bool GetTokenInformation(IntPtr hToken, uint tokenInformationClass, in byte lpData,
+        int tokenInformationLength, out uint returnLength);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern IntPtr GetSidSubAuthorityCount(IntPtr pSid);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern IntPtr GetSidSubAuthority(IntPtr pSid, int nSubAuthority);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
     [SuppressUnmanagedCodeSecurity]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CloseHandle(IntPtr handle);
-    
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SID_AND_ATTRIBUTES
+    {
+        public IntPtr Sid;
+        public uint Attributes;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TOKEN_MANDATORY_LABEL
+    {
+        public SID_AND_ATTRIBUTES Label;
+    }
+
     public static bool RegOpenSubKey(ref IntPtr hKey, string lpSubKey, int samDesired)
     {
         var result = RegOpenKeyEx(hKey, lpSubKey, 0, samDesired, out var hNewKey) == 0;
@@ -101,36 +122,41 @@ internal static class Native
 
     public static bool HasIncompatibleModules()
     {
-        foreach (var module in (ReadOnlySpan<string>)["OnlineFix64"])
+        foreach (var module in (ReadOnlySpan<string>) ["OnlineFix64"])
             if (GetModuleHandle(module) != IntPtr.Zero)
                 return true;
 
         return false;
     }
-    
-    public static bool IsElevated()
+
+    public static unsafe bool IsHighIntegrityLevel()
     {
         var hToken = IntPtr.Zero;
-        var data = IntPtr.Zero;
 
         try
         {
-            if (!OpenProcessToken(GetCurrentProcess(), 0x0008, out hToken))
+            if (!OpenProcessToken(GetCurrentProcess(), 0x0018, out hToken))
                 return false;
 
-            data = Marshal.AllocHGlobal(4);
-            if (!GetTokenInformation(hToken, 20, data, 4, out _))
+            Span<byte> buffer = stackalloc byte[SECURITY_MAX_SID_SIZE + sizeof(uint)];
+
+            if (!GetTokenInformation(hToken, 25, MemoryMarshal.GetReference(buffer), buffer.Length, out _))
                 return false;
 
-            return Marshal.ReadIntPtr(data).ToInt32() != 0;
+            var label = MemoryMarshal.Cast<byte, TOKEN_MANDATORY_LABEL>(buffer)[0];
+            var pSid = label.Label.Sid;
+            if (pSid == IntPtr.Zero)
+                return false;
+
+            var subAuthCount = Marshal.ReadByte(GetSidSubAuthorityCount(pSid));
+            var integrityLevel = Marshal.ReadInt32(GetSidSubAuthority(pSid, subAuthCount - 1));
+
+            return integrityLevel > 0x2000;
         }
         finally
         {
             if (hToken != IntPtr.Zero)
                 CloseHandle(hToken);
-            
-            if (data != IntPtr.Zero)
-                Marshal.FreeHGlobal(data);
         }
     }
 
@@ -149,16 +175,17 @@ internal static class Native
             // and is eventually changed by the game's WindowManager to "R.E.P.O."
             return GetWindowText(hWnd) == "REPO";
         }).ToArray();
-        
+
         if (gameWindows.Length > 1)
-            Logger.LogWarning("Multiple game windows called 'R.E.P.O.' detected. Bringing only the first one to the front.");
+            Logger.LogWarning(
+                "Multiple game windows called 'R.E.P.O.' detected. Bringing only the first one to the front.");
 
         var targetWindow = gameWindows[0];
-        
+
         // Little hack to make BringWindowToTop work properly
         var foregroundPid = GetWindowThreadProcessId(GetForegroundWindow(), out _);
         var currentThreadId = GetCurrentThreadId();
-        
+
         AttachThreadInput(foregroundPid, currentThreadId, true);
         BringWindowToTop(targetWindow);
         AttachThreadInput(foregroundPid, currentThreadId, false);
@@ -172,7 +199,7 @@ internal static class Native
 
         var builder = new StringBuilder(size + 1);
         GetWindowText(hWnd, builder, builder.Capacity);
-        
+
         return builder.ToString();
     }
 

@@ -63,7 +63,7 @@ public class ControlOption : MonoBehaviour
         
         if (string.IsNullOrEmpty(playerInput.currentControlScheme))
         {
-            controlText.text = "NOT BOUND";
+            controlText.text = "<sprite=37> DISCONNECTED";
 
             return;
         }

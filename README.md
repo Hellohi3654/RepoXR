@@ -81,7 +81,7 @@ BepInEx is the modloader that RepoXR uses to mod the game. You can download BepI
 
 To install BepInEx, you can follow their [Installation Guide](https://docs.bepinex.dev/articles/user_guide/installation/index.html#installing-bepinex-1).
 
-# Installing the mod
+## Installing the mod
 
 Once BepInEx has been installed and run at least once, you can start installing the mod.
 
@@ -109,5 +109,6 @@ In this folder, also create a new directory called `RuntimeDeps` (again, has to 
 
 You can now run the game with RepoXR installed.
 
-- TODO: Left handed mode (**fixed**, not tested!)
+- TODO: Gumball force look in multiplayer (**fixed**, not tested!)
+- TODO: Unparent map tool and flashlight from multiplayer hand since scaling fucks everything up (**fixed**, not tested!)
 - TODO: Remind youtube commenter that they can stop holding my beer since the mod is finished and I know it's very heavy but thank you for holding my beer while I coded this it means a lot to me

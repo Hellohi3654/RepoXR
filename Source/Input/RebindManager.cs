@@ -84,9 +84,13 @@ public class RebindManager : MonoBehaviour
     private void DestroyOldUI()
     {
         var container = transform.Find("Scroll Box/Mask/Scroller");
+        var objectsToDestroy = new List<GameObject>();
         
         for (var i = 3; i < container.childCount; i++)
-            Destroy(container.GetChild(i).gameObject);
+            objectsToDestroy.Add(container.GetChild(i).gameObject);
+        
+        // Need to destroy immediately because the scroll box updates the height this frame
+        objectsToDestroy.ForEach(DestroyImmediate);
     }
 
     /// <summary>

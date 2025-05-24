@@ -159,7 +159,8 @@ public class GameHud : MonoBehaviour
         {
             transform =
             {
-                parent = camera.transform.parent.parent, localPosition = Vector3.zero,
+                parent = camera.transform.parent.parent, 
+                localPosition = Vector3.down * 3000, // Move very far away initially to prevent UI flashes during loading
                 localRotation = Quaternion.identity, localScale = Vector3.one * 0.01f
             },
             layer = 5

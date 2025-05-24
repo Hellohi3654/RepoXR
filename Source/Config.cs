@@ -118,6 +118,8 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<string> OpenXRRuntimeFile { get; } = file.Bind("Internal", nameof(OpenXRRuntimeFile), "",
         "FOR INTERNAL USE ONLY, DO NOT EDIT");
 
+    private static bool leftHandedWarningShown;
+    
     /// <summary>
     /// Create persistent callbacks that persist for the entire duration of the application
     /// </summary>
@@ -137,6 +139,18 @@ public class Config(string assemblyPath, ConfigFile file)
                 Object.Instantiate(AssetCollection.CustomCamera, Camera.main!.transform.parent);
             else
                 Object.Destroy(VRCustomCamera.instance.gameObject);
+        };
+
+        LeftHandDominant.SettingChanged += (_, _) =>
+        {
+            if (!LeftHandDominant.Value || leftHandedWarningShown)
+                return;
+
+            leftHandedWarningShown = true;
+            MenuManager.instance.PagePopUpScheduled("Left Handed Notice", Color.yellow,
+                "Left handed mode does not change your default bindings. To set up proper bindings for left handed mode, change your bindings by going to\nSettings -> Controls",
+                "Will do", false);
+            MenuManager.instance.PagePopUpScheduledShow();
         };
     }
 

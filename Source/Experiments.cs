@@ -1,14 +1,12 @@
 ﻿using HarmonyLib;
-using RepoXR.Patches;
 
 namespace RepoXR;
 
 #if DEBUG
-[RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class Experiments
 {
     [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.Awake))]
-    // [HarmonyPostfix]
+    [HarmonyPostfix]
     private static void FuckLolEnemy(EnemyDirector __instance)
     {
         // Only allow eyeyeyeyeyeye spawning
@@ -43,7 +41,7 @@ internal static class Experiments
     }
 
     [HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Hurt))]
-    // [HarmonyPrefix]
+    [HarmonyPrefix]
     private static bool NoDamage()
     {
         return false;

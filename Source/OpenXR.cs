@@ -311,7 +311,8 @@ internal static class OpenXR
         {
             InitializeScripts();
 
-            if (Native.IsElevated())
+            // Cannot override runtime if high integrity: https://github.com/KhronosGroup/OpenXR-SDK-Source/blob/main/src/common/platform_utils.hpp#L317
+            if (Native.IsHighIntegrityLevel())
             {
                 Logger.LogWarning("Application is elevated! Unable to override the XR runtime! Only the system default OpenXR runtime will be available.");
 

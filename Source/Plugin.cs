@@ -32,12 +32,12 @@ public class Plugin : BaseUnityPlugin
 
     private readonly string[] GAME_ASSEMBLY_HASHES =
     [
-        "67F0573F52930DA80902394F45584CDCDBC884D1525FBA23A77567024E6F26E3" // v0.1.2_23beta
+        "8CCD770EB1868E610636B9B7C898083004E627ABCE16941122738B961E401607" // v0.1.2_32beta
     ];
     
     public new static Config Config { get; private set; } = null!;
     public static Flags Flags { get; private set; } = 0;
-    
+
     private void Awake()
     {
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
@@ -46,13 +46,13 @@ public class Plugin : BaseUnityPlugin
         RepoXR.Logger.source = Logger;
 
         Config = new Config(Info.Location, base.Config);
-        
+
         Logger.LogInfo($"Starting {PLUGIN_NAME} v{PLUGIN_VERSION} ({GetCommitHash()})");
-        
+
         // Allow disabling VR via config and command line
         var disableVr = Config.DisableVR.Value ||
                         Environment.GetCommandLineArgs().Contains("--disable-vr", StringComparer.OrdinalIgnoreCase);
-        
+
         if (disableVr)
             Logger.LogWarning("VR has been disabled by config or the `--disable-vr` command line flag");
 
@@ -64,7 +64,8 @@ public class Plugin : BaseUnityPlugin
             if (allowUnverified)
             {
                 Logger.LogWarning("Warning: Unsupported game version, or corrupted/pirated game detected!");
-                Logger.LogWarning("RepoXR might not work properly. Please consider updating your game and RepoXR before creating bug reports.");
+                Logger.LogWarning(
+                    "RepoXR might not work properly. Please consider updating your game and RepoXR before creating bug reports.");
             }
             else
             {
@@ -77,7 +78,7 @@ public class Plugin : BaseUnityPlugin
                 return;
             }
         }
-        
+
         if (!PreloadRuntimeDependencies())
         {
             Logger.LogError("Disabling mod because required runtime dependencies could not be loaded!");
@@ -92,18 +93,22 @@ public class Plugin : BaseUnityPlugin
 
         if (!disableVr && InitializeVR())
             Flags |= Flags.VR;
-        
+
         HarmonyPatcher.PatchUniversal();
-        
+
         Logger.LogDebug("Inserted universal patches using Harmony");
-        
+
+#if DEBUG
+        if (Environment.GetCommandLineArgs().Contains("--repoxr-enable-experiments", StringComparer.OrdinalIgnoreCase))
+        {
+            HarmonyPatcher.PatchClass(typeof(Experiments));
+        }
+#endif
+
         Native.BringGameWindowToFront();
         Config.SetupGlobalCallbacks();
-        
-        SceneManager.sceneLoaded += (scene, _) =>
-        {
-            Entrypoint.OnSceneLoad(scene.name);
-        };
+
+        SceneManager.sceneLoaded += (scene, _) => Entrypoint.OnSceneLoad(scene.name);
     }
 
     public static string GetCommitHash()
@@ -139,7 +144,7 @@ public class Plugin : BaseUnityPlugin
             return true;
         }
         
-        Logger.LogWarning("Failed to verify ame version using local hashes, checking remotely for updated hashes...");
+        Logger.LogWarning("Failed to verify game version using local hashes, checking remotely for updated hashes...");
         
         // Attempt to fetch a gist with known working assembly hashes
         // This allows me to keep RepoXR up and running if the game updates, without having to push an update out

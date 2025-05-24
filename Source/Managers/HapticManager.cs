@@ -56,7 +56,7 @@ public class HapticManager : MonoBehaviour
         currentCurve = null;
     }
 
-    private void Execute(Hand hand, Type type, float amplitude, float duration)
+    private static void Execute(Hand hand, Type type, float amplitude, float duration)
     {
         if ((int)Plugin.Config.HapticFeedback.Value <= (int)type)
             return;
@@ -106,7 +106,8 @@ public class HapticManager : MonoBehaviour
 
         instance.currentPriority = priority;
         instance.priorityTimer = duration;
-        instance.Execute(hand, type, amplitude, duration);
+        
+        Execute(hand, type, amplitude, duration);
     }
 
     public enum Type
