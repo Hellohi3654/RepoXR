@@ -41,7 +41,7 @@ internal static class Experiments
     }
 
     [HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Hurt))]
-    [HarmonyPrefix]
+    // [HarmonyPrefix]
     private static bool NoDamage()
     {
         return false;

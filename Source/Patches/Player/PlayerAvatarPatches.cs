@@ -10,14 +10,14 @@ internal static class PlayerAvatarPatches
     /// <summary>
     /// Detect when the player has died
     /// </summary>
-    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.PlayerDeathRPC))]
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.PlayerDeathDone))]
     [HarmonyPostfix]
     private static void OnPlayerDeath(PlayerAvatar __instance)
     {
         if (!__instance.isLocal || VRSession.Instance is not {} session)
             return;
 
-        session.Player.SetRigVisible(false);
+        session.Player.Rig.SetVisible(false);
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ internal static class PlayerAvatarPatches
         if (!__instance.isLocal || VRSession.Instance is not { } session)
             return;
         
-        session.Player.SetRigVisible(true);
+        session.Player.Rig.SetVisible(true);
 
         // Reset CameraAimOffset (for when revived during the top-down death sequence)
         var offsetTransform = CameraAimOffset.Instance.transform;

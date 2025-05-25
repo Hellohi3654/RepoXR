@@ -54,9 +54,6 @@ public class VRRig : MonoBehaviour
     public Vector3 mapRightPosition;
     public Vector3 mapLeftPosition;
     
-    // public Vector3 normalPlaneOffset;
-    // public Vector3 gazePlaneOffset;
-    
     private Transform leftArmMesh;
     private Transform rightArmMesh;
 
@@ -203,7 +200,8 @@ public class VRRig : MonoBehaviour
 
     private void UpdateClaw()
     {
-        if (playerAvatarVisuals.isMenuAvatar || playerAvatarRightArm.playerAvatar.playerHealth.hurtFreeze)
+        if (playerAvatarVisuals.isMenuAvatar || (playerAvatar.isActiveAndEnabled &&
+                                                 playerAvatarRightArm.playerAvatar.playerHealth.hurtFreeze))
             return;
         
         playerAvatarRightArm.deltaTime = playerAvatarVisuals.deltaTime;

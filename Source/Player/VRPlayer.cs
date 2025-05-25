@@ -112,11 +112,6 @@ public class VRPlayer : MonoBehaviour
     {
         disableRotateTimer = time;
     }
-
-    public void SetRigVisible(bool visible)
-    {
-        localRig.SetVisible(visible);
-    }
     
     public void SetColor(int colorIndex, Color color = default)
     {

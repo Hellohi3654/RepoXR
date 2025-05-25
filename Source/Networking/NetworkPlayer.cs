@@ -32,6 +32,8 @@ public class NetworkPlayer : MonoBehaviour
 
     public Transform PrimaryHand => isLeftHanded ? leftHandTarget : rightHandTarget;
 
+    private bool networkReady;
+    
     private bool isLeftHanded;
     private bool isMapLeftHanded;
     private bool isHeadlampEnabled;
@@ -75,7 +77,7 @@ public class NetworkPlayer : MonoBehaviour
                 transform =
                 {
                     parent = playerAvatarVisuals.attachPointTopHeadMiddle, 
-                    localPosition = new Vector3(-0.21f, 0.1f, 0)
+                    localPosition = new Vector3(isLeftHanded ? 0.21f : -0.21f, 0.1f, 0)
                 }
             }
             .transform;
@@ -85,13 +87,13 @@ public class NetworkPlayer : MonoBehaviour
         var playerRoot = playerAvatar.transform.parent;
         
         flashlight = playerRoot.GetComponentInChildren<FlashlightController>(true);
-        flashlight.transform.parent = leftHandAnchor;
+        flashlight.transform.parent = transform;
         flashlight.transform.localScale = Vector3.one * flashlight.hiddenScale;
         flashlight.transform.localPosition = Vector3.zero;
         flashlight.transform.localRotation = Quaternion.identity;
 
         mapTool = playerRoot.GetComponentInChildren<MapToolController>(true);
-        mapTool.transform.parent.parent = rightHandAnchor;
+        mapTool.transform.parent.parent = transform;
         mapTool.transform.parent.localPosition = Vector3.zero;
         mapTool.transform.parent.localRotation = Quaternion.identity;
 
@@ -100,6 +102,8 @@ public class NetworkPlayer : MonoBehaviour
 
         playerRightArm.physGrabBeam.PhysGrabPointOrigin.SetParent(rightHandAnchor);
         playerRightArm.physGrabBeam.PhysGrabPointOrigin.localPosition = Vector3.zero;
+
+        networkReady = true;
     }
 
     private void Update()
@@ -155,13 +159,20 @@ public class NetworkPlayer : MonoBehaviour
 
     public void HandleMapFrame(MapTool mapFrame)
     {
-        flashlight.hideFlashlight = mapFrame.HideFlashlight;
         isMapLeftHanded = mapFrame.LeftHanded;
+        
+        if (!networkReady)
+            return;
+        
+        flashlight.hideFlashlight = mapFrame.HideFlashlight;
     }
 
     public void HandleHeadlamp(bool headlampEnabled)
     {
         isHeadlampEnabled = headlampEnabled;
+
+        if (!networkReady)
+            return;
         
         flashlight.transform.SetParent(headlampEnabled ? headlampTransform : transform);
         flashlight.transform.localPosition = Vector3.zero;
@@ -172,6 +183,9 @@ public class NetworkPlayer : MonoBehaviour
     {
         isLeftHanded = leftHanded;
 
+        if (!networkReady)
+            return;
+        
         flashlight.transform.parent = isHeadlampEnabled ? headlampTransform : transform;
         flashlight.transform.localScale = Vector3.one * flashlight.hiddenScale;
         flashlight.transform.localPosition = Vector3.zero;

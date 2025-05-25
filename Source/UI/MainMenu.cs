@@ -1,5 +1,8 @@
 ﻿using System.Collections;
+using RepoXR.Input;
+using RepoXR.Player.Camera;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.UI;
@@ -10,6 +13,16 @@ public class MainMenu : MonoBehaviour
 {
     private Camera mainCamera;
     private Canvas mainCanvas;
+
+    private void Awake()
+    {
+        Actions.Instance["ResetHeight"].performed += OnResetHeight;
+    }
+
+    private void OnDestroy()
+    {
+        Actions.Instance["ResetHeight"].performed -= OnResetHeight;
+    }
     
     private IEnumerator Start()
     {
@@ -43,7 +56,7 @@ public class MainMenu : MonoBehaviour
         mainCanvas = HUDCanvas.instance.GetComponent<Canvas>();
         mainCanvas.renderMode = RenderMode.WorldSpace;
         mainCanvas.transform.position = new Vector3(-45, -0.75f, 6);
-        mainCanvas.transform.eulerAngles = new Vector3(0, 45, 0);
+        mainCanvas.transform.eulerAngles = new Vector3(0, 50, 0);
         mainCanvas.transform.localScale = Vector3.one * 0.03f;
         mainCanvas.transform.Find("HUD").gameObject.AddComponent<RectMask2D>();
         
@@ -71,5 +84,10 @@ public class MainMenu : MonoBehaviour
     private void SetupControllers()
     {
         mainCamera.transform.parent.gameObject.AddComponent<XRRayInteractorManager>();
+    }
+    
+    private static void OnResetHeight(InputAction.CallbackContext obj)
+    {
+        VRCameraAim.instance.SetSpawnRotation(0);
     }
 }

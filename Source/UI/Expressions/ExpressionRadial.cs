@@ -134,8 +134,6 @@ public class ExpressionRadial : MonoBehaviour
             return;
 
         var forward = camera.forward;
-        // forward.y = 0;
-        // forward.Normalize();
 
         transform.position = camera.position + forward * .5f + camera.up * -0.15f;
         transform.LookAt(camera.position);
