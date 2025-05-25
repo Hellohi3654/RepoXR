@@ -1,5 +1,11 @@
 # R.E.P.O. VR Mod
 
+> [!WARNING]
+> # ⚠️ The VR mod has not yet been released
+> Some of the README contents may refer to existing releases (either GitHub or Thunderstore), but these don't actually exist for now.
+> 
+> If you stumble upon a R.E.P.O. VR mod on Thunderstore claiming to be this mod, **stay away from it, it might be malware!** When the mod is actually released, it will be announced, and it will be uploaded by the user [*DaXcess*](https://thunderstore.io/c/repo/p/DaXcess) (the same user that also uploaded the [FixPluginTypesSerialization](https://thunderstore.io/c/repo/p/DaXcess/FixPluginTypesSerialization/) mod in the R.E.P.O. community).
+
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/DaXcess/RepoXR?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/repo/p/DaXcess/RepoXR)
 [![GitHub Version](https://img.shields.io/github/v/release/DaXcess/RepoXR?style=for-the-badge&logo=github)](https://github.com/DaXcess/RepoXR/releases/latest)
 [![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/DaXcess/RepoXR?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/repo/p/DaXcess/RepoXR)
@@ -108,5 +114,3 @@ In this folder, also create a new directory called `RuntimeDeps` (again, has to 
 - UnityOpenXR.dll
 
 You can now run the game with RepoXR installed.
-
-- TODO: Remind youtube commenter that they can stop holding my beer since the mod is finished and I know it's very heavy but thank you for holding my beer while I coded this it means a lot to me
