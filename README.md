@@ -4,7 +4,9 @@
 > # ⚠️ The VR mod has not yet been released
 > Some of the README contents may refer to existing releases (either GitHub or Thunderstore), but these don't actually exist for now.
 > 
-> This is the only official place where you can download this mod, nowhere else!
+> This is still an experimental version of RepoXR, here be dragons!
+> 
+> For now, this is the only official place where you can download this mod, nowhere else!
 > If you stumble upon a R.E.P.O. VR mod on Thunderstore claiming to be this mod, **stay away from it, it might be malware!** When the mod is actually released, it will be announced, and it will be uploaded by the user [*DaXcess*](https://thunderstore.io/c/repo/p/DaXcess) (the same user that also uploaded the [FixPluginTypesSerialization](https://thunderstore.io/c/repo/p/DaXcess/FixPluginTypesSerialization/) mod in the R.E.P.O. community).
 
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/DaXcess/RepoXR?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/repo/p/DaXcess/RepoXR)
