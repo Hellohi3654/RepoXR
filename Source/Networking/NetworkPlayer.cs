@@ -108,6 +108,13 @@ public class NetworkPlayer : MonoBehaviour
 
     private void Update()
     {
+        // We're most likely unloading the scene, so disable the VR player
+        if (!playerAvatarVisuals || !mapTool)
+        {
+            enabled = false;
+            return;
+        }
+        
         transform.position = playerAvatarVisuals.transform.position;
 
         leftHandTarget.position =

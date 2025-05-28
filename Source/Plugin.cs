@@ -131,7 +131,7 @@ public class Plugin : BaseUnityPlugin
     {
         // Assume that incompatible modules alter the game in such a way that it makes VR incompatible
         if (Native.HasIncompatibleModules())
-            return false;
+            throw new Exception("Incompatible modules are preventing RepoXR from loading properly");
         
         var location = Path.Combine(Paths.ManagedPath, "Assembly-CSharp.dll");
         var hash = BitConverter.ToString(Utils.ComputeHash(File.ReadAllBytes(location))).Replace("-", "");

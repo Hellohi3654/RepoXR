@@ -98,6 +98,8 @@ internal static class AssetCollection
                 "Unity failed to deserialize some assets. Are you missing the FixPluginTypesSerialization mod?");
             Logger.LogWarning(
                 "I swear to god if you screenshot this and ask \"what is wrong?!\" without acknowledging the above error message I'm going to flip (IRL, and break my neck probably).");
+
+            return false;
         }
 
         return true;
