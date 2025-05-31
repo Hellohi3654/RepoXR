@@ -37,8 +37,12 @@ public class PasswordUI : MonoBehaviour
         keyboard.PresentKeyboard();
         keyboard.OnKeyboardValueKeyPressed += OnKeyboardKeyPressed;
         keyboard.OnKeyboardFunctionKeyPressed += OnKeyboardFunctionKeyPressed;
+
+        // When joining a lobby we have to create a new interactor manager
+        if (!XRRayInteractorManager.Instance)
+            gameObject.AddComponent<XRRayInteractorManager>();
         
-        XRRayInteractorManager.Instance?.SetLineSortingOrder(15);
+        XRRayInteractorManager.Instance!.SetLineSortingOrder(15);
     }
 
     private void OnDestroy()
