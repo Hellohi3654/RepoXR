@@ -51,7 +51,7 @@ internal static class PhysGrabObjectPatches
     /// <summary>
     /// Apply object rotation based on hand rotation instead of camera rotation
     /// </summary>
-    [HarmonyPatch(typeof(PhysGrabObject), nameof(PhysGrabObject.FixedUpdate))]
+    [HarmonyPatch(typeof(PhysGrabObject), nameof(PhysGrabObject.PhysicsGrabbingManipulation))]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> HandRelativeMovementPatch(IEnumerable<CodeInstruction> instructions)
     {
