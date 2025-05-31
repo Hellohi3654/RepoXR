@@ -83,6 +83,7 @@ internal static class TutorialPatches
         var inventoryFill = __instance.tutorialPages[10];
         var inventoryEmpty = __instance.tutorialPages[11];
         var map = __instance.tutorialPages[12];
+        var expressions = __instance.tutorialPages[25];
 
         inventoryFill.text =
             "Grab an Item and deposit it in one of the slots in front of you to put it in your inventory.";
@@ -97,6 +98,8 @@ internal static class TutorialPatches
             "Use [MapGrabLeft] or [MapGrabRight] to grab and view the map. The map is <b><u>important</b></u> for navigation.";
         map.dummyText =
             "Use your left ([MapGrabLeft]) or right ([MapGrabRight]) hand and press the respective button to pick up and view the map until you have filled the progress bar!";
+
+        expressions.text = "Press and hold the [chat] button open the expressions wheel. You can even mix!";
     }
 
     /// <summary>

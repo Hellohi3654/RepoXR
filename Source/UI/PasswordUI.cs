@@ -40,7 +40,7 @@ public class PasswordUI : MonoBehaviour
 
         // When joining a lobby we have to create a new interactor manager
         if (!XRRayInteractorManager.Instance)
-            gameObject.AddComponent<XRRayInteractorManager>();
+            new GameObject("Controllers").AddComponent<XRRayInteractorManager>();
         
         XRRayInteractorManager.Instance!.SetLineSortingOrder(15);
     }
