@@ -63,13 +63,13 @@ public class Plugin : BaseUnityPlugin
         {
             if (allowUnverified)
             {
-                Logger.LogWarning("Warning: Unsupported game version, or corrupted/pirated game detected!");
+                Logger.LogWarning("Warning: Unsupported game version, or corrupted game detected!");
                 Logger.LogWarning(
                     "RepoXR might not work properly. Please consider updating your game and RepoXR before creating bug reports.");
             }
             else
             {
-                Logger.LogError("Error: Unsupported game version, or corrupted/pirated game detected!");
+                Logger.LogError("Error: Unsupported game version, or corrupted game detected!");
                 Logger.LogError("RepoXR only supports legitimate Steam copies of R.E.P.O.");
                 Logger.LogError("R.E.P.O. might have been updated recently, which will also trigger this error.");
                 Logger.LogDebug(
