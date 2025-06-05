@@ -5,7 +5,7 @@ using UnityEngine;
 namespace RepoXR.Player.Camera;
 
 /// <summary>
-/// This is a replacement for the original <see cref="CameraZoom"/> doesn't actually zoom, but instead modifies
+/// This is a replacement for the original <see cref="CameraZoom"/> which doesn't actually zoom, but instead modifies
 /// the position of the camera to recreate the effect
 /// </summary>
 public class VRCameraZoom : MonoBehaviour

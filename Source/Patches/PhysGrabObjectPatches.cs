@@ -13,11 +13,6 @@ namespace RepoXR.Patches;
 [RepoXRPatch(RepoXRPatchTarget.Universal)]
 internal static class PhysGrabObjectPatches
 {
-    private static Transform GetTargetTransformGrabber(PhysGrabber grabber)
-    {
-        return GetTargetTransform(grabber.playerAvatar);
-    }
-
     private static Transform GetTargetTransform(PlayerAvatar player)
     {
         if (player.isLocal)
@@ -46,6 +41,16 @@ internal static class PhysGrabObjectPatches
         return NetworkSystem.instance.GetNetworkPlayer(player, out var networkPlayer)
             ? networkPlayer.PrimaryHand.position
             : player.localCameraPosition;
+    }
+
+    private static Transform GetCartSteerTransform(PhysGrabber grabber)
+    { 
+        if (grabber.playerAvatar.isLocal)
+            return VRSession.Instance is { } session ? session.Player.MainHand : grabber.transform;
+
+        return NetworkSystem.instance.GetNetworkPlayer(grabber.playerAvatar, out var networkPlayer)
+            ? networkPlayer.PrimaryHand
+            : grabber.transform;
     }
 
     /// <summary>
@@ -77,18 +82,18 @@ internal static class PhysGrabObjectPatches
                     Method(typeof(Mathf), nameof(Mathf.Clamp), [typeof(float), typeof(float), typeof(float)])))
             .Advance(-7)
             .SetInstruction(new CodeInstruction(OpCodes.Call,
-                ((Func<PhysGrabber, Transform>)GetTargetTransformGrabber).Method))
+                ((Func<PhysGrabber, Transform>)GetCartSteerTransform).Method))
             .MatchForward(false,
                 new CodeMatch(OpCodes.Callvirt, PropertyGetter(typeof(Transform), nameof(Transform.rotation))))
             .Advance(-1)
             .SetInstruction(new CodeInstruction(OpCodes.Call,
-                ((Func<PhysGrabber, Transform>)GetTargetTransformGrabber).Method))
+                ((Func<PhysGrabber, Transform>)GetCartSteerTransform).Method))
             .MatchForward(false,
                 new CodeMatch(OpCodes.Call,
                     Method(typeof(Quaternion), nameof(Quaternion.LookRotation), [typeof(Vector3), typeof(Vector3)])))
             .Advance(-7)
             .SetInstruction(new CodeInstruction(OpCodes.Call,
-                ((Func<PhysGrabber, Transform>)GetTargetTransformGrabber).Method))
+                ((Func<PhysGrabber, Transform>)GetCartSteerTransform).Method))
             .InstructionEnumeration();
     }
 
