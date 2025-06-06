@@ -199,15 +199,20 @@ internal static class PhysGrabberPatches
         return new CodeMatcher(instructions)
             // Use VR controls for rotation instead of mouse inputs
             .MatchForward(false, new CodeMatch(OpCodes.Ldstr, "Mouse X"))
-            .RemoveInstructions(8)
-            .Insert(new CodeInstruction(OpCodes.Call, ((Func<Vector3>)GetRotationInput).Method))
+            .RemoveInstructions(26)
+            .Insert(
+                new CodeInstruction(OpCodes.Ldarg_0), // this
+                new CodeInstruction(OpCodes.Ldloc_0), // max(mass, 1)
+                new CodeInstruction(OpCodes.Call, ((Func<PhysGrabber, float, Vector3>)GetRotationInput).Method)
+            )
             .InstructionEnumeration();
 
-        static Vector3 GetRotationInput()
+        static Vector3 GetRotationInput(PhysGrabber grabber, float mass)
         {
             var input = Actions.Instance["Rotation"].ReadValue<Vector2>();
+            var massMult = Mathf.Lerp(0.1f, 1, mass * 0.05f);
 
-            return new Vector3(input.x, input.y, 0) * 0.1f;
+            return new Vector3(input.x * massMult, input.y * massMult, 0) * 15 * grabber.grabStrength;
         }
     }
 
