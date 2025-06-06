@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using HarmonyLib;
 using RepoXR.Assets;
 using RepoXR.Input;
@@ -26,11 +27,13 @@ internal static class InputPatches
     [HarmonyPostfix]
     private static void OnInputManagerStart(InputManager __instance)
     {
+        var offset = Enum.GetNames(typeof(InputKey)).Length;
+        
         for (var i = 0; i < AssetCollection.RemappableControls.additionalBindings.Length; i++)
         {
             var binding = AssetCollection.RemappableControls.additionalBindings[i];
             
-            __instance.tagDictionary.Add($"[{binding.action.name}]", (InputKey)(i + 32));
+            __instance.tagDictionary.Add($"[{binding.action.name}]", (InputKey)(i + offset));
         }
     }
     
@@ -50,8 +53,10 @@ internal static class InputPatches
     [HarmonyPrefix]
     private static bool GetAction(ref InputKey key, ref InputAction __result)
     {
-        __result = (int)key >= 32
-            ? AssetCollection.RemappableControls.additionalBindings[(int)key - 32]
+        var bindings = Enum.GetNames(typeof(InputKey)).Length;
+        
+        __result = (int)key >= bindings
+            ? AssetCollection.RemappableControls.additionalBindings[(int)key - bindings]
             : Actions.Instance[key.ToString()];
 
         return false;
