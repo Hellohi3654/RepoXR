@@ -37,6 +37,13 @@ public class Crosshair : MonoBehaviour
             return;
         }
 
+        // Hide the crosshair if we are holding an item (keep overcharge though)
+        if (PhysGrabber.instance.grabbedObject)
+        {
+            sprite.position = Vector3.down * 3000;
+            return;
+        }
+
         // Look straight at camera if we're pointing to an enemy
         if (hit.collider.CompareTag("Phys Grab Object") && hit.collider.GetComponentInParent<EnemyRigidbody>())
         {
@@ -57,5 +64,6 @@ public class Crosshair : MonoBehaviour
 
         transform.SetPositionAndRotation(hit.point, finalRotation);
         sprite.localScale = Vector3.Lerp(Vector3.one * 0.3f, Vector3.one, hit.distance * 0.33f);
+        sprite.localPosition = Vector3.zero;
     }
 }

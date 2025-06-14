@@ -39,6 +39,7 @@ internal static class Entrypoint
         var fade = canvas.Find("Fade");
         var video = canvas.Find("Render Texture Video");
         var loading = canvas.Find("Loading");
+        var moon = canvas.Find("Moon UI");
 
         // The overlay camera is always in the same position in the hierarchy, in every scene
         var overlayCamera = canvas.parent.Find("Camera Overlay").GetComponent<Camera>();
@@ -96,9 +97,25 @@ internal static class Entrypoint
         loadingCanvas.transform.SetParent(Camera.main!.transform.parent, false);
         loadingCanvas.gameObject.AddComponent<UI.LoadingUI>();
         loadingCanvas.GetComponent<RectTransform>().sizeDelta = new Vector2(720, 400); // For masking
-
+        
         loading.SetParent(loadingCanvas.transform, false);
+        
+        // Moon UI stuff
+        var moonMask = new GameObject("Moon Mask")
+        {
+            transform =
+            {
+                parent = loadingCanvas.transform, 
+                localScale = Vector3.one,
+                localPosition = Vector3.zero,
+                localRotation = Quaternion.identity
+            }
+        }.AddComponent<RectMask2D>().GetComponent<RectTransform>();
+        moonMask.sizeDelta = new Vector2(800, 550);
 
+        moon.SetParent(moonMask.transform, false);
+        moon.localScale = Vector3.one * 0.8f;
+        
         // Create custom camera (if enabled)
         if (Plugin.Config.CustomCamera.Value)
             Object.Instantiate(AssetCollection.CustomCamera, Camera.main.transform.parent);

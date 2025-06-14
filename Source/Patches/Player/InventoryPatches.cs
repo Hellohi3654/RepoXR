@@ -170,6 +170,9 @@ internal static class InventoryPatches
     [HarmonyPrefix]
     private static bool HideBatteryIfEquipped(ItemBattery __instance)
     {
+        if (!__instance || !__instance.itemEquippable)
+            return true;
+        
         return __instance.itemEquippable.currentState != ItemEquippable.ItemState.Equipped;
     }
 }
