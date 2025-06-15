@@ -41,7 +41,7 @@ internal static class Experiments
     }
 
     [HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Hurt))]
-    // [HarmonyPrefix]
+    [HarmonyPrefix]
     private static bool NoDamage()
     {
         return false;
@@ -53,42 +53,6 @@ internal static class Experiments
     {
         __result = true;
         return false;
-    }
-
-    private static bool done;
-
-    [HarmonyPatch(typeof(MenuButton), nameof(MenuButton.OnHovering))]
-    [HarmonyPrefix]
-    private static void HeheMuseum()
-    {
-        if (done)
-            return;
-
-        done = true;
-
-        var mgr = RunManager.instance;
-
-        mgr.levels.RemoveRange(1, 3);
-        mgr.levels[0].NarrativeName = "Wie dit leest is gek";
-
-        Logger.LogDebug(mgr.levels[0].ValuablePresets[0].small.Count);
-
-        var logoTiny = mgr.levels[0].ValuablePresets[0].tiny[^2];
-        var headsetTiny = mgr.levels[0].ValuablePresets[0].tiny[^1];
-
-        var logoSmall = mgr.levels[0].ValuablePresets[0].small[^2];
-        var headsetSmall = mgr.levels[0].ValuablePresets[0].small[^1];
-
-        var logoMedium = mgr.levels[0].ValuablePresets[0].medium[^2];
-        var headsetMedium = mgr.levels[0].ValuablePresets[0].medium[^1];
-
-        mgr.levels[0].ValuablePresets[0].tiny.Clear();
-        mgr.levels[0].ValuablePresets[0].small.Clear();
-        mgr.levels[0].ValuablePresets[0].medium.Clear();
-
-        mgr.levels[0].ValuablePresets[0].tiny.AddRange([logoTiny, headsetTiny]);
-        mgr.levels[0].ValuablePresets[0].small.AddRange([logoSmall, headsetSmall]);
-        mgr.levels[0].ValuablePresets[0].medium.AddRange([logoMedium, headsetMedium]);
     }
 }
 #endif

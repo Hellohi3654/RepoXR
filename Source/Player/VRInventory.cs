@@ -46,14 +46,35 @@ public class VRInventory : MonoBehaviour
 
         hoveredSlot = -1;
 
-        var hand = VRSession.Instance.Player.MainHand;
-        if (!holdingItem || !Physics.Raycast(new Ray(hand.position, hand.forward), out var hit,
-                3, 1 << 27))
+        if (!holdingItem || !GetBeamIntersect(out var hit))
             return;
 
         for (var i = 0; i < slots.Length; i++)
             if (hit.collider == slots[i].collider)
                 hoveredSlot = i;
+        
+        return;
+
+        static bool GetBeamIntersect(out RaycastHit hit)
+        {
+            var beam = PhysGrabber.instance.physGrabBeamComponent;
+            var positions = new Vector3[beam.CurveResolution];
+
+            beam.lineRenderer.GetPositions(positions);
+            
+            for (var i = 0; i < positions.Length - 1; i++)
+            {
+                var a = positions[i];
+                var b = positions[i + 1];
+                var distance = Vector3.Distance(a, b);
+
+                if (Physics.Raycast(new Ray(a, b - a), out hit, distance, 1 << 27))
+                    return true;
+            }
+
+            hit = default;
+            return false;
+        }
     }
 
     private void HandleSlotHover()
