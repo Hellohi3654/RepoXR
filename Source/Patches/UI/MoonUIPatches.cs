@@ -52,13 +52,17 @@ internal static class MoonUIPatches
     }
 
     /// <summary>
-    /// Disable fade overlay if the Moon UI is done displaying
+    /// Perform some specific actions during state changes
     /// </summary>
     [HarmonyPatch(typeof(MoonUI), nameof(MoonUI.SetState))]
     [HarmonyPostfix]
     private static void OnSetState(MoonUI.State _state)
     {
+        // Disable fade overlay if the Moon UI is done displaying
         if (_state == MoonUI.State.None)
             FadeOverlay.Instance.Image.color = Color.clear;
+        // Reset the position and rotation of the canvas when we're about to show the UI
+        else if (_state == MoonUI.State.Show)
+            RepoXR.UI.LoadingUI.instance.ResetPosition();
     }
 }

@@ -200,6 +200,10 @@ public class VRRig : MonoBehaviour
 
     private void UpdateClaw()
     {
+        // We most likely are changing scenes
+        if (!playerAvatarVisuals || !playerAvatar || !playerAvatarRightArm)
+            return;
+        
         if (playerAvatarVisuals.isMenuAvatar || (playerAvatar.isActiveAndEnabled &&
                                                  playerAvatarRightArm.playerAvatar.playerHealth.hurtFreeze))
             return;

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using RepoXR.Input;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace RepoXR.UI;
 
@@ -29,6 +31,16 @@ public class PauseUI : MonoBehaviour
         box.transform.parent.localPosition = Vector3.zero;
         box.transform.parent.localRotation = Quaternion.identity;
         box.transform.parent.localScale = Vector3.one;
+    }
+
+    private void OnEnable()
+    {
+        Actions.Instance["ResetHeight"].performed += OnResetHeight;
+    }
+
+    private void OnDisable()
+    {
+        Actions.Instance["ResetHeight"].performed -= OnResetHeight;
     }
 
     private void OnDestroy()
@@ -96,5 +108,13 @@ public class PauseUI : MonoBehaviour
             transform.localPosition = targetPos;
             transform.localRotation = targetRot;
         }
+    }
+    
+    private void OnResetHeight(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.performed || !isOpen)
+            return;
+        
+        ResetPosition();
     }
 }

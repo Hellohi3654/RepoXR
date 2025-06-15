@@ -120,12 +120,12 @@ public class ExpressionRadial : MonoBehaviour
     private void ResetPosition(bool overrideOnly = false)
     {
         var camera = CameraUtils.Instance.MainCamera.transform;
-        
+
         if (isActive)
         {
             if (overrideOnly)
                 return;
-            
+
             transform.position = handTransform.position;
             transform.LookAt(camera.position);
         }
@@ -133,9 +133,12 @@ public class ExpressionRadial : MonoBehaviour
         if (!overrideOnly)
             return;
 
-        var forward = camera.forward;
+        var ui = PlayerExpressionsUI.instance;
 
-        transform.position = camera.position + forward * .5f + camera.up * -0.15f;
+        var forward = camera.forward;
+        var shrink = !ui.shrinkActive ? ui.shrinkCurve.Evaluate(ui.shrinkLerp) * -0.15f : 0;
+
+        transform.position = camera.position + forward * .5f + camera.up * (-0.15f + shrink);
         transform.LookAt(camera.position);
     }
 
