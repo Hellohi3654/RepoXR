@@ -59,14 +59,15 @@ public class VRInventory : MonoBehaviour
         {
             var beam = PhysGrabber.instance.physGrabBeamComponent;
             var positions = new Vector3[beam.CurveResolution];
+            var isOverridden = PhysGrabber.instance.overrideGrabDistance > 0;
 
             beam.lineRenderer.GetPositions(positions);
             
-            for (var i = 0; i < positions.Length - 1; i++)
+            for (var i = 0; i < positions.Length - (isOverridden ? 3 : 1); i++)
             {
                 var a = positions[i];
                 var b = positions[i + 1];
-                var distance = Vector3.Distance(a, b);
+                var distance = Vector3.Distance(a, b) + (isOverridden ? 1 : 0);
 
                 if (Physics.Raycast(new Ray(a, b - a), out hit, distance, 1 << 27))
                     return true;
