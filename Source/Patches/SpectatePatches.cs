@@ -151,13 +151,15 @@ internal static class SpectatePatches
                 turnedLastInput = should;
 
                 break;
-
-            case Config.TurnProviderOption.Disabled:
+            
             case Config.TurnProviderOption.Smooth:
                 if (!Plugin.Config.DynamicSmoothSpeed.Value)
                     value = value == 0 ? 0 : Math.Sign(value);
 
                 spectateTurnAmount += 180 * Time.deltaTime * Plugin.Config.SmoothTurnSpeedModifier.Value * value;
+                break;
+
+            case Config.TurnProviderOption.Disabled:
                 break;
         }
     }

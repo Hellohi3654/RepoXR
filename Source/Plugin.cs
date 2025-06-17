@@ -32,7 +32,7 @@ public class Plugin : BaseUnityPlugin
 
     private readonly string[] GAME_ASSEMBLY_HASHES =
     [
-        "DDD015E94D97AB6338DD77603E4E21AD926FDF73F9E6D70339A8F4B38A74CA60" // v0.1.2_47beta
+        "CDEDF6918AC03D69268678109754A043730CFAB52028200E05F18A0308960C12" // v0.1.2.51_beta
     ];
     
     public new static Config Config { get; private set; } = null!;
