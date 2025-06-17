@@ -92,17 +92,17 @@ internal static class InventoryPatches
         // PlayerAvatar position is at the feet, so if the visuals are below that, they're underneath the floor
         // So when an item would be unequipped below the floor, we just re-enable the original functionality
         if (session.Player.Rig.inventoryController.visualsTransform.position.y <
-            PlayerAvatar.instance.transform.position.y)
+            PlayerAvatar.instance.transform.position.y + 0.1f)
         {
             var mask = SemiFunc.LayerMaskGetVisionObstruct() & ~LayerMask.GetMask("Ignore Raycast", "CollisionCheck");
-            if (Physics.Raycast(PlayerAvatar.instance.transform.position + Vector3.up * 0.2f,
-                    PlayerAvatar.instance.transform.forward, out var hit, distance, mask))
+            if (Physics.Raycast(Camera.main!.transform.position, Camera.main.transform.forward, out var hit, distance,
+                    mask))
             {
                 __instance.teleportPosition = hit.point;
                 return false;
             }
 
-            __instance.teleportPosition = PlayerAvatar.instance.transform.position + Vector3.up * 0.2f;
+            __instance.teleportPosition = Camera.main.transform.position + Camera.main.transform.forward * 0.2f;
         }
         
         __instance.teleportPosition = __instance.transform.position;
