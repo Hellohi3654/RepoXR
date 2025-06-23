@@ -97,10 +97,10 @@ public class NetworkPlayer : MonoBehaviour
         mapTool.transform.parent.localPosition = Vector3.zero;
         mapTool.transform.parent.localRotation = Quaternion.identity;
 
-        playerRightArm.grabberClawParent.SetParent(rightHandAnchor);
+        playerRightArm.grabberClawParent.SetParent(isLeftHanded ? leftHandAnchor : rightHandAnchor);
         playerRightArm.grabberClawParent.localPosition = Vector3.zero;
 
-        playerRightArm.physGrabBeam.PhysGrabPointOrigin.SetParent(rightHandAnchor);
+        playerRightArm.physGrabBeam.PhysGrabPointOrigin.SetParent(isLeftHanded ? leftHandAnchor : rightHandAnchor);
         playerRightArm.physGrabBeam.PhysGrabPointOrigin.localPosition = Vector3.zero;
 
         networkReady = true;

@@ -171,14 +171,14 @@ internal static class OpenXR
 
         if (runtime != null)
             yield return runtime.Value;
-        
+
         // 2. Virtual Desktop
         var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             @"Virtual Desktop Streamer\OpenXR\virtualdesktop-openxr.json");
 
         if (File.Exists(path) && Runtime.ReadFromJson(path, out var rt))
             yield return rt;
-        
+
         // 3. Oculus
         path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             @"Oculus\Support\oculus-runtime\oculus_openxr_64.json");
@@ -186,7 +186,7 @@ internal static class OpenXR
         if (File.Exists(path) && Runtime.ReadFromJson(path, out rt))
             yield return rt;
     }
-    
+
     public static bool GetActiveRuntimeName(out string name)
     {
         name = "";
@@ -299,7 +299,7 @@ internal static class OpenXR
         private static XRGeneralSettings? xrGeneralSettings;
         private static XRManagerSettings? xrManagerSettings;
         private static OpenXRLoader? xrLoader;
-        
+
         private static readonly ManualLogSource Logger = new("OpenXR Loader");
 
         static Loader()
@@ -311,10 +311,24 @@ internal static class OpenXR
         {
             InitializeScripts();
 
+            // Check if Unity's OpenXR subsystem is available
+            var subsystems = new List<ISubsystemDescriptor>();
+            SubsystemManager.GetAllSubsystemDescriptors(subsystems);
+
+            if (!(subsystems.Any(subsystem => subsystem.id == "OpenXR Input") &&
+                  subsystems.Any(subsystem => subsystem.id == "OpenXR Display")))
+            {
+                Logger.LogError(
+                    "No Unity OpenXR subsystem found, this installation of RepoXR was not installed correctly.");
+
+                return false;
+            }
+
             // Cannot override runtime if high integrity: https://github.com/KhronosGroup/OpenXR-SDK-Source/blob/main/src/common/platform_utils.hpp#L317
             if (Native.IsHighIntegrityLevel())
             {
-                Logger.LogWarning("Application is elevated! Unable to override the XR runtime! Only the system default OpenXR runtime will be available.");
+                Logger.LogWarning(
+                    "Application is elevated! Unable to override the XR runtime! Only the system default OpenXR runtime will be available.");
 
                 return InitializeXR(null);
             }
@@ -322,7 +336,8 @@ internal static class OpenXR
             var runtimes = GetRuntimes();
             if (runtimes.Count == 0)
             {
-                Logger.LogWarning("Failed to query runtimes, or no runtimes were found. Falling back to default behavior.");
+                Logger.LogWarning(
+                    "Failed to query runtimes, or no runtimes were found. Falling back to default behavior.");
 
                 return InitializeXR(string.IsNullOrEmpty(Plugin.Config.OpenXRRuntimeFile.Value)
                     ? null
@@ -341,16 +356,17 @@ internal static class OpenXR
 
                 Logger.LogWarning("Loading OpenXR using override failed, falling back to automatic enumeration...");
             }
-            
+
             // Make sure the default runtime is first (unless it's the override which already failed at this point)
-            if (runtimes.Default is {} @default && @default.Path != Plugin.Config.OpenXRRuntimeFile.Value)
+            if (runtimes.Default is { } @default && @default.Path != Plugin.Config.OpenXRRuntimeFile.Value)
                 if (InitializeXR(@default))
                     return true;
-            
-            foreach (var runtime in runtimes.Where(rt => rt.Path != Plugin.Config.OpenXRRuntimeFile.Value && !rt.Default))
+
+            foreach (var runtime in runtimes.Where(rt =>
+                         rt.Path != Plugin.Config.OpenXRRuntimeFile.Value && !rt.Default))
                 if (InitializeXR(runtime))
                     return true;
-            
+
             Logger.LogError("All available runtimes were attempted, but none worked. Aborting...");
             return false;
         }
@@ -359,7 +375,7 @@ internal static class OpenXR
         {
             if (xrManagerSettings == null || xrGeneralSettings == null || xrLoader == null)
                 return false;
-            
+
             if (runtime is { } rt)
             {
                 Logger.LogInfo($"Attempting to initialize OpenXR on {rt.Name}");
@@ -370,7 +386,7 @@ internal static class OpenXR
                 Logger.LogInfo("Attempting to initialize OpenXR using default runtime");
                 Environment.SetEnvironmentVariable("XR_RUNTIME_JSON", null);
             }
-            
+
             xrGeneralSettings.InitXRSDK();
             xrGeneralSettings.Start();
 
@@ -399,7 +415,7 @@ internal static class OpenXR
             xrLoader ??= ScriptableObject.CreateInstance<OpenXRLoader>();
 
             xrGeneralSettings.Manager = xrManagerSettings;
-            
+
             ((List<XRLoader>)xrManagerSettings.activeLoaders).Clear();
             ((List<XRLoader>)xrManagerSettings.activeLoaders).Add(xrLoader);
 
@@ -408,7 +424,7 @@ internal static class OpenXR
 
             if (OpenXRSettings.Instance.features.Length != 0)
                 return;
-            
+
             var valveIndex = ScriptableObject.CreateInstance<ValveIndexControllerProfile>();
             var hpReverb = ScriptableObject.CreateInstance<HPReverbG2ControllerProfile>();
             var htcVive = ScriptableObject.CreateInstance<HTCViveControllerProfile>();
