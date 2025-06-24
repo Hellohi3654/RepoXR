@@ -46,13 +46,5 @@ internal static class Experiments
     {
         return false;
     }
-
-    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.DebugDev))]
-    [HarmonyPrefix]
-    private static bool SemiWorkHehehehahahahahahEhehehehahaha(ref bool __result)
-    {
-        __result = true;
-        return false;
-    }
 }
 #endif
