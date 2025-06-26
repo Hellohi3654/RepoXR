@@ -3,7 +3,7 @@
 
 **The VR mod has been released!!**
 
-It took a bit, but after (UNKNOWN TIME) <sub><sup>_(started March 21st 2025)_</sup></sub> the R.E.P.O. VR mod has finally released!
+It took a bit, but after 3 months <sub><sup>_(started March 21st 2025)_</sup></sub> the R.E.P.O. VR mod has finally released!
 
 No changelogs are necessary for this version, as it is the first version. Subsequent versions will contain a list of changes and new contributors.
 
