@@ -92,7 +92,7 @@ internal static class LeaveMyLeaveAlonePatch
     private static MethodBase TargetMethod() => Method;
 
     [UsedImplicitly]
-    private static void Prefix(object __instance, MethodBody body, MethodBase original)
+    private static bool Prefix(object __instance, MethodBody body, MethodBase original)
     {
         // Clean up the body of the target method
         body.Instructions.Clear();
@@ -156,6 +156,8 @@ internal static class LeaveMyLeaveAlonePatch
 
         // Note: We lose all unassigned labels here along with any way to log them
         // On the contrary, we gain better logging anyway down the line by using Cecil
+
+        return false;
     }
 
     private static IEnumerable<CodeInstruction> ApplyTranspilers(object instance, SRE.ILGenerator il,
