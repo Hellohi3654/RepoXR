@@ -20,7 +20,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string PLUGIN_GUID = "io.daxcess.repoxr";
     public const string PLUGIN_NAME = "RepoXR";
-    public const string PLUGIN_VERSION = "1.0.0";
+    public const string PLUGIN_VERSION = "1.0.1";
     
     #if DEBUG
     private const string SKIP_CHECKSUM_VAR = $"--repoxr-skip-checksum={PLUGIN_VERSION}-dev";
@@ -32,7 +32,7 @@ public class Plugin : BaseUnityPlugin
 
     private readonly string[] GAME_ASSEMBLY_HASHES =
     [
-        "4FDD19B08E5A10B4D2697708284D3EA773D9537185063C3FCB137D791563F6D6" // v0.1.2.56_beta
+        "4FDD19B08E5A10B4D2697708284D3EA773D9537185063C3FCB137D791563F6D6" // v0.2.0
     ];
     
     public new static Config Config { get; private set; } = null!;
