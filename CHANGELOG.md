@@ -1,3 +1,14 @@
+# 1.0.1
+
+**Additions**:
+- Added support for v0.2.1
+
+**Bug fixes**:
+- Fixed the small moons in the moon UI rotating weirdly
+- Fixed a bug in HarmonyX that would generate invalid code during transpiling
+
+**Removals**:
+- Removed support for v0.2.0
 
 # 1.0.0
 

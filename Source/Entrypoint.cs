@@ -40,6 +40,7 @@ internal static class Entrypoint
         var video = canvas.Find("Render Texture Video");
         var loading = canvas.Find("Loading");
         var moon = canvas.Find("Moon UI");
+        var splash = canvas.Find("Splash Screen");
 
         // The overlay camera is always in the same position in the hierarchy, in every scene
         var overlayCamera = canvas.parent.Find("Camera Overlay").GetComponent<Camera>();
@@ -116,6 +117,9 @@ internal static class Entrypoint
         moon.SetParent(moonMask.transform, false);
         moon.localScale = Vector3.one * 0.8f;
         
+        splash.SetParent(loadingCanvas.transform, false);
+        splash.SetAsFirstSibling(); // Prevent obscuring the loading UI
+        
         // Create custom camera (if enabled)
         if (Plugin.Config.CustomCamera.Value)
             Object.Instantiate(AssetCollection.CustomCamera, Camera.main.transform.parent);
@@ -151,12 +155,20 @@ internal static class Entrypoint
     private static void OnStartup(GameDirector __instance)
     {
         VRInputSystem.instance.ActivateInput();
-
+    
         if (RunManager.instance.levelCurrent == RunManager.instance.levelMainMenu ||
-            RunManager.instance.levelCurrent == RunManager.instance.levelLobbyMenu)
+            RunManager.instance.levelCurrent == RunManager.instance.levelLobbyMenu ||
+            RunManager.instance.levelCurrent == RunManager.instance.levelSplashScreen)
             OnStartupMainMenu();
         else
             OnStartupInGame();
+    }
+
+    [HarmonyPatch(typeof(SplashScreen), nameof(SplashScreen.Start))]
+    [HarmonyPostfix]
+    private static void OnStartupSplashScreen()
+    {
+        UI.LoadingUI.instance.ResetPosition();
     }
 
     private static void OnStartupMainMenu()

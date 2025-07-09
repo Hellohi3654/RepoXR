@@ -38,6 +38,8 @@ internal static class AssetCollection
 
     public static TMP_SpriteAsset TMPInputsSpriteAsset;
 
+    public static Sprite Logo;
+
     public static Shader VignetteShader;
 
     public static AnimationCurveData OverchargeHapticCurve;
@@ -84,6 +86,8 @@ internal static class AssetCollection
         
         TMPInputsSpriteAsset = assetBundle.LoadAsset<TMP_SpriteAsset>("TMPInputsSpriteAsset");
 
+        Logo = assetBundle.LoadAsset<Sprite>("REPOXR_Splash_Logo");
+        
         VignetteShader = assetBundle.LoadAsset<Shader>("VignetteVR");
 
         GrabberHapticCurve = assetBundle.LoadAsset<AnimationCurveData>("GrabberHapticCurve");

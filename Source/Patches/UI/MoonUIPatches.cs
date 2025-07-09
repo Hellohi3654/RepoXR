@@ -1,6 +1,9 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using System.Reflection.Emit;
+using HarmonyLib;
 using RepoXR.Assets;
 using UnityEngine;
+using static HarmonyLib.AccessTools;
 
 namespace RepoXR.Patches.UI;
 
@@ -16,7 +19,7 @@ internal static class MoonUIPatches
     {
         __instance.showStartPosition = 300;
         __instance.skipStartPosition = -240;
-        
+
         __instance.skipText.spriteAsset = AssetCollection.TMPInputsSpriteAsset;
     }
 
@@ -64,5 +67,20 @@ internal static class MoonUIPatches
         // Reset the position and rotation of the canvas when we're about to show the UI
         else if (_state == MoonUI.State.Show)
             RepoXR.UI.LoadingUI.instance.ResetPosition();
+    }
+
+    /// <summary>
+    /// Fix moons being rotated in world space instead of local space
+    /// </summary>
+    [HarmonyPatch(typeof(MoonUI), nameof(MoonUI.MoonRotateLogic))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> MoonRotationFix(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Callvirt, PropertySetter(typeof(Transform), nameof(Transform.rotation))))
+            .Repeat(matcher =>
+                matcher.SetOperandAndAdvance(PropertySetter(typeof(Transform), nameof(Transform.localRotation))))
+            .InstructionEnumeration();
     }
 }
