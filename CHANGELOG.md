@@ -1,3 +1,9 @@
+# 1.0.2
+
+**Additions**:
+- Added keybind options for turning
+- Added a new option for configuring the distance of the camera canvas in the gameplay settings
+
 # 1.0.1
 
 **Additions**:

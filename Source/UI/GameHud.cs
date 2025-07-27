@@ -49,7 +49,7 @@ public class GameHud : MonoBehaviour
             ? SpectateCamera.instance.transform.up
             : Vector3.up;
 
-        var fwd = camera.position + camera.forward * 1.5f;
+        var fwd = camera.position + camera.forward * Plugin.Config.SmoothCanvasDistance.Value;
         var rot = Quaternion.LookRotation(camera.forward, up);
 
         SmoothedCanvas.transform.position = Vector3.Slerp(SmoothedCanvas.transform.position, fwd, 0.1f);

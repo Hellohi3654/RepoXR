@@ -53,6 +53,11 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<float> HUDGazePlaneOffset { get; } = file.Bind("Gameplay", nameof(HUDGazePlaneOffset), -0.25f,
         new ConfigDescription("The height offset for the HUD when looking at it", new AcceptableValueRange<float>(-0.6f, 0.5f)));
 
+    [ConfigDescriptor(pointerSize: 0.05f, stepSize: 0.25f)]
+    public ConfigEntry<float> SmoothCanvasDistance { get; } = file.Bind("Gameplay", nameof(SmoothCanvasDistance), 1.5f,
+        new ConfigDescription("The distance that the smooth canvas should be away from the main camera",
+            new AcceptableValueRange<float>(1.25f, 3)));
+
     // Performance configuration
 
     [ConfigDescriptor(stepSize: 5f, suffix: "%")]
