@@ -44,7 +44,6 @@ jobs:
         run: |
           # Set up template
           mkdir package
-          git --work-tree=./package checkout origin/thunderstore ./
           
           # Copy and sign release binaries
           cp bin/Release/netstandard2.1/RepoXR.dll ./package/BepInEx/plugins/RepoXR/
