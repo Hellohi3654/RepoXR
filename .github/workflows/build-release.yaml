@@ -44,21 +44,13 @@ jobs:
         run: |
           # Set up template
           mkdir package
+          mkdir package/BepInEx/plugins/RepoXR
+          mkdir package/BepInEx/patchers/RepoXR
+          mkdir package/BepInEx/plugins/RepoXR/repoxrassets
           
-          # Copy and sign release binaries
+          # Copy release binaries
           cp bin/Release/netstandard2.1/RepoXR.dll ./package/BepInEx/plugins/RepoXR/
           cp bin/Release/netstandard2.1/RepoXR.Preload.dll ./package/BepInEx/patchers/RepoXR/
-          
-          # Move assets
-          mv ./package/repoxrassets ./package/BepInEx/plugins/RepoXR/repoxrassets
-          
-          # Copy docs and license
-          cp CHANGELOG.md ./package/CHANGELOG.md
-          cp LICENSE ./package/LICENSE
-          
-          # Update Thunderstore manifest
-          jq '.version_number = "1.0.2"' ./package/manifest.json > ./package/manifest_new.json
-          mv ./package/manifest_new.json ./package/manifest.json
           
       - name: Upload build artifacts
         if: github.event_name == 'push'
