@@ -44,13 +44,10 @@ jobs:
         run: |
           # Set up template
           mkdir package
-          mkdir package/BepInEx/plugins/RepoXR
-          mkdir package/BepInEx/patchers/RepoXR
-          mkdir package/BepInEx/plugins/RepoXR/repoxrassets
           
           # Copy release binaries
-          cp bin/Release/netstandard2.1/RepoXR.dll ./package/BepInEx/plugins/RepoXR/
-          cp bin/Release/netstandard2.1/RepoXR.Preload.dll ./package/BepInEx/patchers/RepoXR/
+          cp bin/Release/netstandard2.1/RepoXR.dll ./package/
+          cp bin/Release/netstandard2.1/RepoXR.Preload.dll ./package/
           
       - name: Upload build artifacts
         if: github.event_name == 'push'
