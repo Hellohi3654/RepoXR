@@ -122,10 +122,6 @@ internal static class Native
 
     public static bool HasIncompatibleModules()
     {
-        foreach (var module in (ReadOnlySpan<string>) ["OnlineFix64"])
-            if (GetModuleHandle(module) != IntPtr.Zero)
-                return true;
-
         return false;
     }
 
