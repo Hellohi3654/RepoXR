@@ -61,22 +61,9 @@ public class Plugin : BaseUnityPlugin
 
         if (!VerifyGameVersion())
         {
-            if (allowUnverified)
-            {
-                Logger.LogWarning("Warning: Unsupported game version, or corrupted game detected!");
-                Logger.LogWarning(
-                    "RepoXR might not work properly. Please consider updating your game and RepoXR before creating bug reports.");
-            }
-            else
-            {
-                Logger.LogError("Error: Unsupported game version, or corrupted game detected!");
-                Logger.LogError("RepoXR only supports legitimate Steam copies of R.E.P.O.");
-                Logger.LogError("R.E.P.O. might have been updated recently, which will also trigger this error.");
-                Logger.LogDebug(
-                    $"To bypass this check, add the following flag to your launch options in Steam: {SKIP_CHECKSUM_VAR}");
-
-                return;
-            }
+            Logger.LogWarning("Warning: Unsupported game version, or corrupted game detected!");
+            Logger.LogWarning(
+                "RepoXR might not work properly. Please consider updating your game and RepoXR before creating bug reports.");
         }
 
         if (!PreloadRuntimeDependencies())
@@ -129,63 +116,7 @@ public class Plugin : BaseUnityPlugin
 
     private bool VerifyGameVersion()
     {
-        // Assume that incompatible modules alter the game in such a way that it makes VR incompatible
-        if (Native.HasIncompatibleModules())
-            throw new Exception("Incompatible modules are preventing RepoXR from loading properly");
-        
-        var location = Path.Combine(Paths.ManagedPath, "Assembly-CSharp.dll");
-        var hash = BitConverter.ToString(Utils.ComputeHash(File.ReadAllBytes(location))).Replace("-", "");
-        
-        // Attempt local lookup first
-        if (GAME_ASSEMBLY_HASHES.Contains(hash))
-        {
-            Logger.LogInfo("Game version verified using local hashes");
-
-            return true;
-        }
-        
-        Logger.LogWarning("Failed to verify game version using local hashes, checking remotely for updated hashes...");
-        
-        // Attempt to fetch a gist with known working assembly hashes
-        // This allows me to keep RepoXR up and running if the game updates, without having to push an update out
-        try
-        {
-            var contents = new WebClient().DownloadString(HASHES_OVERRIDE_URL);
-            var hashes = Utils.ParseConfig(contents);
-
-            var found = false;
-            
-            foreach (var versionedHash in hashes)
-            {
-                try
-                {
-                    var (versions, remoteHash) = versionedHash.Split(':') switch { var x => (x[0].Split(','), x[1]) };
-
-                    if (remoteHash != hash || !versions.Contains(PLUGIN_VERSION))
-                        continue;
-
-                    found = true;
-                    break;
-                }
-                catch
-                {
-                    // Broken line, ignore
-                }
-            }
-
-            if (!found)
-                return false;
-
-            Logger.LogInfo("Game version verified using remote hashes");
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning($"Failed to verify using remote hashes: {ex.Message}");
-
-            return false;
-        }
+        return true;
     }
 
     private bool PreloadRuntimeDependencies()
